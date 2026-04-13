@@ -1,7 +1,7 @@
 ---
 name: 기본 이슈
 about: 일반 작업/기능 이슈 템플릿
-title: "[FEAT] "
+title: "feat:"
 labels: todo
 ---
 
