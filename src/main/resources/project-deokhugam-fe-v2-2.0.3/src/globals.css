@@ -1,0 +1,135 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS 리셋 - 브라우저 기본 스타일 초기화 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* HTML5 display-role 리셋 (구형 브라우저용) */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+
+/* ul, ol 요소의 list role에 대한 리스트 스타일 제거 */
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+}
+
+/* 클래스가 없는 A 요소에 기본 스타일 적용 */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* 이미지 작업을 쉽게 만들기 */
+img,
+picture {
+  max-width: 100%;
+  display: block;
+}
+
+/* input과 button에 폰트 상속 */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 애니메이션을 선호하지 않는 사용자를 위한 모든 애니메이션, 전환 및 부드러운 스크롤 제거 */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Input 요소 기본 스타일 리셋 (브라우저 기본 스타일만 제거) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+textarea,
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Edge 브라우저 비밀번호 input 눈 아이콘 제거 */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* Chrome 브라우저 비밀번호 input 눈 아이콘 제거 */
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none;
+}
+
+/* 포커스시 기본 outline만 제거 (Tailwind 스타일은 유지) */
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+/* 자동완성 스타일 오버라이드 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #f5f5f5 inset !important;
+  -webkit-text-fill-color: #54545e !important;
+  background-color: #f5f5f5 !important;
+}
+
+/* 기본 브라우저 포커스 제거 */
+input:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: none;
+}

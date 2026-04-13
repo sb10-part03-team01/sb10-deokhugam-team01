@@ -1,0 +1,45 @@
+{
+  "name": "deokhugam",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint ",
+    "preview": "vite preview",
+    "format": "prettier --write ",
+    "format:check": "prettier --check "
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "axios": "^1.12.2",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.16",
+    "react": "19.1.0",
+    "react-datepicker": "^8.7.0",
+    "react-dom": "19.1.0",
+    "react-hook-form": "^7.62.0",
+    "react-responsive": "^10.0.1",
+    "react-router-dom": "^7.5.0",
+    "zod": "^4.1.11",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.3",
+    "postcss": "^8",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5",
+    "vite": "^6.2.0"
+  }
+}
