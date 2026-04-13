@@ -1,7 +1,6 @@
 HELP.md
 .gradle
 build/
-!../gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -35,6 +34,12 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Security ###
+.env
+.env.*
+*.env
+# 필요시 추가할 것
 
 # ===================================================================
 
@@ -129,6 +134,7 @@ $RECYCLE.BIN/
 
 # Package Files #
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
