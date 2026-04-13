@@ -23,3 +23,6 @@ reviews:
   auto_review:
     enabled: true # 자동리뷰 켬
     drafts: false # Draft PR은 자동 리뷰하지 않음
+    base_branches:
+      - "main"
+      - "dev"
