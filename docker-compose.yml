@@ -36,7 +36,7 @@ services:
 
   postgres:
     # image - 사용할 Docker 이미지를 지정
-    image: postgres:18-alpine # 경량 이미지 (alpine)
+    image: postgres:17-alpine # 경량 이미지 (alpine)
     container_name: deokhugam-postgres
     restart: unless-stopped # 컨테이너 비정상 정료되면 자동 재시작
     environment:

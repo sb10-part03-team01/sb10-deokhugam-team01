@@ -81,7 +81,7 @@ FROM ${IMAGE}
 WORKDIR /app
 
 # 빌드 스테이지에서 생성한 JAR 파일만 복사
-COPY --from=builder /app/build/libs/*.jar ./app.jar
+COPY --from=builder /app/build/libs/*-SNAPSHOT.jar ./app.jar
 
 ## 80 포트를 노출하도록 설정
 # EXPOSE 80
