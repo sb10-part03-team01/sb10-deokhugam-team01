@@ -10,17 +10,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
   @ExceptionHandler(DeokhugamException.class)
   public ResponseEntity<ErrorResponse> handleDeokhugamException(DeokhugamException e){
+    ErrorCode errorCode = e.getErrorCode();
+
     log.warn(" [Domain Error] Code: {}, Message: {}, Details: {}",
-        e.getErrorCode().getCode(),
-        e.getErrorCode().getMessage(),
+        errorCode.getCode(),
+        errorCode.getMessage(),
         e.getDetails());
+
     ErrorResponse response = new ErrorResponse(
         e.getTimeStamp(),
-        e.getErrorCode().getCode(),
-        e.getErrorCode().getMessage(),
+        errorCode.getCode(),
+        errorCode.getMessage(),
         e.getDetails(),
         e.getClass().getSimpleName(),
-        e.getErrorCode().getStatus()
+        errorCode.getStatus()
     );
     return ResponseEntity.status(response.getStatus()).body(response);
   }
