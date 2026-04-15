@@ -2,7 +2,7 @@ package com.team01.deokhugam.global.pagination;
 
 public final class PageLimitPolicy {
 
-  public static final int DEFAULT_LIMIT = 10;
+  public static final int DEFAULT_LIMIT = 50;
   public static final int MAX_LIMIT = 100;
 
   private PageLimitPolicy() {
