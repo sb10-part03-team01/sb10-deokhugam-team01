@@ -2,7 +2,7 @@ package com.team01.deokhugam.global.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import lombok.Getter;
 
 @Getter
@@ -13,7 +13,7 @@ public abstract class BaseRemovableEntity extends BaseUpdatableEntity {
   private boolean isDeleted = false;
 
   @Column(name = "deleted_at", nullable = true)
-  private Instant deletedAt;
+  private OffsetDateTime deletedAt;
 
   // 논리 삭제 용 -> 삭제여부 O / 삭제시간 부여
   public void softDelete() {
@@ -21,6 +21,6 @@ public abstract class BaseRemovableEntity extends BaseUpdatableEntity {
       return;
     }
     this.isDeleted = true;
-    this.deletedAt = Instant.now();
+    this.deletedAt = OffsetDateTime.now();
   }
 }
