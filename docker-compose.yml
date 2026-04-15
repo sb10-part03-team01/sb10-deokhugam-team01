@@ -1,0 +1,79 @@
+# 실행: docker compose up -d
+# 종료: docker compose down
+# 데이터 포함 삭제: docker compose down -v
+# 볼륨 확인: docker volume ls
+
+services:
+  deokhugam:
+    build:
+      context: .
+      # dockerfile - 사용할 Dockerfile의 경로 (context 경로를 기준으로 한 상대 경로)
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE}
+      SERVER_PORT: ${SERVER_PORT}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      # AWS
+      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
+      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
+      AWS_S3_REGION: ${AWS_S3_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_S3_PRESIGNED_URL_EXPIRATION: 300
+      # S3
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_ROOT_PATH: .deokhugam/storage
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - deokhugam-storage:/app/.deokhugam/storage # 썸네일 임시 저장
+    networks:
+      backend:
+
+  postgres:
+    # image - 사용할 Docker 이미지를 지정
+    image: postgres:18-alpine # 경량 이미지 (alpine)
+    container_name: deokhugam-postgres
+    restart: unless-stopped # 컨테이너 비정상 정료되면 자동 재시작
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      # 데이터 영속화: postgres_data라는 Docker 관리 볼륨을 컨테이너의 /var/lib/postgresql/data에 마운트
+      - postgres_data:/var/lib/postgresql/data
+      # 초기화 스크립트 ./docker/postgres/init 디렉토리를 컨테이너의 /docker-entrypoint-initdb.d 디렉토리에 마운트
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      # test - 헬스체크에 사용할 명령어
+      #  - CMD-SHELL : /bin/sh -c를 통해 shell에서 명령어를 실행 (환경 변수 치환을 위함)
+      #  - pg_isready : PostgreSQL이 클라이언트 연결을 수락할 준비가 되었는지 확인
+      #  - -U : 연결을 시도할 사용자를 지정
+      #  - -d : 연결을 시도할 데이터베이스를 지정
+      #  -> 명령어가 exit code 0을 반환하면 healthy, 그 외에는 unhealthy로 판단
+      # interval - 헬스체크 실행 간격
+      # timeout - 각 헬스체크의 응답 대기 시간 (5초 이내에 응답해야 함)
+      # retries - unhealthy로 판정하기까지 연속 실패 횟수
+      # start_period - 컨테이너 시작 후 헬스체크 싪패해도 unhealthy로 판정하지 않는 유예 시간
+      # start_interval - start_period 동안의 헬스체크 간격
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 5s
+    networks:
+      backend:
+
+volumes:
+  postgres_data:
+  deokhugam-storage:
+
+networks:
+  backend:
