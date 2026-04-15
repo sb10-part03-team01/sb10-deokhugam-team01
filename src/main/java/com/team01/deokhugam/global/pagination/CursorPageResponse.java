@@ -8,6 +8,7 @@ public record CursorPageResponse<T>(
     String nextCursor,
     OffsetDateTime nextAfter,
     int size,
+    long totalElements,
     boolean hasNext
 ) {
 

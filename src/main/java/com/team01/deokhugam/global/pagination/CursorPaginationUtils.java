@@ -13,6 +13,7 @@ public final class CursorPaginationUtils {
   public static <T> CursorPageResponse<T> of(
       List<T> results,
       int limit,
+      long totalElements,
       Function<T, String> cursorExtractor,
       Function<T, OffsetDateTime> afterExtractor
   ) {
@@ -30,20 +31,23 @@ public final class CursorPaginationUtils {
         ? results.subList(0, limit)
         : results;
 
+    List<T> safeContent = List.copyOf(content);
+
     String nextCursor = null;
     OffsetDateTime nextAfter = null;
 
-    if (hasNext && !content.isEmpty()) {
-      T lastElement = content.get(content.size() - 1);
+    if (hasNext && !safeContent.isEmpty()) {
+      T lastElement = safeContent.get(safeContent.size() - 1);
       nextCursor = cursorExtractor.apply(lastElement);
       nextAfter = afterExtractor.apply(lastElement);
     }
 
     return new CursorPageResponse<>(
-        content,
+        safeContent,
         nextCursor,
         nextAfter,
-        content.size(),
+        safeContent.size(),
+        totalElements,
         hasNext
     );
   }
