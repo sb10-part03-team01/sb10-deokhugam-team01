@@ -12,16 +12,10 @@ public abstract class BaseRemovableEntity extends BaseUpdatableEntity {
   @Column(name = "is_deleted", nullable = false)
   private boolean isDeleted = false;
 
-  @Column(name = "deleted_at")
+  @Column(name = "deleted_at", nullable = true)
   private Instant deletedAt;
 
   // 논리 삭제 용 -> 삭제여부 O / 삭제시간 부여
-  /**
-   * Marks the entity as deleted and records the deletion timestamp.
-   *
-   * After invocation, {@code isDeleted} is set to {@code true} and {@code deletedAt}
-   * holds the current instant.
-   */
   public void softDelete() {
     if (this.isDeleted) {
       return;
