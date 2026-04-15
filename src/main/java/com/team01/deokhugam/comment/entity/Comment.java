@@ -1,6 +1,8 @@
 package com.team01.deokhugam.comment.entity;
 
 import com.team01.deokhugam.global.entity.BaseRemovableEntity;
+import com.team01.deokhugam.review.entity.Review;
+import com.team01.deokhugam.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
