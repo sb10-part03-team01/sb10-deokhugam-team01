@@ -1,0 +1,25 @@
+server:
+  port: 80
+
+spring:
+  datasource:
+    url: ${RDS_SPRING_DATASOURCE_URL}
+    username: ${RDS_SPRING_DATASOURCE_USERNAME}
+    password: ${RDS_SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    com.team01.deokhugam: info
+    org.hibernate.SQL: info
+
+management:
+  endpoint:
+    health:
+      show-details: never
+  info:
+    env:
+      enabled: false
