@@ -6,6 +6,7 @@ import com.team01.deokhugam.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -16,7 +17,12 @@ import org.hibernate.annotations.Where;
 
 @Getter
 @Entity
-@Table(name = "comments")
+@Table(
+    name = "comments",
+    indexes = {
+      @Index(name = "idx_comment_review_created_at_id", columnList = "review_id, created_at, id"),
+      @Index(name = "idx_comments_user_id", columnList = "user_id")
+    })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Where(clause = "is_deleted = false")
 public class Comment extends BaseRemovableEntity {
