@@ -1,7 +1,6 @@
 package com.team01.deokhugam.global.entity;
 
 import jakarta.persistence.*;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.Getter;
