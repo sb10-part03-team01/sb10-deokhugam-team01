@@ -19,7 +19,7 @@ public class BookService {
   @Transactional
   public BookDto createBook(BookCreateRequest request, MultipartFile thumbnail){
     // isbn이 빈 문자열(공백)로 들어올 시 방어 로직
-    String safeIsbn = StringUtils.hasText(request.getIsbn()) ? request.getIsbn() : null;
+    String safeIsbn = StringUtils.hasText(request.getIsbn()) ? request.getIsbn().trim() : null;
 
     // isbn 중복 예외 처리
     if(safeIsbn != null && bookRepository.existsByIsbn(safeIsbn)){
