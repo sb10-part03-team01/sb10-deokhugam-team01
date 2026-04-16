@@ -80,8 +80,24 @@ FROM ${IMAGE}
 # 앱 실행 디렉토리 지정
 WORKDIR /app
 
+# 애플리케이션 실행용 non-root 사용자 생성
+RUN adduser -D appuser && chown -R appuser:appuser /app
+USER appuser
+
 # 빌드 스테이지에서 생성한 JAR 파일만 복사
-COPY --from=builder /app/build/libs/*-SNAPSHOT.jar ./app.jar
+COPY --from=builder /app/build/libs/*.jar ./app.jar
+
+#   wget -qO- http://localhost:8080/actuator/health
+#     - wget: HTTP 요청을 보내는 CLI 도구 (alpine 이미지에 기본 포함)
+#     - -q: quiet 모드 (진행 상황 출력 안 함)
+#     - -O-: 응답 결과를 stdout으로 출력 (파일 저장 안 함)
+#     - /actuator/health: Spring Boot Actuator의 헬스체크 엔드포인트
+#       응답 예시: {"status":"UP"} (정상) / {"status":"DOWN"} (비정상)
+#   || exit 1
+#     - wget이 실패하면(HTTP 에러 또는 연결 불가) exit code 1을 반환
+#     - exit 0 = healthy, exit 1 = unhealthy
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
 
 ## 80 포트를 노출하도록 설정
 # EXPOSE 80
@@ -95,7 +111,6 @@ COPY --from=builder /app/build/libs/*-SNAPSHOT.jar ./app.jar
 #      ->  컨테이너 환경에서 메모리 제한에 맞게 JVM 옵션 조정
 ENV JVM_OPTS=""
 
-# Spring Boot 프로필을 dev로 설정 - SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE}에서 prod 주입
 ENV SPRING_PROFILES_ACTIVE=dev
 
 ## 애플리케이션 실행 명령어를 설정 - 이때 환경변수로 정의한 프로젝트 정보를 활용
