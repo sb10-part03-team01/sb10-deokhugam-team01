@@ -1,8 +1,18 @@
 package com.team01.deokhugam.global.exception.user;
 
-public class EmailAlreadyExistsException extends RuntimeException {
+import com.team01.deokhugam.global.exception.ErrorCode;
+import java.util.Map;
 
-  public EmailAlreadyExistsException(String message) {
-    super(message);
+public class EmailAlreadyExistsException extends UserException {
+
+  public EmailAlreadyExistsException(String email) {
+    super(
+        ErrorCode.EMAIL_ALREADY_EXISTS,
+        Map.of(
+            "email", email,
+            "operation", "REGISTER",
+            "rule", "이메일은 중복될 수 없음"
+        )
+    );
   }
 }

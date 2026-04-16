@@ -5,8 +5,20 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum  ErrorCode {
-  BOOK_NOT_FOUND(404, "BOOK_NOT_FOUND", "도서를 찾을 수 없습니다");
+public enum ErrorCode {
+  // Book
+  BOOK_NOT_FOUND(404, "BOOK_NOT_FOUND", "도서를 찾을 수 없습니다"),
+
+  // Comment
+
+  // notification
+
+  // ranking
+
+  // review
+
+  // user
+  EMAIL_ALREADY_EXISTS(409, "EMAIL_ALREADY_EXISTS", "이미 등록된 이메일입니다.");
 
   private final int status;
   private final String code;
