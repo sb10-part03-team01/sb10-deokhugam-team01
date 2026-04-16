@@ -1,7 +1,7 @@
 package com.team01.deokhugam.global.entity;
 
 import jakarta.persistence.*;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
@@ -18,5 +18,5 @@ public abstract class BaseEntity {
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
-  private Instant createdAt;
+  private OffsetDateTime createdAt;
 }
