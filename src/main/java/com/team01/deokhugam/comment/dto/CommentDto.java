@@ -1,6 +1,6 @@
 package com.team01.deokhugam.comment.dto;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record CommentDto(
@@ -9,5 +9,5 @@ public record CommentDto(
     UUID userId,
     String userNickname,
     String content,
-    Instant createdAt,
-    Instant updatedAt) {}
+    OffsetDateTime createdAt,
+    OffsetDateTime updatedAt) {}
