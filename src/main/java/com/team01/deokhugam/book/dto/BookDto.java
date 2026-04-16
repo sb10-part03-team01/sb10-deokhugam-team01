@@ -3,6 +3,7 @@ package com.team01.deokhugam.book.dto;
 import com.team01.deokhugam.book.Book;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +23,7 @@ public class BookDto {
   private String thumbnailUrl;
   private int reviewCount;
   private double rating;
-  private Instant createdAt;
-  private Instant updatedAt;
+  private OffsetDateTime createdAt;
+  private OffsetDateTime updatedAt;
 
 }
