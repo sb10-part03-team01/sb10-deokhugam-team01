@@ -20,7 +20,7 @@ public class SwaggerConfig {
         )
         .servers(List.of(
             // Swagger UI의 "Try it out" 요청이 전송될 기본 서버 주소
-            new Server().url("http://localhost:8080").description("로컬 서버")
+            new Server().url("/").description("현재 접속 서버")
         ));
   }
 }
