@@ -2,15 +2,19 @@ package com.team01.deokhugam.comment.repository;
 
 import com.team01.deokhugam.comment.dto.CommentSearchCondition;
 import com.team01.deokhugam.comment.entity.Comment;
-import com.team01.deokhugam.global.pagination.PageLimitPolicy;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+@Repository
 public class CommentRepositoryImpl implements CommentRepositoryCustom {
   // JPQL
   @PersistenceContext private EntityManager em;
@@ -18,11 +22,17 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
   @Override
   public List<Comment> findAllByCursor(CommentSearchCondition condition) {
     // 요청받은 limit 보정
-    int limit = PageLimitPolicy.normalize(condition.limit());
+    int limit = condition.normalizedLimit();
     OffsetDateTime after = condition.after();
 
     // 문자열 cursor UUID 변환
     UUID cursor = parseCursor(condition.cursor());
+
+    if ((after == null) != (cursor == null)) {
+      throw new DeokhugamException(
+          ErrorCode.INVALID_CURSOR_PAGINATION,
+          Map.of("cursor", condition.cursor(), "after", condition.after()));
+    }
 
     // ASC면 >  -> 다음 페이지는 더 큰 값 조회
     String comparisonOperator = condition.direction().isAscending() ? ">" : "<";
@@ -45,7 +55,6 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     // 커서 페이지네이션 after, cursor 둘다 있을떄만
     boolean hasCursorCondition = after != null && cursor != null;
 
-    //
     // createdAt 같다면 현재 커서위치만 id보다 큰 값
     if (hasCursorCondition) {
       jpql.append(
@@ -95,10 +104,15 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
         .getSingleResult();
   }
 
+  // 값이 있으면 UUID 변환
   private UUID parseCursor(String cursor) {
     if (!StringUtils.hasText(cursor)) {
       return null;
     }
-    return UUID.fromString(cursor);
+    try {
+      return UUID.fromString(cursor);
+    } catch (IllegalArgumentException e) {
+      throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("cursor", cursor));
+    }
   }
 }

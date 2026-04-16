@@ -9,7 +9,7 @@ public record CommentSearchCondition(
     UUID reviewId, Sort.Direction direction, String cursor, OffsetDateTime after, Integer limit) {
 
   public CommentSearchCondition {
-    direction = direction == null ? Sort.Direction.DESC : direction;
+    direction = (direction == null) ? Sort.Direction.DESC : direction;
   }
 
   public int normalizedLimit() {
