@@ -34,7 +34,7 @@ public class Book extends BaseRemovableEntity {
   @Column(name = "published_date" , nullable = false)
   private LocalDate publishedDate;
 
-  @Column(name = "isbn", unique = true, length = 20, nullable = false)
+  @Column(name = "isbn", unique = true, length = 20)
   private String isbn;
 
   @Column(name = "thumbnail_url", length = 255)
@@ -54,7 +54,10 @@ public class Book extends BaseRemovableEntity {
     this.publisher = publisher;
     this.publishedDate = publishedDate;
     this.isbn = isbn;
-    this.thumbnailUrl = thumbnailUrl;
     // reviewCount, rating, isDeleted는 생성 시에는 필요없이 default로 들어가야해서 없음
+  }
+
+  public void addThumbnail(String thumbnailUrl){
+    this.thumbnailUrl = thumbnailUrl;
   }
 }
