@@ -30,6 +30,7 @@ CREATE TABLE books
 
 
     is_deleted     BOOLEAN       NOT NULL DEFAULT FALSE,
+    deleted_at    TIMESTAMPTZ,
     created_at     TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
