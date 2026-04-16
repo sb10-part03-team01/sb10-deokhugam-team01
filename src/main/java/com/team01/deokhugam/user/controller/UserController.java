@@ -17,17 +17,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users")
 public class UserController {
 
-  private final UserService userservice;
+  private final UserService userService;
 
-  public UserController(UserService userservice) {
-    this.userservice = userservice;
+  public UserController(UserService userService) {
+    this.userService = userService;
   }
 
   /// POST - /api/users - 회원가입
   @PostMapping
   public ResponseEntity<UserDto> register(@Valid @RequestBody UserRegisterRequest request) {
     log.info("회원가입 요청: email={}", request.email());
-    UserDto result = userservice.register(request);
+    UserDto result = userService.register(request);
     log.info("회원가입 완료: userId={}", result.id());
     return ResponseEntity
         .status(HttpStatus.CREATED)
