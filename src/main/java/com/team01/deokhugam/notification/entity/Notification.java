@@ -1,9 +1,14 @@
 package com.team01.deokhugam.notification.entity;
 
 import com.team01.deokhugam.global.entity.BaseUpdatableEntity;
+import com.team01.deokhugam.review.entity.Review;
+import com.team01.deokhugam.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.Objects;
 import java.util.UUID;
@@ -23,11 +28,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notification extends BaseUpdatableEntity {
 
-  @Column(name = "review_id", nullable = false)
-  private UUID reviewId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "review_id", nullable = false)
+  private Review review;
 
-  @Column(name = "user_id", nullable = false)
-  private UUID userId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
   @Column(name = "content", length = 255, nullable = false)
   private String content;
@@ -36,8 +43,8 @@ public class Notification extends BaseUpdatableEntity {
   private boolean isRead = false;
 
   public Notification(UUID reviewId, UUID userId, String content) {
-    this.reviewId = Objects.requireNonNull(reviewId, "리뷰ID는 null 일 수 없습니다");
-    this.userId = Objects.requireNonNull(userId, "유저ID는 null 일 수 없습니다");
+    this.review = Objects.requireNonNull(review, "리뷰ID는 null 일 수 없습니다");
+    this.user = Objects.requireNonNull(user, "유저ID는 null 일 수 없습니다");
     if (content == null || content.isBlank()) {
       throw new IllegalArgumentException("알람 내용은 비어있을 수 없습니다");
     }
