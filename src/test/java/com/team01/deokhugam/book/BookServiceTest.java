@@ -72,7 +72,7 @@ class BookServiceTest {
         .reviewCount(book.getReviewCount())
         .rating(book.getRating())
         .createdAt(book.getCreatedAt())
-        .updateAt(book.getUpdatedAt())
+        .updatedAt(book.getUpdatedAt())
         .build();
   }
 
@@ -80,9 +80,10 @@ class BookServiceTest {
   @DisplayName("썸네일 없이 도서 등록 성공 - 정상적인 요청일 때")
   void createBook_without_thumbnail_Success() {
     // given
+    Book savedBook = book;
     given(bookRepository.existsByIsbn(anyString())).willReturn(false); // ISBN 중복 아님
-    given(bookRepository.save(any(Book.class))).willReturn(book); // 저장하면 book 반환
-    given(bookMapper.toDto(any(Book.class))).willReturn(bookDto); // 매퍼 호출 시 bookDto 반환
+    given(bookRepository.save(any(Book.class))).willReturn(savedBook); // 저장하면 book 반환
+    given(bookMapper.toDto(savedBook)).willReturn(bookDto); // 매퍼 호출 시 bookDto 반환
 
     // when
     BookDto result = bookService.createBook(request, null);
@@ -99,7 +100,7 @@ class BookServiceTest {
     // 메서드들이 한번씩 호출되었는지 검사
     verify(bookRepository).existsByIsbn("1234567890");
     verify(bookRepository).save(any(Book.class));
-    verify(bookMapper).toDto(any(Book.class));
+    verify(bookMapper).toDto(savedBook);
   }
 
   @Test
