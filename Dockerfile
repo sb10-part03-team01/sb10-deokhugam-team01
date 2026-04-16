@@ -96,10 +96,11 @@ COPY --from=builder /app/build/libs/*.jar ./app.jar
 #   || exit 1
 #     - wget이 실패하면(HTTP 에러 또는 연결 불가) exit code 1을 반환
 #     - exit 0 = healthy, exit 1 = unhealthy
+# TODO: Linux에서 1024 미만 포트는 root만 바인딩할 수 있다 -> 배포할 때 참고할 것
+# FIXME: 배포할 때 포트 번호에 따라서 8080 하드코딩 값 수정 필요
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD wget -qO- http://localhost:8080/actuator/health || exit 1
 
-## 80 포트를 노출하도록 설정
 # EXPOSE 80
 
 ## JVM 옵션을 환경 변수로 설정 - JVM_OPTS: 기본값은 빈 문자열로 정의
