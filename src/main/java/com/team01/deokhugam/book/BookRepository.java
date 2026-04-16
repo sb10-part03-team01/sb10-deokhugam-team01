@@ -1,9 +1,9 @@
 package com.team01.deokhugam.book;
 
-import java.awt.print.Pageable;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BookRepository extends JpaRepository<Book, UUID> {
