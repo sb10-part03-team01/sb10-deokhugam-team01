@@ -1,4 +1,4 @@
-package com.team01.deokhugam.notification;
+package com.team01.deokhugam.notification.entity;
 
 import com.team01.deokhugam.global.entity.BaseUpdatableEntity;
 import jakarta.persistence.Column;
@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class NotificationEntity extends BaseUpdatableEntity {
+public class Notification extends BaseUpdatableEntity {
 
   @Column(name = "review_id", nullable = false)
   private UUID reviewId;
@@ -35,7 +35,7 @@ public class NotificationEntity extends BaseUpdatableEntity {
   @Column(name = "is_read", nullable = false)
   private boolean isRead = false;
 
-  public NotificationEntity(UUID reviewId, UUID userId, String content) {
+  public Notification(UUID reviewId, UUID userId, String content) {
     this.reviewId = Objects.requireNonNull(reviewId, "리뷰ID는 null 일 수 없습니다");
     this.userId = Objects.requireNonNull(userId, "유저ID는 null 일 수 없습니다");
     if (content == null || content.isBlank()) {
