@@ -13,7 +13,6 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Where;
 
 @Getter
 @Entity
@@ -24,7 +23,6 @@ import org.hibernate.annotations.Where;
       @Index(name = "idx_comments_user_id", columnList = "user_id")
     })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Where(clause = "is_deleted = false")
 public class Comment extends BaseRemovableEntity {
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "review_id", nullable = false)
