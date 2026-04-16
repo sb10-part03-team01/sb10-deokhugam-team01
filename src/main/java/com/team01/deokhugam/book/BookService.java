@@ -42,7 +42,7 @@ public class BookService {
     // DataIntegrityViolationException가 발생하기 때문에 해당 예외 발생시 커스텀 예외로 응답하도록 함
     // 이를 TOCTOU (Time-Of-Check-Time-Of-Use) 문제라고 함
     try {
-      Book savedBook = bookRepository.save(book);
+      Book savedBook = bookRepository.saveAndFlush(book);
       return bookMapper.toDto(savedBook);
     }
     catch (DataIntegrityViolationException ex) {
