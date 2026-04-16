@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,10 +29,16 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     // 문자열 cursor UUID 변환
     UUID cursor = parseCursor(condition.cursor());
 
+    // after나 cursor 둘이 상태다르면 바로 예외
     if ((after == null) != (cursor == null)) {
-      throw new DeokhugamException(
-          ErrorCode.INVALID_CURSOR_PAGINATION,
-          Map.of("cursor", condition.cursor(), "after", condition.after()));
+      Map<String, Object> details = new HashMap<>();
+      if (condition.cursor() != null) {
+        details.put("cursor", condition.cursor());
+      }
+      if (condition.after() != null) {
+        details.put("after", condition.after());
+      }
+      throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, details);
     }
 
     // ASC면 >  -> 다음 페이지는 더 큰 값 조회
@@ -53,7 +60,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
         """);
 
     // 커서 페이지네이션 after, cursor 둘다 있을떄만
-    boolean hasCursorCondition = after != null && cursor != null;
+    boolean hasCursorCondition = after != null;
 
     // createdAt 같다면 현재 커서위치만 id보다 큰 값
     if (hasCursorCondition) {
@@ -89,7 +96,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     return query.getResultList();
   }
 
-  // idDeleted = false는 카운트 제외
+  // 삭제 x인 댓글만 카운트
   @Override
   public long countCommentsByReviewId(UUID reviewId) {
     return em.createQuery(
