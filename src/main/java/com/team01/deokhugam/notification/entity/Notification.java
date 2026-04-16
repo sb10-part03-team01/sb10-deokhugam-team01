@@ -42,7 +42,7 @@ public class Notification extends BaseUpdatableEntity {
   @Column(name = "is_read", nullable = false)
   private boolean isRead = false;
 
-  public Notification(UUID reviewId, UUID userId, String content) {
+  public Notification(Review review, User user, String content) {
     this.review = Objects.requireNonNull(review, "리뷰ID는 null 일 수 없습니다");
     this.user = Objects.requireNonNull(user, "유저ID는 null 일 수 없습니다");
     if (content == null || content.isBlank()) {
