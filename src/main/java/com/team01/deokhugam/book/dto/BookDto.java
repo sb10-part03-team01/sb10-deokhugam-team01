@@ -23,6 +23,6 @@ public class BookDto {
   private int reviewCount;
   private double rating;
   private Instant createdAt;
-  private Instant updateAt;
+  private Instant updatedAt;
 
 }
