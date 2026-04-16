@@ -24,10 +24,11 @@ public class User extends BaseUpdatableEntity {
   @Column(name = "email", nullable = false, unique = true)
   private String email;
 
-  @Column(name = "nickname", nullable = false)
+  @Column(name = "nickname", nullable = false, length = 20)
   private String nickname;
 
-  @Column(name = "password", nullable = false)
+  // 암호화 저장 고려 길이 100 설정
+  @Column(name = "password", nullable = false, length = 100)
   private String password;
 
   // deletedAt이 null이면 활성, 값이 있으면 삭제됨 -> 이걸로 isDeleted 역할 대신 가능
