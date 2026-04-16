@@ -1,8 +1,10 @@
 package com.team01.deokhugam.book;
 
+import com.team01.deokhugam.global.entity.BaseRemovableEntity;
 import com.team01.deokhugam.global.entity.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AccessLevel;
@@ -15,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "books")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Book extends BaseUpdatableEntity {
+public class Book extends BaseRemovableEntity {
   @Column(name = "title", length = 255, nullable = false)
   private String title;
 
@@ -23,6 +25,7 @@ public class Book extends BaseUpdatableEntity {
   private String author;
 
   @Column(name = "description", nullable = false)
+  @Lob
   private String description;
 
   @Column(name = "publisher", length = 100, nullable = false)
@@ -43,9 +46,6 @@ public class Book extends BaseUpdatableEntity {
   @Column(name = "rating", nullable = false)
   private double rating = 0.0;
 
-  @Column(name = "is_deleted", nullable = false)
-  private boolean isDeleted = false;
-
   @Builder
   public Book(String title, String author, String description, String publisher, LocalDate publishedDate, String isbn, String thumbnailUrl) {
     this.title = title;
@@ -56,12 +56,5 @@ public class Book extends BaseUpdatableEntity {
     this.isbn = isbn;
     this.thumbnailUrl = thumbnailUrl;
     // reviewCount, rating, isDeleted는 생성 시에는 필요없이 default로 들어가야해서 없음
-  }
-
-  public void softDelete(){
-    if(this.isDeleted){
-      return;
-    }
-    this.isDeleted = true;
   }
 }
