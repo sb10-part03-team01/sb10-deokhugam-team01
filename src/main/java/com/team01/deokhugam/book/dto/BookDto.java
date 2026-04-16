@@ -10,6 +10,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@Builder
 public class BookDto {
   private UUID id;
   private String title;
