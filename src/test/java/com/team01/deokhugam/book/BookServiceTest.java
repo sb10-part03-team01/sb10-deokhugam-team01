@@ -2,7 +2,6 @@ package com.team01.deokhugam.book;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -11,8 +10,8 @@ import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
+import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
