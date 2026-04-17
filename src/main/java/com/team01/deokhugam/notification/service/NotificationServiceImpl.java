@@ -8,6 +8,7 @@ import com.team01.deokhugam.notification.entity.Notification;
 import com.team01.deokhugam.notification.repository.NotificationRepository;
 import com.team01.deokhugam.user.entity.User;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -71,8 +72,9 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
+  @Transactional
   public void cleanupReadNotifications() {
-    OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusWeeks(1);
+    OffsetDateTime oneWeekAgo = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(1);
     log.info("[DELETE_NOTIFICATION] 1주일 경과 알림 삭제 시작 기준시간={}", oneWeekAgo);
 
     notificationRepository.deleteAllByIsReadTrueAndUpdatedAtBefore(oneWeekAgo);
