@@ -4,7 +4,7 @@ public class PiiMasker {
 
   private PiiMasker() {
   }
-  
+
   public static String maskEmail(String email) {
     if (email == null) {
       return null;
@@ -15,8 +15,8 @@ public class PiiMasker {
     }
     String local = email.substring(0, at);
     String domain = email.substring(at);
-    if (local.length() <= 2) {
-      return local.charAt(0) + "***" + domain;
+    if (local.length() == 1) {
+      return local.charAt(0) + "****" + domain;
     }
     return local.substring(0, 2) + "***" + domain;
   }

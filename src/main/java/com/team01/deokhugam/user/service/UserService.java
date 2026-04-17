@@ -27,7 +27,7 @@ public class UserService {
   public UserDto register(UserRegisterRequest request) {
     log.debug("회원가입 처리 시작: email={}", PiiMasker.maskEmail(request.email()));
     if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
-      throw new EmailAlreadyExistsException(request.email());
+      throw new EmailAlreadyExistsException();
     }
     String encodedPassword = passwordEncoder.encode(request.password());
     User user = new User(request.email(), request.nickname(), encodedPassword);
