@@ -82,7 +82,7 @@ class BookServiceTest {
     // given
     Book savedBook = book;
     given(bookRepository.existsByIsbn(anyString())).willReturn(false); // ISBN 중복 아님
-    given(bookRepository.save(any(Book.class))).willReturn(savedBook); // 저장하면 book 반환
+    given(bookRepository.saveAndFlush(any(Book.class))).willReturn(savedBook); // 저장하면 book 반환
     given(bookMapper.toDto(savedBook)).willReturn(bookDto); // 매퍼 호출 시 bookDto 반환
 
     // when
@@ -99,7 +99,7 @@ class BookServiceTest {
 
     // 메서드들이 한번씩 호출되었는지 검사
     verify(bookRepository).existsByIsbn("1234567890");
-    verify(bookRepository).save(any(Book.class));
+    verify(bookRepository).saveAndFlush(any(Book.class));
     verify(bookMapper).toDto(savedBook);
   }
 
@@ -114,7 +114,7 @@ class BookServiceTest {
         .isInstanceOf(DuplicatedIsbnException.class);
 
     // 메서드들이 호출되지 않는지 확인
-    verify(bookRepository, never()).save(any(Book.class));
+    verify(bookRepository, never()).saveAndFlush(any(Book.class));
     verify(bookMapper, never()).toDto(any(Book.class));
   }
 }
