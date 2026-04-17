@@ -7,6 +7,7 @@ import com.team01.deokhugam.user.dto.UserRegisterRequest;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,9 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
   private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
-  public UserService(UserRepository userRepository) {
+  public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
+    this.passwordEncoder = passwordEncoder;
   }
 
   @Transactional
@@ -26,7 +29,8 @@ public class UserService {
     if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
       throw new EmailAlreadyExistsException(request.email());
     }
-    User user = new User(request.email(), request.nickname(), request.password());
+    String encodedPassword = passwordEncoder.encode(request.password());
+    User user = new User(request.email(), request.nickname(), encodedPassword);
     User savedUser = userRepository.save(user);
     log.debug("회원가입 처리 완료: userId={}, email={}",
         savedUser.getId(), PiiMasker.maskEmail(savedUser.getEmail()));
