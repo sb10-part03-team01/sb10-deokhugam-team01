@@ -94,7 +94,7 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
       case "title" -> new OrderSpecifier<>(order, book.title);
       case "rating" -> new OrderSpecifier<>(order, book.rating);
       case "reviewCount" -> new OrderSpecifier<>(order, book.reviewCount);
-      case "publishDate" -> new OrderSpecifier<>(order, book.publishedDate);
+      case "publishedDate" -> new OrderSpecifier<>(order, book.publishedDate);
       default -> new OrderSpecifier<>(order, book.createdAt);
     };
   }
