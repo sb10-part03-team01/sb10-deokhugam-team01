@@ -10,6 +10,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -42,6 +43,9 @@ public class Notification extends BaseUpdatableEntity {
   @Column(name = "is_read", nullable = false)
   private boolean isRead = false;
 
+  @Column(name = "confirmed_at")
+  private LocalDateTime confirmedAt; // 스키마 파일에 없는 필드 추가
+
   public Notification(Review review, User user, String content) {
     this.review = Objects.requireNonNull(review, "리뷰ID는 null 일 수 없습니다");
     this.user = Objects.requireNonNull(user, "유저ID는 null 일 수 없습니다");
@@ -57,6 +61,7 @@ public class Notification extends BaseUpdatableEntity {
 
   public void markAsRead() {
     isRead = true;
+    this.confirmedAt = LocalDateTime.now();
   }
 
 
