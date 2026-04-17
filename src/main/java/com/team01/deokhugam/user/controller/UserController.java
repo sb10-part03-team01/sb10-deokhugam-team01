@@ -26,7 +26,7 @@ public class UserController {
   /// POST - /api/users - 회원가입
   @PostMapping
   public ResponseEntity<UserDto> register(@Valid @RequestBody UserRegisterRequest request) {
-    log.info("회원가입 요청: email={}", request.email());
+    log.info("회원가입 요청 수신");
     UserDto result = userService.register(request);
     log.info("회원가입 완료: userId={}", result.id());
     return ResponseEntity
