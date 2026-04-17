@@ -52,6 +52,8 @@ public class CommentServiceImpl implements CommentService {
     Comment comment = new Comment(review, user, content);
     Comment savedComment = commentRepository.save(comment);
 
+    review.increaseCommentCount();
+
     return CommentDto.from(savedComment);
   }
 
@@ -65,7 +67,7 @@ public class CommentServiceImpl implements CommentService {
                 () ->
                     new DeokhugamException(
                         ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId)));
-    // fetch join 필요
+
     return CommentDto.from(comment);
   }
 
@@ -117,7 +119,7 @@ public class CommentServiceImpl implements CommentService {
   public void deleteComment(UUID userId, UUID commentId) {
     Comment comment =
         commentRepository
-            .findByIdAndIsDeletedFalse(commentId)
+            .findDetailById(commentId)
             .orElseThrow(
                 () ->
                     new DeokhugamException(
@@ -126,6 +128,7 @@ public class CommentServiceImpl implements CommentService {
     validateOwner(userId, comment);
     // 논리 삭제
     comment.softDelete();
+    comment.getReview().decreaseCommentCount();
   }
 
   // 댓글 단 id와 같은지 검사하는 메서드

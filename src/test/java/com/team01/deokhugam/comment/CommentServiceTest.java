@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
+import com.team01.deokhugam.book.Book;
 import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
@@ -19,6 +20,7 @@ import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -50,6 +52,7 @@ public class CommentServiceTest {
   private User otherUser;
   private Review review;
   private Comment comment;
+  private Book book;
 
   @BeforeEach
   void setUp() throws Exception {
@@ -61,7 +64,8 @@ public class CommentServiceTest {
 
     user = new User("jongin@test.com", "jongin", "1234");
     otherUser = new User("torie@test.com", "torie", "1234");
-    review = new Review(bookId, userId, "hello", 4.3);
+    book = new Book("Hello", "123", "123", "123", LocalDate.now(), "123", "123");
+    review = new Review(book, user, "hello", 4.3);
     comment = new Comment(review, user, "기존 댓글");
 
     setField(user, "id", userId);
@@ -79,16 +83,21 @@ public class CommentServiceTest {
   @Test
   @DisplayName("댓글 생성 테스트")
   void createComment() {
+    // given
     CommentCreateRequest commentCreateRequest = new CommentCreateRequest(reviewId, "댓글 내용");
+    int beforeCount = review.getCommentCount();
 
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
     given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
     given(commentRepository.save(any(Comment.class)))
         .willAnswer(invocation -> invocation.getArgument(0));
 
+    // when
     CommentDto result = commentService.createComment(userId, commentCreateRequest);
 
+    // when
     assertThat(result.content()).isEqualTo("댓글 내용");
+    assertThat(review.getCommentCount()).isEqualTo(beforeCount + 1);
   }
 
   @Test
@@ -210,7 +219,10 @@ public class CommentServiceTest {
   @DisplayName("댓글 삭제")
   void delete_comment() {
     // given
-    given(commentRepository.findByIdAndIsDeletedFalse(commentId)).willReturn(Optional.of(comment));
+    review.increaseCommentCount();
+    int beforeCount = review.getCommentCount();
+
+    given(commentRepository.findDetailById(commentId)).willReturn(Optional.of(comment));
 
     // when
     commentService.deleteComment(userId, commentId);
@@ -218,13 +230,14 @@ public class CommentServiceTest {
     // then
     assertThat(comment.isDeleted()).isTrue();
     assertThat(comment.getDeletedAt()).isNotNull();
+    assertThat(review.getCommentCount()).isEqualTo(beforeCount - 1);
   }
 
   @Test
   @DisplayName("댓글 삭제시 작성자가 아니면 예외 발생")
   void delete_not_author_exception() {
     // given
-    given(commentRepository.findByIdAndIsDeletedFalse(commentId)).willReturn(Optional.of(comment));
+    given(commentRepository.findDetailById(commentId)).willReturn(Optional.of(comment));
 
     // when // then
     assertThatThrownBy(() -> commentService.deleteComment(otherUserId, commentId))
