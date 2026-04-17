@@ -12,7 +12,8 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
 
   Page<Notification> findAllByUserId(UUID userId, Pageable pageable);
   List<Notification> findAllByUserIdAndIsReadFalse(UUID userId);
-
   void deleteAllByIsReadTrueAndUpdatedAtBefore(OffsetDateTime cutoff);
+
+
 
 }
