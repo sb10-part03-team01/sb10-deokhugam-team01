@@ -3,7 +3,6 @@ package com.team01.deokhugam.user.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -24,6 +23,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
+  private static final String TEST_EMAIL = "test@email.com";
+  private static final String TEST_NICKNAME = "테스트닉네임";
+  private static final String TEST_PASSWORD = "Password1!";
+
   // 가짜 객체 생성
   @Mock
   private UserRepository userRepository;
@@ -39,9 +42,9 @@ class UserServiceTest {
   @BeforeEach
   void setUp() {
     userRegisterRequest = new UserRegisterRequest(
-        "test@email.com",
-        "테스트닉네임",
-        "Password1!"
+        TEST_EMAIL,
+        TEST_NICKNAME,
+        TEST_PASSWORD
     );
 
     user = new User(
@@ -55,7 +58,7 @@ class UserServiceTest {
   @DisplayName("회원가입 성공 - 중복되지 않은 이메일일 때")
   void register_Success() {
     // given
-    given(userRepository.existsByEmailAndDeletedAtIsNull(anyString())).willReturn(false);
+    given(userRepository.existsByEmailAndDeletedAtIsNull(TEST_EMAIL)).willReturn(false);
     given(userRepository.save(any(User.class))).willReturn(user);
 
     // when
@@ -63,10 +66,10 @@ class UserServiceTest {
 
     // then
     assertThat(result).isNotNull();
-    assertThat(result.email()).isEqualTo("test@email.com");
-    assertThat(result.nickname()).isEqualTo("테스트닉네임");
+    assertThat(result.email()).isEqualTo(TEST_EMAIL);
+    assertThat(result.nickname()).isEqualTo(TEST_NICKNAME);
 
-    verify(userRepository).existsByEmailAndDeletedAtIsNull("test@email.com");
+    verify(userRepository).existsByEmailAndDeletedAtIsNull(TEST_EMAIL);
     verify(userRepository).save(any(User.class));
   }
 
@@ -74,7 +77,7 @@ class UserServiceTest {
   @DisplayName("회원가입 실패 - 이미 존재하는 이메일일 때")
   void register_Fail_DuplicateEmail() {
     // given
-    given(userRepository.existsByEmailAndDeletedAtIsNull(anyString())).willReturn(true);
+    given(userRepository.existsByEmailAndDeletedAtIsNull(TEST_EMAIL)).willReturn(true);
 
     // when & then
     assertThatThrownBy(() -> userService.register(userRegisterRequest))
