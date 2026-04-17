@@ -9,5 +9,5 @@ public interface NotificationService {
   void create(NotificationCreateRequest request);
   void confirm(Notification notification);
   void confirmAll(User user);
-  // void cleanupReadNotifications();
+  void cleanupReadNotifications();
 }

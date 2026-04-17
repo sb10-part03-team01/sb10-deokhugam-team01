@@ -3,20 +3,18 @@ package com.team01.deokhugam.notification.service;
 import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
 import com.team01.deokhugam.notification.entity.Notification;
 import com.team01.deokhugam.notification.repository.NotificationRepository;
-import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.user.entity.User;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationsServiceImpl implements NotificationService {
+public class NotificationServiceImpl implements NotificationService {
 
   private final NotificationRepository notificationRepository;
 
@@ -32,7 +30,8 @@ public class NotificationsServiceImpl implements NotificationService {
       return;
     }
 
-    log.info("[CREATE_NOTIFICATION] 알림 생성 시작 reviewId={}, reviewOwnerId={}", request.review().getId(),
+    log.info("[CREATE_NOTIFICATION] 알림 생성 시작 reviewId={}, reviewOwnerId={}",
+        request.review().getId(),
         reviewOwner.getId());
     Notification notification = new Notification(request.review(), reviewOwner, request.content());
     notificationRepository.save(notification);
@@ -58,12 +57,16 @@ public class NotificationsServiceImpl implements NotificationService {
   @Override
   @Transactional
   public void confirmAll(User user) {
-    log.info("[UPDATE_NOTIFICATION] 전체 알림 읽음 처리 시작 userId={}",user.getId());
-    List<Notification> unReadList = notificationRepository.findAllByUserIdAndIsReadFalse(user.getId());
+    log.info("[UPDATE_NOTIFICATION] 전체 알림 읽음 처리 시작 userId={}", user.getId());
+    List<Notification> unReadList = notificationRepository.findAllByUserIdAndIsReadFalse(
+        user.getId());
 
     unReadList.forEach(Notification::markAsRead);
-    log.info("[UPDATE_NOTIFICATION] 전체 알림 읽음 처리 완료 userId={}",user.getId());
+    log.info("[UPDATE_NOTIFICATION] 전체 알림 읽음 처리 완료 userId={}", user.getId());
   }
 
+  @Override
+  public void cleanupReadNotifications() {
 
+  }
 }
