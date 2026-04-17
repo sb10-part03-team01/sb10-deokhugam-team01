@@ -11,9 +11,9 @@ public record ReviewDto(
     UUID userId,
     String userNickname,
     String content,
-    Double rating,
-    long likeCount,
-    long commentCount,
+    double rating,
+    int likeCount,
+    int commentCount,
     boolean likedByMe,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt
