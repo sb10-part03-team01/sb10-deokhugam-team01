@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Sort;
 
 public interface CommentService {
-  CommentDto createCommennt(UUID userId, CommentCreateRequest commentCreateRequest);
+  CommentDto createComment(UUID userId, CommentCreateRequest commentCreateRequest);
 
   CommentDto getComment(UUID commentId);
 

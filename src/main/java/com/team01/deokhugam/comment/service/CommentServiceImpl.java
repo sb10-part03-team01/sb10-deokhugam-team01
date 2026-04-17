@@ -54,17 +54,33 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public CommentDto getComment(UUID commentId) {}
+  public CommentDto getComment(UUID commentId) {
+    Comment comment =
+        commentRepository
+            .findByIdAndIsDeletedFalse(commentId)
+            .orElseThrow(
+                () ->
+                    new DeokhugamException(
+                        ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId)));
+
+    return CommentDto.from(comment);
+  }
 
   @Override
   public CursorPageResponse<CommentDto> getComments(
-      UUID reviewId, CursorPageRequest pageRequest, Sort.Direction direction) {}
+      UUID reviewId, CursorPageRequest pageRequest, Sort.Direction direction) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
 
   @Override
   @Transactional
-  public CommentDto updateComment(UUID userId, UUID commentId, CommentUpdateRequest request) {}
+  public CommentDto updateComment(UUID userId, UUID commentId, CommentUpdateRequest request) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
 
   @Override
   @Transactional
-  public void deleteComment(UUID userId, UUID commentId) {}
+  public void deleteComment(UUID userId, UUID commentId) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
 }
