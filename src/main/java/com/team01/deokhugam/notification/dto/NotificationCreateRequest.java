@@ -5,7 +5,7 @@ import com.team01.deokhugam.user.entity.User;
 
 public record NotificationCreateRequest(
     Review review,
-    User user,
+    User actor,
     String content
 ) {
 

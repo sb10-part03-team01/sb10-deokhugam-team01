@@ -27,8 +27,8 @@ public class NotificationsServiceImpl implements NotificationService {
     log.info("[CREATE_NOTIFICATION] 리뷰 유저 확인 : reviewId={}", request.review().getId());
     User reviewOwner = request.review().getUser();
 
-    if (Objects.equals(reviewOwner.getId(), request.user().getId())) {
-      log.info("[CREATE_NOTIFICATION] 리뷰 유저, 알림 받을 유저 동일 userId={}", request.user().getId());
+    if (Objects.equals(reviewOwner.getId(), request.actor().getId())) {
+      log.info("[CREATE_NOTIFICATION] 리뷰 작성자와 행위자가 동일 userId={}", request.actor().getId());
       return;
     }
 
