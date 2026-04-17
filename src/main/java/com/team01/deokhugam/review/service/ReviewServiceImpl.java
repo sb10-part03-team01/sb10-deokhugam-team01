@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class ReviewServiceImpl implements ReviewService {
 
   private final ReviewRepository reviewRepository;
@@ -25,6 +25,7 @@ public class ReviewServiceImpl implements ReviewService {
   private final ReviewMapper reviewMapper;
 
   @Override
+  @Transactional
   public ReviewDto createReview(ReviewCreateRequest request) {
     //도서 확인
     Book book = bookRepository.findById(request.bookId())
@@ -35,7 +36,8 @@ public class ReviewServiceImpl implements ReviewService {
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
     // 리뷰 중복확인
-    if (reviewRepository.existsByBook_IdAndUser_Id(request.bookId(), request.userId())) {
+    if (reviewRepository.existsByBook_IdAndUser_IdAndIsDeletedFalse(request.bookId(),
+        request.userId())) {
       throw new IllegalArgumentException("해당 도서에 작성한 리뷰가 있습니다.");
     }
 

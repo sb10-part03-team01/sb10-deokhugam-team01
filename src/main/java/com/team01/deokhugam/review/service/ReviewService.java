@@ -5,6 +5,6 @@ import com.team01.deokhugam.review.dto.ReviewDto;
 
 public interface ReviewService {
 
-  ReviewDto createReview(ReviewCreateRequest review);
+  ReviewDto createReview(ReviewCreateRequest request);
 
 }

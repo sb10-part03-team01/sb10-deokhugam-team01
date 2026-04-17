@@ -18,8 +18,8 @@ public interface ReviewMapper {
   @Mapping(target = "userId", source = "user.id")
   @Mapping(target = "userNickname", source = "user.nickname")
   @Mapping(target = "likedByMe", ignore = true)
-  @Mapping(target = "createdAt", expression = "java(OffsetDateTime.ofInstant(review.getCreatedAt(), ZoneOffset.UTC))")
-  @Mapping(target = "updatedAt", expression = "java(OffsetDateTime.ofInstant(review.getUpdatedAt(), ZoneOffset.UTC))")
+  @Mapping(target = "createdAt", source = "createdAt")
+  @Mapping(target = "updatedAt", source = "updatedAt")
   ReviewDto toDto(Review review);
 
   // 리스트 변환

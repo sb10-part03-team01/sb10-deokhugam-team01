@@ -10,25 +10,16 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Where;
 
 @Getter
 @Entity
 @Table(
     name = "reviews",
-    // 같은 사용자가 같은 도서에 리뷰 2개 못 쓰게 막는 제약
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_review_book_user",
-            columnNames = {"book_id", "user_id"}
-        )
-    },
     indexes = {
         // 조회 성능용 인덱스
         @Index(name = "idx_reviews_book_id", columnList = "book_id"),
@@ -39,7 +30,6 @@ import org.hibernate.annotations.Where;
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 
-@Where(clause = "is_deleted = false")
 public class Review extends BaseRemovableEntity {
 
   // 리뷰가 달린 도서
