@@ -8,11 +8,7 @@ public class EmailAlreadyExistsException extends UserException {
   public EmailAlreadyExistsException(String email) {
     super(
         ErrorCode.EMAIL_ALREADY_EXISTS,
-        Map.of(
-            "email", email,
-            "operation", "REGISTER",
-            "rule", "이메일은 중복될 수 없음"
-        )
+        Map.of("operation", "REGISTER")
     );
   }
 }

@@ -1,6 +1,7 @@
 package com.team01.deokhugam.user.service;
 
 import com.team01.deokhugam.global.exception.user.EmailAlreadyExistsException;
+import com.team01.deokhugam.global.util.PiiMasker;
 import com.team01.deokhugam.user.dto.UserDto;
 import com.team01.deokhugam.user.dto.UserRegisterRequest;
 import com.team01.deokhugam.user.entity.User;
@@ -21,13 +22,14 @@ public class UserService {
 
   @Transactional
   public UserDto register(UserRegisterRequest request) {
-    log.debug("회원가입 처리 시작: email={}", request.email());
+    log.debug("회원가입 처리 시작: email={}", PiiMasker.maskEmail(request.email()));
     if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
       throw new EmailAlreadyExistsException(request.email());
     }
     User user = new User(request.email(), request.nickname(), request.password());
     User savedUser = userRepository.save(user);
-    log.debug("회원가입 처리 완료: userId={}, email={}", savedUser.getId(), savedUser.getEmail());
+    log.debug("회원가입 처리 완료: userId={}, email={}",
+        savedUser.getId(), PiiMasker.maskEmail(savedUser.getEmail()));
     return UserDto.from(savedUser);
   }
 }
