@@ -10,6 +10,7 @@ import com.team01.deokhugam.review.mapper.ReviewMapper;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,4 +53,33 @@ public class ReviewServiceImpl implements ReviewService {
 
     return reviewMapper.toDto(savedReview);
   }
+
+  @Override
+  @Transactional
+  public ReviewDto getReview(UUID reviewId, UUID requestUserId) {
+    // 리뷰 검증
+    Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+        .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+
+    ReviewDto reviewDto = reviewMapper.toDto(review);
+    /*TODO 리뷰 좋아요 기능 아직 구현 전 이라 구현 후  likedByMe 결과값 반영
+       likedByMe에 requestUserId 사용
+     */
+    return new ReviewDto(
+        reviewDto.id(),
+        reviewDto.bookId(),
+        reviewDto.bookTitle(),
+        reviewDto.bookThumbnailUrl(),
+        reviewDto.userId(),
+        reviewDto.userNickname(),
+        reviewDto.content(),
+        reviewDto.rating(),
+        reviewDto.likeCount(),
+        reviewDto.commentCount(),
+        false,
+        reviewDto.createdAt(),
+        reviewDto.updatedAt()
+    );
+  }
+
 }
