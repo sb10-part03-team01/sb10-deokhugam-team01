@@ -55,31 +55,15 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
-  @Transactional
   public ReviewDto getReview(UUID reviewId, UUID requestUserId) {
     // 리뷰 검증
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
 
-    ReviewDto reviewDto = reviewMapper.toDto(review);
     /*TODO 리뷰 좋아요 기능 아직 구현 전 이라 구현 후  likedByMe 결과값 반영
        likedByMe에 requestUserId 사용
      */
-    return new ReviewDto(
-        reviewDto.id(),
-        reviewDto.bookId(),
-        reviewDto.bookTitle(),
-        reviewDto.bookThumbnailUrl(),
-        reviewDto.userId(),
-        reviewDto.userNickname(),
-        reviewDto.content(),
-        reviewDto.rating(),
-        reviewDto.likeCount(),
-        reviewDto.commentCount(),
-        false,
-        reviewDto.createdAt(),
-        reviewDto.updatedAt()
-    );
+    return reviewMapper.toDto(review);
   }
 
 }
