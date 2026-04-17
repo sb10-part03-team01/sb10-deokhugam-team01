@@ -95,7 +95,7 @@ public class CommentServiceTest {
     // when
     CommentDto result = commentService.createComment(userId, commentCreateRequest);
 
-    // when
+    // then
     assertThat(result.content()).isEqualTo("댓글 내용");
     assertThat(review.getCommentCount()).isEqualTo(beforeCount + 1);
   }
@@ -133,8 +133,8 @@ public class CommentServiceTest {
         .isEqualTo(ErrorCode.USER_NOT_FOUND);
   }
 
-  // 단건 조회 테스트
   @Test
+  @DisplayName("단건 조회 테스트")
   void get_comment_by_id() {
     // given
     given(commentRepository.findDetailById(commentId)).willReturn(Optional.of(comment));

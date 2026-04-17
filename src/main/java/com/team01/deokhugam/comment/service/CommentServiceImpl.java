@@ -131,7 +131,7 @@ public class CommentServiceImpl implements CommentService {
     comment.getReview().decreaseCommentCount();
   }
 
-  // 댓글 단 id와 같은지 검사하는 메서드
+  // 요청자가 댓글 작성자인지 검증
   private void validateOwner(UUID userId, Comment comment) {
     if (!comment.getUser().getId().equals(userId)) {
       throw new DeokhugamException(
