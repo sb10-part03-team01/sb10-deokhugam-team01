@@ -26,6 +26,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     // Spring Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // Security (PasswordEncoder만 사용, 자동 보안 필터체인은 쓰지 않음)
+    implementation 'org.springframework.security:spring-security-crypto'
 
     // Documentation - Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'

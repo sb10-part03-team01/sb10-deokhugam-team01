@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public record NotificationDto(
     UUID id,
+    UUID userId,
     UUID reviewId,
     String reviewContent,
     String message,
