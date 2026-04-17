@@ -12,7 +12,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -60,7 +59,10 @@ public class Notification extends BaseUpdatableEntity {
   }
 
   public void markAsRead() {
-    isRead = true;
+    if (this.isRead) {
+      return;
+    }
+    this.isRead = true;
     this.confirmedAt = LocalDateTime.now();
   }
 

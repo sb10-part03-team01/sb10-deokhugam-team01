@@ -1,7 +1,6 @@
 package com.team01.deokhugam.notification.repository;
 
 import com.team01.deokhugam.notification.entity.Notification;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
