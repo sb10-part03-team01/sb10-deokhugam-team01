@@ -153,4 +153,42 @@ class UserServiceTest {
           .isInstanceOf(UserNotFoundException.class);
     }
   }
+
+  @Nested
+  @DisplayName("deleteUser - 사용자 논리 삭제")
+  class DeleteUser {
+
+    @Test
+    @DisplayName("사용자 논리 삭제 성공")
+    void deleteUser_Success() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(savedUser));
+
+      // when
+      userService.deleteUser(userId);
+
+      // then
+      assertThat(savedUser.isDeleted()).isTrue();
+      assertThat(savedUser.getDeletedAt()).isNotNull();
+      // save()를 명시적으로 호출하지 않았는지 검증 (더티 체킹 검증용)
+      verify(userRepository, never()).save(any(User.class));
+      // delete()를 호출하지 않았는지 검증 (논리 삭제이므로 물리 삭제가 발생하면 안됨)
+      verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    @DisplayName("사용자 논리 삭제 실패 - 존재하지 않는 사용자")
+    void deleteUser_Fail_UserNotFound() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> userService.deleteUser(userId))
+          .isInstanceOf(UserNotFoundException.class);
+
+      verify(userRepository, never()).delete(any(User.class));
+    }
+  }
 }
