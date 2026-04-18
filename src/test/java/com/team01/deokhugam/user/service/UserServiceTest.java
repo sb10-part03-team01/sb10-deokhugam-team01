@@ -9,8 +9,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.global.exception.user.EmailAlreadyExistsException;
+import com.team01.deokhugam.global.exception.user.LoginFailedException;
 import com.team01.deokhugam.global.exception.user.UserNotFoundException;
 import com.team01.deokhugam.user.dto.UserDto;
+import com.team01.deokhugam.user.dto.UserLoginRequest;
 import com.team01.deokhugam.user.dto.UserRegisterRequest;
 import com.team01.deokhugam.user.dto.UserUpdateRequest;
 import com.team01.deokhugam.user.entity.User;
@@ -113,6 +115,69 @@ class UserServiceTest {
       // 중복이면 인코딩/저장은 실행되지 않아야 함
       verify(passwordEncoder, never()).encode(anyString());
       verify(userRepository, never()).save(any(User.class));
+    }
+  }
+
+  @Nested
+  @DisplayName("login - 로그인")
+  class Login {
+
+    private UserLoginRequest userLoginRequest;
+
+    @BeforeEach
+    void setUp() {
+      userLoginRequest = new UserLoginRequest(TEST_EMAIL, TEST_PASSWORD);
+    }
+
+    @Test
+    @DisplayName("로그인 성공 - 이메일과 비밀번호 일치")
+    void login_Success() {
+      // given
+      given(userRepository.findByEmailAndDeletedAtIsNull(TEST_EMAIL))
+          .willReturn(Optional.of(savedUser));
+      given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(true);
+
+      // when
+      UserDto result = userService.login(userLoginRequest);
+
+      // then
+      assertThat(result).isNotNull();
+      assertThat(result.email()).isEqualTo(TEST_EMAIL);
+      assertThat(result.nickname()).isEqualTo(TEST_NICKNAME);
+
+      // 올바른 인자로 호출되었는지 검증
+      verify(userRepository).findByEmailAndDeletedAtIsNull(TEST_EMAIL);
+      verify(passwordEncoder).matches(TEST_PASSWORD, ENCODED_PASSWORD);
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 존재하지 않거나 탈퇴한 이메일")
+    void login_Fail_EmailNotFound() {
+      // given
+      given(userRepository.findByEmailAndDeletedAtIsNull(TEST_EMAIL))
+          .willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> userService.login(userLoginRequest))
+          .isInstanceOf(LoginFailedException.class);
+
+      // 사용자 조회 실패 시 비밀번호 검증은 수행되지 않아야 함
+      verify(passwordEncoder, never()).matches(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 비밀번호 불일치")
+    void login_Fail_PasswordMismatch() {
+      // given
+      given(userRepository.findByEmailAndDeletedAtIsNull(TEST_EMAIL))
+          .willReturn(Optional.of(savedUser));
+      given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(false);
+
+      // when & then
+      assertThatThrownBy(() -> userService.login(userLoginRequest))
+          .isInstanceOf(LoginFailedException.class);
+
+      verify(passwordEncoder).matches(TEST_PASSWORD, ENCODED_PASSWORD);
     }
   }
 
