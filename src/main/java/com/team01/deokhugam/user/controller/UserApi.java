@@ -100,7 +100,12 @@ public interface UserApi {
       @ApiResponse(responseCode = "500", description = "서버 내부 오류")
   })
   ResponseEntity<Void> deleteUser(
-      @Parameter(description = "삭제할 사용자 ID") UUID userId
+      @Parameter(description = "삭제할 사용자 ID") UUID userId,
+      @Parameter(
+          name = "Deokhugam-Request-User-ID",
+          description = "요청자 ID",
+          required = true
+      ) UUID requestUserId
   );
 
   /// PATCH - /api/users/{userId} - 사용자 정보 수정
@@ -127,6 +132,11 @@ public interface UserApi {
   ResponseEntity<UserDto> updateUser(
       @Parameter(description = "수정할 사용자 ID") UUID userId,
       @Parameter(
+          name = "Deokhugam-Request-User-ID",
+          description = "요청자 ID",
+          required = true
+      ) UUID requestUserId,
+      @Parameter(
           description = "수정할 사용자 정보",
           content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
       ) @Valid UserUpdateRequest request
@@ -149,6 +159,11 @@ public interface UserApi {
       @ApiResponse(responseCode = "500", description = "서버 내부 오류")
   })
   ResponseEntity<Void> permanentDeleteUser(
-      @Parameter(description = "물리 삭제할 사용자 ID") UUID userId
+      @Parameter(description = "물리 삭제할 사용자 ID") UUID userId,
+      @Parameter(
+          name = "Deokhugam-Request-User-ID",
+          description = "요청자 ID",
+          required = true
+      ) UUID requestUserId
   );
 }
