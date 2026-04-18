@@ -182,6 +182,43 @@ class UserServiceTest {
   }
 
   @Nested
+  @DisplayName("getUser - 사용자 조회")
+  class GetUser {
+
+    @Test
+    @DisplayName("사용자 조회 성공 - 존재하는 사용자")
+    void getUser_Success() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findByIdAndDeletedAtIsNull(userId))
+          .willReturn(Optional.of(savedUser));
+
+      // when
+      UserDto result = userService.getUser(userId);
+
+      // then
+      assertThat(result).isNotNull();
+      assertThat(result.email()).isEqualTo(TEST_EMAIL);
+      assertThat(result.nickname()).isEqualTo(TEST_NICKNAME);
+
+      verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+    }
+
+    @Test
+    @DisplayName("사용자 조회 실패 - 존재하지 않거나 탈퇴한 사용자")
+    void getUser_Fail_UserNotFound() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findByIdAndDeletedAtIsNull(userId))
+          .willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> userService.getUser(userId))
+          .isInstanceOf(UserNotFoundException.class);
+    }
+  }
+
+  @Nested
   @DisplayName("updateUser - 사용자 정보 수정")
   class UpdateUser {
 
