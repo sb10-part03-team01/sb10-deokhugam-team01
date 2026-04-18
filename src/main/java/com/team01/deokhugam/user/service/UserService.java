@@ -46,7 +46,7 @@ public class UserService {
   public UserDto login(UserLoginRequest request) {
     log.debug("로그인 처리 시작: email={}", request.email());
     User user = userRepository.findByEmailAndDeletedAtIsNull(request.email())
-        .orElseThrow(() -> new LoginFailedException());
+        .orElseThrow(LoginFailedException::new);
     /*
     request.password() - 사용자가 로그인 요청에 보낸 평문 비밀번호
     user.getPassword() - DB에 저장된 BCrypt 해시값
