@@ -44,7 +44,7 @@ public class UserService {
 
   @Transactional(readOnly = true)
   public UserDto login(UserLoginRequest request) {
-    log.debug("로그인 처리 시작: email={}", request.email());
+    log.debug("로그인 처리 시작: email={}", PiiMasker.maskEmail(request.email()));
     User user = userRepository.findByEmailAndDeletedAtIsNull(request.email())
         .orElseThrow(LoginFailedException::new);
     /*
