@@ -35,7 +35,7 @@ public class UserController implements UserApi {
   public ResponseEntity<UserDto> register(@Valid @RequestBody UserRegisterRequest request) {
     log.info("회원가입 요청 수신");
     UserDto result = userService.register(request);
-    log.info("회원가입 완료: userId={}", result.id());
+    log.info("회원가입 완료");
     return ResponseEntity
         .status(HttpStatus.CREATED)
         .body(result);
@@ -46,7 +46,7 @@ public class UserController implements UserApi {
   public ResponseEntity<UserDto> login(@Valid @RequestBody UserLoginRequest request) {
     log.info("로그인 요청 수신");
     UserDto result = userService.login(request);
-    log.info("로그인 성공: userId={}", result.id());
+    log.info("로그인 성공");
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(result);
@@ -55,16 +55,16 @@ public class UserController implements UserApi {
   /// GET - /api/users/{userId} - 사용자 정보 조회
   @GetMapping("/{userId}")
   public ResponseEntity<UserDto> getUser(@PathVariable UUID userId) {
-    log.info("사용자 조회 요청: userId={}", userId);
+    log.info("사용자 조회 요청");
     return ResponseEntity.ok(userService.getUser(userId));
   }
 
   /// DELETE - /api/users/{userId} - 사용자 논리 삭제
   @DeleteMapping("/{userId}")
   public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
-    log.info("사용자 논리 삭제 요청: userId={}", userId);
+    log.info("사용자 논리 삭제 요청");
     userService.deleteUser(userId);
-    log.info("사용자 논리 삭제 완료: userId={}", userId);
+    log.info("사용자 논리 삭제 완료");
     return ResponseEntity
         .noContent()
         .build();
@@ -76,9 +76,9 @@ public class UserController implements UserApi {
       @PathVariable UUID userId,
       @Valid @RequestBody UserUpdateRequest request
   ) {
-    log.info("사용자 정보 수정 요청: userId={}", userId);
+    log.info("사용자 정보 수정 요청");
     UserDto result = userService.updateUser(userId, request);
-    log.info("사용자 정보 수정 완료: userId={}", userId);
+    log.info("사용자 정보 수정 완료");
     return ResponseEntity.ok(result);
   }
 
@@ -87,9 +87,9 @@ public class UserController implements UserApi {
   /// DELETE - /api/users/{userId}/hard - 사용자 물리 삭제
   @DeleteMapping("/{userId}/hard")
   public ResponseEntity<Void> permanentDeleteUser(@PathVariable UUID userId) {
-    log.warn("사용자 물리 삭제 요청: userId={}", userId);
+    log.warn("사용자 물리 삭제 요청");
     userService.permanentDeleteUser(userId);
-    log.warn("사용자 물리 삭제 완료: userId={}", userId);
+    log.warn("사용자 물리 삭제 완료");
     return ResponseEntity
         .noContent()
         .build();
