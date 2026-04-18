@@ -97,6 +97,7 @@ public class UserService {
   @Transactional
   public void permanentDeleteUser(UUID userId) {
     log.warn("사용자 물리 삭제 시작: userId={}", userId);
+    // 물리 삭제는 이미 논리 삭제된 유저도 대상이므로 findById 사용
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new UserNotFoundException(userId));
     userRepository.delete(user);

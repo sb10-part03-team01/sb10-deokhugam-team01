@@ -293,4 +293,38 @@ class UserServiceTest {
       verify(userRepository, never()).delete(any(User.class));
     }
   }
+
+  @Nested
+  @DisplayName("permanentDeleteUser - 사용자 물리 삭제")
+  class PermanentDeleteUser {
+
+    @Test
+    @DisplayName("사용자 물리 삭제 성공")
+    void permanentDeleteUser_Success() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findById(userId)).willReturn(Optional.of(savedUser));
+
+      // when
+      userService.permanentDeleteUser(userId);
+
+      // then
+      verify(userRepository).findById(userId);
+      verify(userRepository).delete(savedUser);
+    }
+
+    @Test
+    @DisplayName("사용자 물리 삭제 실패 - 존재하지 않는 사용자")
+    void permanentDeleteUser_Fail_UserNotFound() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findById(userId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> userService.permanentDeleteUser(userId))
+          .isInstanceOf(UserNotFoundException.class);
+
+      verify(userRepository, never()).delete(any(User.class));
+    }
+  }
 }
