@@ -1,6 +1,8 @@
 package com.team01.deokhugam.user.repository;
 
 import com.team01.deokhugam.user.entity.User;
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,4 +29,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   WHERE u.id = :id AND u.deleted_at IS NULL
    */
   Optional<User> findByIdAndDeletedAtIsNull(UUID id);
+
+  /*
+  SELECT u
+  FROM User u
+  WHERE u.is_deleted = true AND u.deleted_at < :expiredBefore
+   */
+  List<User> findAllByIsDeletedTrueAndDeletedAtBefore(OffsetDateTime expiredBefore);
 }
