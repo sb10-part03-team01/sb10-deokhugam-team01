@@ -2,7 +2,6 @@ package com.team01.deokhugam.book;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -12,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,7 +80,7 @@ class BookServiceTest {
     // given
     Book savedBook = book;
     given(bookRepository.existsByIsbn(anyString())).willReturn(false); // ISBN 중복 아님
-    given(bookRepository.save(any(Book.class))).willReturn(savedBook); // 저장하면 book 반환
+    given(bookRepository.saveAndFlush(any(Book.class))).willReturn(savedBook); // 저장하면 book 반환
     given(bookMapper.toDto(savedBook)).willReturn(bookDto); // 매퍼 호출 시 bookDto 반환
 
     // when
@@ -99,7 +97,7 @@ class BookServiceTest {
 
     // 메서드들이 한번씩 호출되었는지 검사
     verify(bookRepository).existsByIsbn("1234567890");
-    verify(bookRepository).save(any(Book.class));
+    verify(bookRepository).saveAndFlush(any(Book.class));
     verify(bookMapper).toDto(savedBook);
   }
 
