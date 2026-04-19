@@ -1,5 +1,9 @@
 # sb10-deokhugam-team01
 
+## Codecov
+
+[![codecov](https://codecov.io/github/sb10-part03-team01/sb10-deokhugam-team01/graph/badge.svg?token=VKUCVC9GI7)](https://codecov.io/github/sb10-part03-team01/sb10-deokhugam-team01)
+
 ### [팀 노션 페이지 링크](https://plume-wavelength-88d.notion.site/_-03_-01-0cfa756433c1834eb1b2812a878f46b5?pvs=74)
 
 ## 팀원 구성
