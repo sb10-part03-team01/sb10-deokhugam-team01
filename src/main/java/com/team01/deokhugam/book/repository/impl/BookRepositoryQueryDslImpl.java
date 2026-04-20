@@ -84,7 +84,7 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
 
   // OrderSpecifier<>(a,b) -> b를 기준으로 a방향으로 정렬 조건문을 반환
   private OrderSpecifier<?> dynamicOrder(String orderBy, String direction){
-    Order order = "ASC".equalsIgnoreCase(direction) ? Order.ASC : Order.DESC;
+    Order order = "ASC".equals(direction) ? Order.ASC : Order.DESC;
 
     if(!StringUtils.hasText(orderBy)){
       // 정렬 기준이 없으면 생성일을 기본 정렬 기준으로 설정
@@ -135,7 +135,7 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
       case "publishedDate" -> {
         LocalDate dateCursor = LocalDate.parse(cursor);
         yield isAsc
-            ? book.publishedDate.gt(dateCursor).or(book.publishedDate.eq(dateCursor).and(book.createdAt.gt(after)))
+            ? book.publishedDate.gt(dateCursor).or(book.publishedDate.eq(dateCursor).and(book.createdAt.lt(after)))
             : book.publishedDate.lt(dateCursor).or(book.publishedDate.eq(dateCursor).and(book.createdAt.lt(after)));
       }
       // 그 외의 정렬 기준이 들어온다며 제목 기준으로 함
