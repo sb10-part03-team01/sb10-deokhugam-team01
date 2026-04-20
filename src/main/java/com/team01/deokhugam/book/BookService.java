@@ -2,7 +2,17 @@ package com.team01.deokhugam.book;
 
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
+import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
+import com.team01.deokhugam.global.pagination.CursorPageResponse;
+import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
+import com.team01.deokhugam.global.pagination.PageLimitPolicy;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -49,6 +59,55 @@ public class BookService {
       throw new DuplicatedIsbnException(safeIsbn);
     }
 
+  }
+
+  @Transactional(readOnly = true)
+  public CursorPageResponse<BookDto> findAllBooks(String keyword, String orderBy, String direction, String cursor, OffsetDateTime after, Integer limit){
+    Set<String> allowedOrderBy = Set.of("title", "rating", "reviewCount", "publishedDate");
+    Set<String> allowedDirection = Set.of("ASC", "DESC");
+
+    // 추후에 커스텀 예외로 바꿀 예정
+    if(!allowedOrderBy.contains(orderBy)){
+      throw new IllegalArgumentException("올바른 정렬기준이 아닙니다");
+    }
+    if(!allowedDirection.contains(direction)){
+      throw new IllegalArgumentException("올바른 정렬 방향이 아닙니다");
+    }
+
+    int normalizedLimit = PageLimitPolicy.normalize(limit);
+
+    List<Book> books = bookRepository.findBooks(keyword, orderBy, direction, cursor, after, normalizedLimit);
+
+    long totalElements = bookRepository.countBooks(keyword);
+
+    List<BookDto> bookDtos = books.stream()
+        .map(bookMapper::toDto)
+        .toList();
+
+    // BookDto를 받으면 String 타입으로 반환
+    Function<BookDto, String> dynamicCursorExtractor = dto ->
+        switch (orderBy){
+          case "rating" -> String.valueOf(dto.getRating());
+          case "reviewCount" -> String.valueOf(dto.getReviewCount());
+          case "publishedDate" -> dto.getPublishedDate().toString();
+          default -> dto.getTitle();
+        };
+
+    return CursorPaginationUtils.of(
+        bookDtos,
+        normalizedLimit,
+        totalElements,
+        dynamicCursorExtractor,
+        BookDto::getCreatedAt
+    );
+  }
+
+  @Transactional(readOnly = true)
+  public BookDto findBook(UUID bookId){
+    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
+        .orElseThrow(() -> new BookNotFoundException(bookId));
+
+    return bookMapper.toDto(book);
   }
 
 }

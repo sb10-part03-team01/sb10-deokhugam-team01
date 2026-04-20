@@ -1,17 +1,27 @@
 package com.team01.deokhugam.book;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
+import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
+import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -112,7 +122,145 @@ class BookServiceTest {
         .isInstanceOf(DuplicatedIsbnException.class);
 
     // 메서드들이 호출되지 않는지 확인
-    verify(bookRepository, never()).save(any(Book.class));
+    verify(bookRepository, never()).saveAndFlush(any(Book.class));
     verify(bookMapper, never()).toDto(any(Book.class));
+  }
+
+  // =========================================================================
+  // 단건 조회 (findBook) 테스트
+  // =========================================================================
+
+  @Test
+  @DisplayName("도서 상세 조회 성공 - 존재하는 도서일 때")
+  void findBook_Success() {
+    // given
+    UUID bookId = UUID.randomUUID();
+
+    Book book1 = Book.builder()
+        .title("해리포터1")
+        .author("J.K. 롤링")
+        .description("해리포터의 위대한 첫 번째 이야기입니다.")
+        .publisher("문학수첩")
+        .publishedDate(LocalDate.of(1997, 6, 26))
+        .isbn("9788983920677")
+        .build();
+
+    // 매퍼가 반환할 가짜 DTO 세팅
+    BookDto mockDto = BookDto.builder()
+        .id(bookId)
+        .title(book1.getTitle())
+        .author(book1.getAuthor())
+        .description(book1.getDescription())
+        .build();
+
+    given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.of(book1));
+    given(bookMapper.toDto(book1)).willReturn(mockDto);
+
+    // when
+    BookDto result = bookService.findBook(bookId);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getTitle()).isEqualTo("해리포터1");
+
+    verify(bookRepository).findByIdAndIsDeletedFalse(bookId);
+    verify(bookMapper).toDto(book1);
+  }
+
+  @Test
+  @DisplayName("도서 상세 조회 실패 - 존재하지 않거나 삭제된 도서일 때")
+  void findBook_Fail_NotFound() {
+    // given
+    UUID bookId = UUID.randomUUID();
+    given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> bookService.findBook(bookId))
+        .isInstanceOf(BookNotFoundException.class);
+
+    verify(bookRepository).findByIdAndIsDeletedFalse(bookId);
+    verify(bookMapper, never()).toDto(any());
+  }
+
+  // =========================================================================
+  // 목록 조회 (findAllBooks) 테스트
+  // =========================================================================
+
+  @Test
+  @DisplayName("도서 목록 조회 성공 - 정상적인 커서 페이징 요청일 때")
+  void findAllBooks_Success() {
+    // given
+    String keyword = "해리포터";
+    String orderBy = "title";
+    String direction = "ASC";
+    Integer limit = 10;
+
+    Book book1 = Book.builder()
+        .title("해리포터1")
+        .author("J.K. 롤링")
+        .description("해리포터의 위대한 첫 번째 이야기입니다.")
+        .publisher("문학수첩")
+        .publishedDate(LocalDate.of(1997, 6, 26))
+        .isbn("9788983920677")
+        .build();
+
+    BookDto mockDto = BookDto.builder()
+        .id(UUID.randomUUID())
+        .title(book1.getTitle())
+        .createdAt(OffsetDateTime.now()) // 커서 추출기를 위해 시간 세팅 필요
+        .build();
+
+    List<Book> books = List.of(book1);
+    long totalElements = 1L;
+
+    // Repository 및 Mapper 모킹
+    given(bookRepository.findBooks(eq(keyword), eq(orderBy), eq(direction), isNull(), isNull(), anyInt()))
+        .willReturn(books);
+    given(bookRepository.countBooks(keyword)).willReturn(totalElements);
+    given(bookMapper.toDto(book1)).willReturn(mockDto);
+
+    // when
+    CursorPageResponse<BookDto> result = bookService.findAllBooks(
+        keyword, orderBy, direction, null, null, limit
+    );
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.content()).hasSize(1);
+    assertThat(result.content().get(0).getTitle()).isEqualTo("해리포터1");
+    assertThat(result.totalElements()).isEqualTo(1L);
+
+    verify(bookRepository).findBooks(eq(keyword), eq(orderBy), eq(direction), isNull(), isNull(), anyInt());
+    verify(bookRepository).countBooks(keyword);
+  }
+
+  @Test
+  @DisplayName("도서 목록 조회 실패 - 허용되지 않은 정렬 기준(orderBy)일 때")
+  void findAllBooks_Fail_InvalidOrderBy() {
+    // given
+    String invalidOrderBy = "이상한정렬기준";
+
+    // when & then
+    assertThatThrownBy(() -> bookService.findAllBooks("keyword", invalidOrderBy, "ASC", null, null, 10))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("올바른 정렬기준이 아닙니다");
+
+    // 검증 로직에서 컷 당했으므로 DB 조회가 일어나면 안 됨
+    verify(bookRepository, never()).findBooks(any(), any(), any(), any(), any(), anyInt());
+  }
+
+  @Test
+  @DisplayName("도서 목록 조회 실패 - 허용되지 않은 정렬 방향(direction)일 때")
+  void findAllBooks_Fail_InvalidDirection() {
+    // given
+    String invalidDirection = "이상한방향";
+
+    // when & then
+    assertThatThrownBy(() -> bookService.findAllBooks("keyword", "title", invalidDirection, null, null, 10))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("올바른 정렬 방향이 아닙니다");
+
+    // 마찬가지로 DB 조회 차단 확인
+    verify(bookRepository, never()).findBooks(any(), any(), any(), any(), any(), anyInt());
   }
 }
