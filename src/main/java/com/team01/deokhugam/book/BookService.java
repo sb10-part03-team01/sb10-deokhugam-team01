@@ -9,6 +9,7 @@ import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.global.pagination.PageLimitPolicy;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -60,6 +61,17 @@ public class BookService {
 
   @Transactional(readOnly = true)
   public CursorPageResponse<BookDto> findAllBooks(String keyword, String orderBy, String direction, String cursor, OffsetDateTime after, Integer limit){
+    Set<String> allowedOrderBy = Set.of("title", "rating", "reviewCount", "publishedDate");
+    Set<String> allowedDirection = Set.of("ASC", "DESC");
+
+    // 추후에 커스텀 예외로 바꿀 예정
+    if(!allowedOrderBy.contains(orderBy)){
+      throw new IllegalArgumentException("올바른 정렬기준이 아닙니다");
+    }
+    if(!allowedDirection.contains(direction)){
+      throw new IllegalArgumentException("올바른 정렬 방향이 아닙니다");
+    }
+
     int normalizedLimit = PageLimitPolicy.normalize(limit);
 
     List<Book> books = bookRepository.findBooks(keyword, orderBy, direction, cursor, after, normalizedLimit);

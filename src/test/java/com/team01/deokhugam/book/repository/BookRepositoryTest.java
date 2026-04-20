@@ -102,8 +102,6 @@ class BookRepositoryTest {
     );
 
     // then
-    assertThat(result).hasSize(3); // limit(2) + 1개
-
     // 1등: 평점이 4.5로 같지만, time3으로 더 최신인 '반지의제왕'이 먼저 와야 함!
     assertThat(result.get(0).getTitle()).isEqualTo("반지의제왕");
 

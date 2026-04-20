@@ -69,6 +69,7 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
   }
 
   // 키워드가 포함되는지 안되는지 판별하는 조건문을 반환
+  // 추후 성능 개선 여지가 있음
   private BooleanBuilder containsKeyword(String keyword){
     // 공백인지 아닌지 검사
     if(!StringUtils.hasText(keyword)){
@@ -95,7 +96,7 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
       case "rating" -> new OrderSpecifier<>(order, book.rating);
       case "reviewCount" -> new OrderSpecifier<>(order, book.reviewCount);
       case "publishedDate" -> new OrderSpecifier<>(order, book.publishedDate);
-      default -> new OrderSpecifier<>(order, book.createdAt);
+      default -> new OrderSpecifier<>(order, book.title);
     };
   }
 
@@ -137,11 +138,11 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
             ? book.publishedDate.gt(dateCursor).or(book.publishedDate.eq(dateCursor).and(book.createdAt.gt(after)))
             : book.publishedDate.lt(dateCursor).or(book.publishedDate.eq(dateCursor).and(book.createdAt.lt(after)));
       }
-      // 그 외의 정렬 기준이 들어온다며 날짜 기준으로 함
+      // 그 외의 정렬 기준이 들어온다며 제목 기준으로 함
       default -> {
-        yield  isAsc
-            ? book.createdAt.gt(after)
-            : book.createdAt.lt(after);
+        yield isAsc
+            ? book.title.gt(cursor).or(book.title.eq(cursor).and(book.createdAt.gt(after)))
+            : book.title.lt(cursor).or(book.title.eq(cursor).and(book.createdAt.lt(after)));
       }
     };
 
