@@ -2,6 +2,7 @@ package com.team01.deokhugam.notification.service;
 
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
+import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
 import com.team01.deokhugam.notification.dto.NotificationDto;
 import com.team01.deokhugam.notification.entity.Notification;
@@ -14,6 +15,7 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,6 +86,45 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public CursorPageResponse<NotificationDto> findAll(UUID userId, CursorPageRequest request) {
-    return null;
+    log.info("[FIND_ALL_NOTIFICATION] 알림 목록 조회 시작 userId={}, after={}, limit={}",
+        userId, request.after(), request.limit());
+    PageRequest pageable = PageRequest.of(0, request.limit() + 1);
+
+    List<Notification> results;
+
+    if (request.after() == null) {
+      log.info("[FIND_ALL_NOTIFICATION] 첫 페이지 조회 userId={}", userId);
+      results = notificationRepository
+          .findByUserIdOrderByCreatedAtDesc(userId, pageable);
+    } else {
+      log.info("[FIND_ALL_NOTIFICATION] 다음 페이지 조회 userId={}, after={}", userId, request.after());
+      results = notificationRepository
+          .findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(userId, request.after(), pageable);
+    }
+
+    log.info("[FIND_ALL_NOTIFICATION] 조회 완료 userId={}, 조회된 개수={}", userId, results.size());
+
+    long totalElements = notificationRepository.countByUserId(userId);
+
+    List<NotificationDto> dtoList = results.stream()
+        .map(n -> new NotificationDto(
+            n.getId(),
+            n.getUser().getId(),
+            n.getReview().getId(),
+            n.getReview().getContent(),
+            n.getContent(),
+            n.isRead(),
+            n.getCreatedAt(),
+            n.getUpdatedAt()
+        ))
+        .toList();
+
+    return CursorPaginationUtils.of(
+        dtoList,
+        request.limit(),
+        totalElements,
+        dto -> dto.id().toString(),
+        NotificationDto::createdAt
+    );
   }
 }
