@@ -114,21 +114,21 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
     return switch (orderBy){
       case "title" -> {
         yield isAsc
-            ? book.title.gt(cursor).or(book.title.eq(cursor).and(book.createdAt.gt(after)))
+            ? book.title.gt(cursor).or(book.title.eq(cursor).and(book.createdAt.lt(after)))
             : book.title.lt(cursor).or(book.title.eq(cursor).and(book.createdAt.lt(after)));
       }
 
       case "rating" -> {
         double ratingCursor = Double.parseDouble(cursor);
         yield isAsc
-            ? book.rating.gt(ratingCursor).or(book.rating.eq(ratingCursor).and(book.createdAt.gt(after)))
+            ? book.rating.gt(ratingCursor).or(book.rating.eq(ratingCursor).and(book.createdAt.lt(after)))
             : book.rating.lt(ratingCursor).or(book.rating.eq(ratingCursor).and(book.createdAt.lt(after)));
       }
 
       case "reviewCount" -> {
         int countCursor = Integer.parseInt(cursor);
         yield isAsc
-            ? book.reviewCount.gt(countCursor).or(book.reviewCount.eq(countCursor).and(book.createdAt.gt(after)))
+            ? book.reviewCount.gt(countCursor).or(book.reviewCount.eq(countCursor).and(book.createdAt.lt(after)))
             : book.reviewCount.lt(countCursor).or(book.reviewCount.eq(countCursor).and(book.createdAt.lt(after)));
       }
 
@@ -141,7 +141,7 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
       // 그 외의 정렬 기준이 들어온다며 제목 기준으로 함
       default -> {
         yield isAsc
-            ? book.title.gt(cursor).or(book.title.eq(cursor).and(book.createdAt.gt(after)))
+            ? book.title.gt(cursor).or(book.title.eq(cursor).and(book.createdAt.lt(after)))
             : book.title.lt(cursor).or(book.title.eq(cursor).and(book.createdAt.lt(after)));
       }
     };
