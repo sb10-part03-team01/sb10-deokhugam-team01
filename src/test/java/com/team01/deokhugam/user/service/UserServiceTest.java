@@ -9,8 +9,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.global.exception.user.EmailAlreadyExistsException;
+import com.team01.deokhugam.global.exception.user.LoginFailedException;
 import com.team01.deokhugam.global.exception.user.UserNotFoundException;
 import com.team01.deokhugam.user.dto.UserDto;
+import com.team01.deokhugam.user.dto.UserLoginRequest;
 import com.team01.deokhugam.user.dto.UserRegisterRequest;
 import com.team01.deokhugam.user.dto.UserUpdateRequest;
 import com.team01.deokhugam.user.entity.User;
@@ -117,6 +119,106 @@ class UserServiceTest {
   }
 
   @Nested
+  @DisplayName("login - 로그인")
+  class Login {
+
+    private UserLoginRequest userLoginRequest;
+
+    @BeforeEach
+    void setUp() {
+      userLoginRequest = new UserLoginRequest(TEST_EMAIL, TEST_PASSWORD);
+    }
+
+    @Test
+    @DisplayName("로그인 성공 - 이메일과 비밀번호 일치")
+    void login_Success() {
+      // given
+      given(userRepository.findByEmailAndDeletedAtIsNull(TEST_EMAIL))
+          .willReturn(Optional.of(savedUser));
+      given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(true);
+
+      // when
+      UserDto result = userService.login(userLoginRequest);
+
+      // then
+      assertThat(result).isNotNull();
+      assertThat(result.email()).isEqualTo(TEST_EMAIL);
+      assertThat(result.nickname()).isEqualTo(TEST_NICKNAME);
+
+      // 올바른 인자로 호출되었는지 검증
+      verify(userRepository).findByEmailAndDeletedAtIsNull(TEST_EMAIL);
+      verify(passwordEncoder).matches(TEST_PASSWORD, ENCODED_PASSWORD);
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 존재하지 않거나 탈퇴한 이메일")
+    void login_Fail_EmailNotFound() {
+      // given
+      given(userRepository.findByEmailAndDeletedAtIsNull(TEST_EMAIL))
+          .willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> userService.login(userLoginRequest))
+          .isInstanceOf(LoginFailedException.class);
+
+      // 사용자 조회 실패 시 비밀번호 검증은 수행되지 않아야 함
+      verify(passwordEncoder, never()).matches(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 비밀번호 불일치")
+    void login_Fail_PasswordMismatch() {
+      // given
+      given(userRepository.findByEmailAndDeletedAtIsNull(TEST_EMAIL))
+          .willReturn(Optional.of(savedUser));
+      given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(false);
+
+      // when & then
+      assertThatThrownBy(() -> userService.login(userLoginRequest))
+          .isInstanceOf(LoginFailedException.class);
+
+      verify(passwordEncoder).matches(TEST_PASSWORD, ENCODED_PASSWORD);
+    }
+  }
+
+  @Nested
+  @DisplayName("getUser - 사용자 조회")
+  class GetUser {
+
+    @Test
+    @DisplayName("사용자 조회 성공 - 존재하는 사용자")
+    void getUser_Success() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findByIdAndDeletedAtIsNull(userId))
+          .willReturn(Optional.of(savedUser));
+
+      // when
+      UserDto result = userService.getUser(userId);
+
+      // then
+      assertThat(result).isNotNull();
+      assertThat(result.email()).isEqualTo(TEST_EMAIL);
+      assertThat(result.nickname()).isEqualTo(TEST_NICKNAME);
+
+      verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+    }
+
+    @Test
+    @DisplayName("사용자 조회 실패 - 존재하지 않거나 탈퇴한 사용자")
+    void getUser_Fail_UserNotFound() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findByIdAndDeletedAtIsNull(userId))
+          .willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> userService.getUser(userId))
+          .isInstanceOf(UserNotFoundException.class);
+    }
+  }
+
+  @Nested
   @DisplayName("updateUser - 사용자 정보 수정")
   class UpdateUser {
 
@@ -151,6 +253,44 @@ class UserServiceTest {
       // when & then
       assertThatThrownBy(() -> userService.updateUser(userId, request))
           .isInstanceOf(UserNotFoundException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("deleteUser - 사용자 논리 삭제")
+  class DeleteUser {
+
+    @Test
+    @DisplayName("사용자 논리 삭제 성공")
+    void deleteUser_Success() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(savedUser));
+
+      // when
+      userService.deleteUser(userId);
+
+      // then
+      assertThat(savedUser.isDeleted()).isTrue();
+      assertThat(savedUser.getDeletedAt()).isNotNull();
+      // save()를 명시적으로 호출하지 않았는지 검증 (더티 체킹 검증용)
+      verify(userRepository, never()).save(any(User.class));
+      // delete()를 호출하지 않았는지 검증 (논리 삭제이므로 물리 삭제가 발생하면 안됨)
+      verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    @DisplayName("사용자 논리 삭제 실패 - 존재하지 않는 사용자")
+    void deleteUser_Fail_UserNotFound() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> userService.deleteUser(userId))
+          .isInstanceOf(UserNotFoundException.class);
+
+      verify(userRepository, never()).delete(any(User.class));
     }
   }
 }
