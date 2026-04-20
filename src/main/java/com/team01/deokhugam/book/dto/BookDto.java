@@ -1,7 +1,5 @@
 package com.team01.deokhugam.book.dto;
 
-import com.team01.deokhugam.book.Book;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -25,5 +23,4 @@ public class BookDto {
   private double rating;
   private OffsetDateTime createdAt;
   private OffsetDateTime updatedAt;
-
 }
