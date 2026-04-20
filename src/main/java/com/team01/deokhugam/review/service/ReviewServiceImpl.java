@@ -1,7 +1,7 @@
 package com.team01.deokhugam.review.service;
 
 import com.team01.deokhugam.book.Book;
-import com.team01.deokhugam.book.BookRepository;
+import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
