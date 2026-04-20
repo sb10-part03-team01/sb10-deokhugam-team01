@@ -12,28 +12,28 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   /*
   SELECT COUNT(*) > 0
   FROM users u
-  WHERE u.email = ? AND u.deleted_at IS NULL
+  WHERE u.email = ? AND u.deletedAt IS NULL
    */
   boolean existsByEmailAndDeletedAtIsNull(String email);
 
   /*
   SELECT u
   FROM User u
-  WHERE u.email = :email AND u.deleted_at IS NULL
+  WHERE u.email = :email AND u.deletedAt IS NULL
    */
   Optional<User> findByEmailAndDeletedAtIsNull(String email);
 
   /*
   SELECT u
   FROM User u
-  WHERE u.id = :id AND u.deleted_at IS NULL
+  WHERE u.id = :id AND u.deletedAt IS NULL
    */
   Optional<User> findByIdAndDeletedAtIsNull(UUID id);
 
   /*
   SELECT u
   FROM User u
-  WHERE u.is_deleted = true AND u.deleted_at < :expiredBefore
+  WHERE u.isDeleted = true AND u.deletedAt < :expiredBefore
    */
   List<User> findAllByIsDeletedTrueAndDeletedAtBefore(OffsetDateTime expiredBefore);
 }
