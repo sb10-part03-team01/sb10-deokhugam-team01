@@ -16,6 +16,7 @@ import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.book.service.BookService;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
@@ -195,7 +196,7 @@ class BookServiceTest {
     // given
     String keyword = "해리포터";
     String orderBy = "title";
-    String direction = "ASC";
+    SortDirection direction = SortDirection.ASC;
     Integer limit = 10;
 
     Book book1 = Book.builder()
@@ -244,26 +245,11 @@ class BookServiceTest {
     String invalidOrderBy = "이상한정렬기준";
 
     // when & then
-    assertThatThrownBy(() -> bookService.findAllBooks("keyword", invalidOrderBy, "ASC", null, null, 10))
+    assertThatThrownBy(() -> bookService.findAllBooks("keyword", invalidOrderBy, SortDirection.ASC, null, null, 10))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("올바른 정렬기준이 아닙니다");
 
     // 검증 로직에서 컷 당했으므로 DB 조회가 일어나면 안 됨
-    verify(bookRepository, never()).findBooks(any(), any(), any(), any(), any(), anyInt());
-  }
-
-  @Test
-  @DisplayName("도서 목록 조회 실패 - 허용되지 않은 정렬 방향(direction)일 때")
-  void findAllBooks_Fail_InvalidDirection() {
-    // given
-    String invalidDirection = "이상한방향";
-
-    // when & then
-    assertThatThrownBy(() -> bookService.findAllBooks("keyword", "title", invalidDirection, null, null, 10))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("올바른 정렬 방향이 아닙니다");
-
-    // 마찬가지로 DB 조회 차단 확인
     verify(bookRepository, never()).findBooks(any(), any(), any(), any(), any(), anyInt());
   }
 
@@ -272,8 +258,8 @@ class BookServiceTest {
   // =========================================================================
 
   @Test
-  @DisplayName("도서 수정 성공 - null이 아닌 필드만 정상적으로 업데이트된다.")
-  void updateBook_Success() {
+  @DisplayName("썸네일 수정 없이 도서 수정 성공 - null이 아닌 필드만 정상적으로 업데이트된다.")
+  void updateBook_without_thumbnail_Success() {
     // given
     UUID bookId = UUID.randomUUID();
 
@@ -289,7 +275,7 @@ class BookServiceTest {
     given(bookMapper.toDto(book)).willReturn(bookDto);
 
     // when
-    BookDto result = bookService.updateBook(request, bookId);
+    BookDto result = bookService.updateBook(request, bookId, null);
 
     // then
     AssertionsForClassTypes.assertThat(book.getTitle()).isEqualTo("새로운 제목");
@@ -310,7 +296,7 @@ class BookServiceTest {
     given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> bookService.updateBook(request, bookId))
+    assertThatThrownBy(() -> bookService.updateBook(request, bookId, null))
         .isInstanceOf(BookNotFoundException.class);
   }
 
