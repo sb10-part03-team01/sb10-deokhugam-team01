@@ -6,6 +6,7 @@ import com.team01.deokhugam.user.dto.UserRegisterRequest;
 import com.team01.deokhugam.user.dto.UserUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -103,6 +104,7 @@ public interface UserApi {
       @Parameter(description = "삭제할 사용자 ID") UUID userId,
       @Parameter(
           name = "Deokhugam-Request-User-ID",
+          in = ParameterIn.HEADER,
           description = "요청자 ID",
           required = true
       ) UUID requestUserId
@@ -133,6 +135,7 @@ public interface UserApi {
       @Parameter(description = "수정할 사용자 ID") UUID userId,
       @Parameter(
           name = "Deokhugam-Request-User-ID",
+          in = ParameterIn.HEADER,
           description = "요청자 ID",
           required = true
       ) UUID requestUserId,
@@ -162,6 +165,7 @@ public interface UserApi {
       @Parameter(description = "물리 삭제할 사용자 ID") UUID userId,
       @Parameter(
           name = "Deokhugam-Request-User-ID",
+          in = ParameterIn.HEADER,
           description = "요청자 ID",
           required = true
       ) UUID requestUserId
