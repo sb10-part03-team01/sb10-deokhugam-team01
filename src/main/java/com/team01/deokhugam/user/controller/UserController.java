@@ -1,5 +1,7 @@
 package com.team01.deokhugam.user.controller;
 
+import com.team01.deokhugam.global.constant.AuthHeader;
+import com.team01.deokhugam.global.exception.user.UserAccessDeniedException;
 import com.team01.deokhugam.user.dto.UserDto;
 import com.team01.deokhugam.user.dto.UserLoginRequest;
 import com.team01.deokhugam.user.dto.UserRegisterRequest;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -61,7 +64,11 @@ public class UserController implements UserApi {
 
   /// DELETE - /api/users/{userId} - 사용자 논리 삭제
   @DeleteMapping("/{userId}")
-  public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
+  public ResponseEntity<Void> deleteUser(
+      @PathVariable UUID userId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
+  ) {
+    verifySelf(userId, requestUserId);
     log.info("사용자 논리 삭제 요청");
     userService.deleteUser(userId);
     log.info("사용자 논리 삭제 완료");
@@ -74,8 +81,10 @@ public class UserController implements UserApi {
   @PatchMapping("/{userId}")
   public ResponseEntity<UserDto> updateUser(
       @PathVariable UUID userId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
       @Valid @RequestBody UserUpdateRequest request
   ) {
+    verifySelf(userId, requestUserId);
     log.info("사용자 정보 수정 요청");
     UserDto result = userService.updateUser(userId, request);
     log.info("사용자 정보 수정 완료");
@@ -86,12 +95,22 @@ public class UserController implements UserApi {
 
   /// DELETE - /api/users/{userId}/hard - 사용자 물리 삭제
   @DeleteMapping("/{userId}/hard")
-  public ResponseEntity<Void> permanentDeleteUser(@PathVariable UUID userId) {
+  public ResponseEntity<Void> permanentDeleteUser(
+      @PathVariable UUID userId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
+  ) {
+    verifySelf(userId, requestUserId);
     log.warn("사용자 물리 삭제 요청");
     userService.permanentDeleteUser(userId);
     log.warn("사용자 물리 삭제 완료");
     return ResponseEntity
         .noContent()
         .build();
+  }
+
+  private void verifySelf(UUID pathUserId, UUID requestUserId) {
+    if (!pathUserId.equals(requestUserId)) {
+      throw new UserAccessDeniedException(pathUserId, requestUserId);
+    }
   }
 }
