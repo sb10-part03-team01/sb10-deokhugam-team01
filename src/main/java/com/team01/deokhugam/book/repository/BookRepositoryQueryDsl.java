@@ -1,6 +1,6 @@
 package com.team01.deokhugam.book.repository;
 
-import com.team01.deokhugam.book.Book;
+import com.team01.deokhugam.book.entity.Book;
 import java.time.OffsetDateTime;
 import java.util.List;
 

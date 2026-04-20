@@ -3,7 +3,7 @@ package com.team01.deokhugam.book.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.team01.deokhugam.book.Book;
+import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.global.config.QueryDslConfig;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;

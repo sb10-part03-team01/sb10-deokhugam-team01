@@ -1,8 +1,10 @@
-package com.team01.deokhugam.book;
+package com.team01.deokhugam.book.service;
 
+import com.team01.deokhugam.book.BookMapper;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
+import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;

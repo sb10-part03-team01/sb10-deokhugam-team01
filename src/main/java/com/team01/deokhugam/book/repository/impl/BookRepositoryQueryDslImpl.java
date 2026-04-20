@@ -5,7 +5,7 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.team01.deokhugam.book.Book;
+import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepositoryQueryDsl;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import static com.team01.deokhugam.book.QBook.book;
+import static com.team01.deokhugam.book.entity.QBook.book;
 
 @Repository
 @RequiredArgsConstructor
