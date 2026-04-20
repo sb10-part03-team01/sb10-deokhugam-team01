@@ -55,6 +55,15 @@ dependencies {
     // PostgreSQL
     runtimeOnly 'org.postgresql:postgresql'
 
+    // AWS SDK v2 BOM
+    implementation platform('software.amazon.awssdk:bom:2.20.70')
+
+    // S3와의 통신을 위한 AWS SDK v2 라이브러리
+    implementation 'software.amazon.awssdk:s3'
+
+    // AWS 인증 처리 모듈
+    implementation 'software.amazon.awssdk:auth'
+
     // spring-boot-starter-test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     // Lombok
