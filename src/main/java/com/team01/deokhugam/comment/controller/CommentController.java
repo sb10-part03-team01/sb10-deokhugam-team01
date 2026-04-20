@@ -44,16 +44,19 @@ public class CommentController {
     @ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공"),
     @ApiResponse(
         responseCode = "400",
-        description = "잘못된 요청 (정렬 방향 오류, 페이지네이션 파라미터 오류, 리뷰 ID 누락)",
+        description = "잘못된 요청 (정렬 방향 오류, 페이지네이션 파라미터 오류, 리뷰 ID 누락, 요청자 ID 누락)",
         content = @Content),
     @ApiResponse(responseCode = "404", description = "리뷰 정보 없음", content = @Content),
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<CursorPageResponse<CommentDto>> getComments(
+      @Parameter(description = "요청자 ID", required = true)
+          @RequestHeader("Deokhugam-Request-User-ID")
+          UUID userId,
       @Parameter(description = "리뷰 ID", required = true) @RequestParam UUID reviewId,
       @Parameter(description = "정렬 방향", example = "DESC")
           @RequestParam(required = false, defaultValue = "DESC")
-      SortDirection direction,
+          SortDirection direction,
       @Parameter(description = "커서 페이지네이션 커서") @RequestParam(required = false) String cursor,
       @Parameter(description = "보조 커서(createdAt)") @RequestParam(required = false)
           OffsetDateTime after,
@@ -91,10 +94,14 @@ public class CommentController {
   @Operation(summary = "댓글 상세 정보 조회", description = "특정 댓글의 상세 정보를 조회합니다.")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "댓글 조회 성공"),
+    @ApiResponse(responseCode = "400", description = "잘못된 요청 (요청자 ID 누락)", content = @Content),
     @ApiResponse(responseCode = "404", description = "댓글 정보 없음", content = @Content),
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<CommentDto> getComment(
+      @Parameter(description = "요청자 ID", required = true)
+          @RequestHeader("Deokhugam-Request-User-ID")
+          UUID userId,
       @Parameter(description = "댓글 ID", required = true) @PathVariable UUID commentId) {
     return ResponseEntity.ok(commentService.getComment(commentId));
   }
