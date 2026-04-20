@@ -3,10 +3,10 @@ package com.team01.deokhugam.comment.service;
 import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.util.UUID;
-import org.springframework.data.domain.Sort;
 
 public interface CommentService {
   CommentDto createComment(UUID userId, CommentCreateRequest commentCreateRequest);
@@ -14,7 +14,7 @@ public interface CommentService {
   CommentDto getComment(UUID commentId);
 
   CursorPageResponse<CommentDto> getComments(
-      UUID reviewId, CursorPageRequest pageRequest, Sort.Direction direction);
+      UUID reviewId, CursorPageRequest pageRequest, SortDirection direction);
 
   CommentDto updateComment(UUID userId, UUID commentId, CommentUpdateRequest commentUpdateRequest);
 

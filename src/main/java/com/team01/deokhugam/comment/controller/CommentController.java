@@ -4,6 +4,7 @@ import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.service.CommentService;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +17,6 @@ import jakarta.validation.Valid;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,7 +53,7 @@ public class CommentController {
       @Parameter(description = "리뷰 ID", required = true) @RequestParam UUID reviewId,
       @Parameter(description = "정렬 방향", example = "DESC")
           @RequestParam(required = false, defaultValue = "DESC")
-          Sort.Direction direction,
+      SortDirection direction,
       @Parameter(description = "커서 페이지네이션 커서") @RequestParam(required = false) String cursor,
       @Parameter(description = "보조 커서(createdAt)") @RequestParam(required = false)
           OffsetDateTime after,
@@ -66,7 +66,7 @@ public class CommentController {
     return ResponseEntity.ok(commentService.getComments(reviewId, pageRequest, direction));
   }
 
-  // 댓글 생성
+  // 댓글 등록
   @PostMapping
   @Operation(summary = "댓글 등록", description = "새로운 댓글을 등록합니다.")
   @ApiResponses({

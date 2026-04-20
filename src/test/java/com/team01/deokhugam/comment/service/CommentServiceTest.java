@@ -12,6 +12,7 @@ import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.comment.repository.CommentRepository;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
@@ -31,7 +32,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
@@ -282,7 +282,7 @@ public class CommentServiceTest {
     given(commentRepository.countCommentsByReviewId(reviewId)).willReturn(3L);
 
     // when
-    var result = commentService.getComments(reviewId, pageRequest, Sort.Direction.DESC);
+    var result = commentService.getComments(reviewId, pageRequest, SortDirection.DESC);
 
     // then
     assertThat(result.content()).hasSize(2);

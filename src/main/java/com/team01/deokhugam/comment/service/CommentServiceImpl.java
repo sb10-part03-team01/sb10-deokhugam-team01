@@ -6,6 +6,7 @@ import com.team01.deokhugam.comment.dto.CommentSearchCondition;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.comment.repository.CommentRepository;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.exception.comment.CommentNotFoundException;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,7 +70,7 @@ public class CommentServiceImpl implements CommentService {
   @Override
   @Transactional(readOnly = true)
   public CursorPageResponse<CommentDto> getComments(
-      UUID reviewId, CursorPageRequest pageRequest, Sort.Direction direction) {
+      UUID reviewId, CursorPageRequest pageRequest, SortDirection direction) {
     if (!reviewRepository.existsById(reviewId)) {
       throw new DeokhugamException(ErrorCode.REVIEW_NOT_FOUND, Map.of("reviewId", reviewId));
     }
