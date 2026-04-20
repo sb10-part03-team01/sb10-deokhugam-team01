@@ -15,12 +15,6 @@ spring:
     init:
       mode: never # schema.sql 무시. H2 호환 스키마 자동 생성
 
-deokhugam:
-  storage:
-    type: local
-    local:
-      root-path: .deokhugam/storage-test
-
 logging:
   level:
     com.team01.deokhugam: debug

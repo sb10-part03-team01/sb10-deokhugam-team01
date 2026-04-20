@@ -21,16 +21,11 @@ services:
       AWS_S3_REGION: ${AWS_S3_REGION}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       AWS_S3_PRESIGNED_URL_EXPIRATION: ${AWS_S3_PRESIGNED_URL_EXPIRATION}
-      # S3
-      STORAGE_TYPE: ${STORAGE_TYPE}
-      STORAGE_LOCAL_ROOT_PATH: ${STORAGE_LOCAL_ROOT_PATH}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - deokhugam-storage:/app/.deokhugam/storage # 썸네일 임시 저장
     networks:
       backend:
 
@@ -73,7 +68,6 @@ services:
 
 volumes:
   postgres_data:
-  deokhugam-storage:
 
 networks:
   backend:

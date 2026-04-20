@@ -38,8 +38,6 @@ jobs:
       AWS_S3_SECRET_KEY: ${{ secrets.AWS_S3_SECRET_KEY }}
       AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-      STORAGE_TYPE: local
-      STORAGE_LOCAL_ROOT_PATH: .deokhugam/storage-test
 
     # job 내에서 순서대로 실행되는 개별 단계들
     steps:
