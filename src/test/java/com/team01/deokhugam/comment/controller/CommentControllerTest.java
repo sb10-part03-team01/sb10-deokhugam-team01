@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -13,9 +14,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
+import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.service.CommentService;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +49,8 @@ public class CommentControllerTest {
         OffsetDateTime.of(2026, 4, 20, 12, 0, 0, 0, ZoneOffset.UTC),
         OffsetDateTime.of(2026, 4, 20, 12, 0, 0, 0, ZoneOffset.UTC));
   }
+
+  // ========= Comment 등록 테스트 =========
 
   @Test
   @DisplayName("댓글 등록 성공")
@@ -91,4 +98,128 @@ public class CommentControllerTest {
     // 호출 횟수 검증
     verify(commentService, never()).createComment(any(), any());
   }
+
+  @Test
+  @DisplayName("댓글 등록 실패(400) - content가 비어있음")
+  void create_comment_fail_when_content_is_blank() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID reviewId = UUID.randomUUID();
+    CommentCreateRequest request = new CommentCreateRequest(reviewId, "");
+
+    // when , then
+    mockMvc
+        .perform(
+            post("/api/comments")
+                .header(USER_ID_HEADER, userId.toString())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+    verify(commentService, never()).createComment(any(), any());
+  }
+
+  @Test
+  @DisplayName("댓글 등록 실패(404) - 존재하지 않는 리뷰면")
+  void create_comment_fail_when_review_not_found() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID reviewId = UUID.randomUUID();
+    CommentCreateRequest request = new CommentCreateRequest(reviewId, "댓글");
+
+    given(commentService.createComment(eq(userId), any(CommentCreateRequest.class)))
+        .willThrow(
+            new DeokhugamException(
+                ErrorCode.REVIEW_NOT_FOUND, Map.of("reviewId", reviewId.toString())));
+
+    // when , then
+    mockMvc
+        .perform(
+            post("/api/comments")
+                .header(USER_ID_HEADER, userId.toString())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isNotFound());
+  }
+
+  // ========= Comment 수정 테스트 =========
+  @Test
+  @DisplayName("댓글 수정 성공")
+  void update_comment_success() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID reviewId = UUID.randomUUID();
+    UUID commentId = UUID.randomUUID();
+
+    CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글");
+    CommentDto response = createCommentDto(commentId, reviewId, userId, "수정된 댓글");
+
+    given(commentService.updateComment(eq(userId), eq(commentId), any(CommentUpdateRequest.class)))
+        .willReturn(response);
+
+    // when // then
+    mockMvc
+        .perform(
+            patch("/api/comments/{commentId}", commentId)
+                .header(USER_ID_HEADER, userId.toString())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(commentId.toString()))
+        .andExpect(jsonPath("$.reviewId").value(reviewId.toString()))
+        .andExpect(jsonPath("$.userId").value(userId.toString()))
+        .andExpect(jsonPath("$.userNickname").value("jongin"))
+        .andExpect(jsonPath("$.content").value("수정된 댓글"));
+
+    verify(commentService)
+        .updateComment(eq(userId), eq(commentId), any(CommentUpdateRequest.class));
+  }
+
+  @Test
+  @DisplayName("댓글 수정 실패(400) - 요청자 ID 헤더 누락")
+  void update_comment_fail_without_user_id_header() throws Exception {
+    // given
+    UUID commentId = UUID.randomUUID();
+    CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글");
+
+    // when // then
+    mockMvc
+        .perform(
+            patch("/api/comments/{commentId}", commentId)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+
+    verify(commentService, never()).updateComment(any(), any(), any());
+  }
+
+  @Test
+  @DisplayName("댓글 수정 실패(403) - 본인 댓글이 아니면")
+  void update_comment_fail_when_forbidden() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID commentId = UUID.randomUUID();
+    CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글");
+
+    given(commentService.updateComment(eq(userId), eq(commentId), any(CommentUpdateRequest.class)))
+        .willThrow(
+            new DeokhugamException(
+                ErrorCode.FORBIDDEN_COMMENT_ACCESS,
+                Map.of(
+                    "commentId", commentId.toString(),
+                    "userId", userId.toString())));
+
+    // when // then
+    mockMvc
+        .perform(
+            patch("/api/comments/{commentId}", commentId)
+                .header(USER_ID_HEADER, userId.toString())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isForbidden());
+  }
+
+  // ========= Comment 삭제 테스트 =========
+
+  // ========= Comment 조회 테스트 =========}
+
 }
