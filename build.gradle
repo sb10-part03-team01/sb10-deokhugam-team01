@@ -78,14 +78,13 @@ test {
 
 // 커버리지 집계에서 제외할 클래스 목록
 def excludes = [
-        '**/entity/**',                   // JPA 엔티티 (Lombok이 생성한 getter/setter만 존재)
-        '**/dto/**',                      // 데이터 전송 객체 (로직 없이 필드만 보유)
-        '**/mapper/**',                   // MapStruct가 빌드 타임에 자동 생성한 구현체
+        '**/entity/**',
+        '**/dto/**',
+        '**/mapper/**',
         '**/enums/**',
-        // → 개발자가 작성한 코드가 아니므로 테스트 대상 아님
-        '**/config/**',                   // Spring Config 클래스 (프레임워크가 실행하며 검증)
-        '**/exception/**',                // 커스텀 예외 클래스 (단순 상속/생성자만 존재)
-        '**/Q*.class'                     // QueryDSL이 자동 생성하는 Q 클래스
+        '**/config/**',
+        '**/exception/**',
+        '**/Q*.class'
 ]
 
 // JaCoCo 커버리지 리포트 생성 태스크 설정
