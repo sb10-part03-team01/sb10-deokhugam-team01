@@ -3,6 +3,7 @@ package com.team01.deokhugam.notification.service;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
+import com.team01.deokhugam.global.pagination.PageLimitPolicy;
 import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
 import com.team01.deokhugam.notification.dto.NotificationDto;
 import com.team01.deokhugam.notification.entity.Notification;
@@ -85,10 +86,13 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public CursorPageResponse<NotificationDto> findAll(UUID userId, CursorPageRequest request) {
     log.info("[FIND_ALL_NOTIFICATION] 알림 목록 조회 시작 userId={}, after={}, limit={}",
         userId, request.after(), request.limit());
-    PageRequest pageable = PageRequest.of(0, request.limit() + 1);
+
+    int normalizedLimit = PageLimitPolicy.normalize(request.limit());
+    PageRequest pageable = PageRequest.of(0,  normalizedLimit + 1);
 
     List<Notification> results;
 
@@ -99,7 +103,8 @@ public class NotificationServiceImpl implements NotificationService {
     } else {
       log.info("[FIND_ALL_NOTIFICATION] 다음 페이지 조회 userId={}, after={}", userId, request.after());
       results = notificationRepository
-          .findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(userId, request.after(), pageable);
+          .findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(
+              userId, request.after(), UUID.fromString(request.cursor()), pageable);
     }
 
     log.info("[FIND_ALL_NOTIFICATION] 조회 완료 userId={}, 조회된 개수={}", userId, results.size());
@@ -121,7 +126,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     return CursorPaginationUtils.of(
         dtoList,
-        request.limit(),
+        normalizedLimit,
         totalElements,
         dto -> dto.id().toString(),
         NotificationDto::createdAt

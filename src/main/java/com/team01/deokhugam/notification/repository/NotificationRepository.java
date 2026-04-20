@@ -19,7 +19,7 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
       JOIN FETCH n.user
       JOIN FETCH n.review
       WHERE n.user.id = :userId
-      ORDER BY n.createdAt DESC
+      ORDER BY n.createdAt DESC, n.id DESC
       """)
   List<Notification> findByUserIdOrderByCreatedAtDesc(
       @Param("userId") UUID userId,
@@ -27,22 +27,20 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
   );
 
   @Query("""
-        SELECT n FROM Notification n
-        JOIN FETCH n.user
-        JOIN FETCH n.review
-        WHERE n.user.id = :userId
-          AND n.createdAt < :after
-        ORDER BY n.createdAt DESC
-        """)
+      SELECT n FROM Notification n
+      JOIN FETCH n.user
+      JOIN FETCH n.review
+      WHERE n.user.id = :userId
+      AND (n.createdAt < :after
+      OR (n.createdAt = :after AND n.id < :cursor))
+      ORDER BY n.createdAt DESC, n.id DESC
+      """)
   List<Notification> findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(
       @Param("userId") UUID userId,
       @Param("after") OffsetDateTime after,
+      @Param("cursor") UUID cursor,
       Pageable pageable
   );
 
   long countByUserId(UUID userId);
-
-
-
-
 }
