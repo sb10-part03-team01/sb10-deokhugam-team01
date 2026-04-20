@@ -6,10 +6,12 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @AllArgsConstructor
 @Builder
+@Setter
 public class BookDto {
   private UUID id;
   private String title;

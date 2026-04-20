@@ -11,11 +11,11 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
+import com.team01.deokhugam.book.dto.BookUpdateRequest;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.LocalDate;
@@ -23,6 +23,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -262,5 +263,90 @@ class BookServiceTest {
 
     // 마찬가지로 DB 조회 차단 확인
     verify(bookRepository, never()).findBooks(any(), any(), any(), any(), any(), anyInt());
+  }
+
+  // =========================================================================
+  // 도서 수정 (updateBook) 테스트
+  // =========================================================================
+
+  @Test
+  @DisplayName("도서 수정 성공 - null이 아닌 필드만 정상적으로 업데이트된다.")
+  void updateBook_Success() {
+    // given
+    UUID bookId = UUID.randomUUID();
+
+    // 수정 요청 (제목과 설명만 바꾸고, 저자는 null로 보냄)
+    BookUpdateRequest request = new BookUpdateRequest(
+        "새로운 제목", "새로운 저자", null, null, null
+    );
+
+    bookDto.setTitle(request.getTitle());
+    bookDto.setPublisher(request.getPublisher());
+
+    given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.of(book));
+    given(bookMapper.toDto(book)).willReturn(bookDto);
+
+    // when
+    BookDto result = bookService.updateBook(request, bookId);
+
+    // then
+    AssertionsForClassTypes.assertThat(book.getTitle()).isEqualTo("새로운 제목");
+    AssertionsForClassTypes.assertThat(book.getAuthor()).isEqualTo("새로운 저자");
+    AssertionsForClassTypes.assertThat(book.getDescription()).isEqualTo("테스트 설명"); // null이 들어왔으니 기존 값 유지
+
+    verify(bookRepository).findByIdAndIsDeletedFalse(bookId);
+    verify(bookMapper).toDto(book);
+  }
+
+  @Test
+  @DisplayName("도서 수정 실패 - 존재하지 않는 도서일 때 예외 발생")
+  void updateBook_Fail_NotFound() {
+    // given
+    UUID bookId = UUID.randomUUID();
+    BookUpdateRequest request = new BookUpdateRequest("새로운 제목", null, null, null, null);
+
+    given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> bookService.updateBook(request, bookId))
+        .isInstanceOf(BookNotFoundException.class);
+  }
+
+  // =========================================================================
+  // 도서 삭제 (Soft / Hard Delete) 테스트
+  // =========================================================================
+
+  @Test
+  @DisplayName("도서 소프트 삭제 성공 - 도서의 상태가 삭제(isDeleted = true)로 변경된다.")
+  void deleteBook_Success() { // 💡 deleteUser -> deleteBook 으로 수정했다고 가정!
+    // given
+    UUID bookId = UUID.randomUUID();
+
+    given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.of(book));
+
+    // when
+    bookService.deleteBook(bookId);
+
+    // then
+    AssertionsForClassTypes.assertThat(book.isDeleted()).isTrue();
+
+    verify(bookRepository).findByIdAndIsDeletedFalse(bookId);
+    verify(bookRepository, never()).delete(any());
+  }
+
+  @Test
+  @DisplayName("도서 영구 삭제 성공 - Repository의 delete 메서드가 직접 호출된다.")
+  void permanentDeleteBook_Success() {
+    // given
+    UUID bookId = UUID.randomUUID();
+
+    given(bookRepository.findById(bookId)).willReturn(Optional.of(book));
+
+    // when
+    bookService.permanentDeleteBook(bookId);
+
+    // then
+    // 💡 JPA의 실제 삭제 메서드가 호출되었는지 검증!
+    verify(bookRepository).delete(book);
   }
 }

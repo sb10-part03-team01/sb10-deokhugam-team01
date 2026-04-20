@@ -2,6 +2,7 @@ package com.team01.deokhugam.book;
 
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
+import com.team01.deokhugam.book.dto.BookUpdateRequest;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
@@ -110,4 +111,43 @@ public class BookService {
     return bookMapper.toDto(book);
   }
 
+  @Transactional
+  public BookDto updateBook(BookUpdateRequest request, UUID bookId){
+    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
+        .orElseThrow(() -> new BookNotFoundException(bookId));
+
+    if(request.getTitle() != null){
+      book.updateTitle(request.getTitle());
+    }
+    if(request.getAuthor() != null){
+      book.updateAuthor(request.getAuthor());
+    }
+    if(request.getDescription() != null){
+      book.updateDescription(request.getDescription());
+    }
+    if(request.getPublisher() != null){
+      book.updatePublisher(request.getPublisher());
+    }
+    if(request.getPublishedDate() != null){
+      book.updatePublishedDate(request.getPublishedDate());
+    }
+
+    return bookMapper.toDto(book);
+  }
+
+  @Transactional
+  public void deleteBook(UUID bookId){
+    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
+        .orElseThrow(() -> new BookNotFoundException(bookId));
+
+    book.softDelete();
+  }
+
+  @Transactional
+  public void permanentDeleteBook(UUID bookId){
+    Book book = bookRepository.findById(bookId)
+        .orElseThrow(() -> new BookNotFoundException(bookId));
+
+    bookRepository.delete(book);
+  }
 }
