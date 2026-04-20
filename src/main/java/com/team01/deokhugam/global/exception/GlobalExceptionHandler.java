@@ -6,7 +6,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingRequestHeaderException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -35,7 +34,7 @@ public class GlobalExceptionHandler {
   }
 
   // ServletException 처리 - 체크드 예외 (Checked Exception)
-  @ExceptionHandler(MissingServletRequestParameterException.class)
+  @ExceptionHandler(MissingRequestHeaderException.class)
   public ResponseEntity<ErrorResponse> handleMissingRequestHeader(MissingRequestHeaderException e) {
     // REQUEST_USER_ID 누락
     if (AuthHeader.REQUEST_USER_ID.equals(e.getHeaderName())) {
