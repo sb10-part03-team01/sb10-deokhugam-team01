@@ -103,7 +103,9 @@ class UserControllerTest {
               // 헤더를 넣지 않음 -> 누락
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(request)))
-          .andExpect(status().isBadRequest());
+          .andExpect(status().isBadRequest())
+          // ErrorCode가 MISSING_REQUEST_USER_ID 인지 검증 (GlobalExceptionHandler에서 제대로 잡히는지 확인)
+          .andExpect(jsonPath("$.code").value("MISSING_REQUEST_USER_ID"));
 
       verify(userService, never()).updateUser(any(UUID.class), any(UserUpdateRequest.class));
     }
