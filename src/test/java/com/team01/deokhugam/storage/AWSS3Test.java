@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -38,8 +37,6 @@ S3의 기본 동작(업로드/다운로드/Presigned URL 생성을 검증
 upload -> download -> generatePresignedUrl 순서로 실행
  */
 // @EnabledIfEnvironmentVariable: 특정 환경 변수의 값이 설정한 조건과 일치할 때만 테스트를 실행
-// AWS_ACCESS_KEY_ID가 설정되어 있을 때만 이 테스트를 실행, 없으면 넘어감
-@EnabledIfEnvironmentVariable(named = "AWS_ACCESS_KEY_ID", matches = ".+")
 public class AWSS3Test {
 
   // S3 업로드/다운로드용 클라이언트
