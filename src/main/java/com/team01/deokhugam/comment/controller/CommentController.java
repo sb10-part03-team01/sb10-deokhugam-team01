@@ -50,9 +50,6 @@ public class CommentController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<CursorPageResponse<CommentDto>> getComments(
-      @Parameter(description = "요청자 ID", required = true)
-          @RequestHeader("Deokhugam-Request-User-ID")
-          UUID userId,
       @Parameter(description = "리뷰 ID", required = true) @RequestParam UUID reviewId,
       @Parameter(description = "정렬 방향", example = "DESC")
           @RequestParam(required = false, defaultValue = "DESC")
@@ -74,10 +71,7 @@ public class CommentController {
   @Operation(summary = "댓글 등록", description = "새로운 댓글을 등록합니다.")
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "댓글 등록 성공"),
-    @ApiResponse(
-        responseCode = "400",
-        description = "잘못된 요청 (입력값 검증 실패, 요청자 ID 누락)",
-        content = @Content),
+    @ApiResponse(responseCode = "400", description = "잘못된 요청 (입력값 검증 실패)", content = @Content),
     @ApiResponse(responseCode = "404", description = "리뷰 정보 없음", content = @Content),
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
@@ -99,9 +93,6 @@ public class CommentController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<CommentDto> getComment(
-      @Parameter(description = "요청자 ID", required = true)
-          @RequestHeader("Deokhugam-Request-User-ID")
-          UUID userId,
       @Parameter(description = "댓글 ID", required = true) @PathVariable UUID commentId) {
     return ResponseEntity.ok(commentService.getComment(commentId));
   }
