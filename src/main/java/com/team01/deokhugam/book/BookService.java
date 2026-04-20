@@ -3,6 +3,7 @@ package com.team01.deokhugam.book;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
@@ -10,6 +11,7 @@ import com.team01.deokhugam.global.pagination.PageLimitPolicy;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -98,6 +100,14 @@ public class BookService {
         dynamicCursorExtractor,
         BookDto::getCreatedAt
     );
+  }
+
+  @Transactional(readOnly = true)
+  public BookDto findBook(UUID bookId){
+    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
+        .orElseThrow(() -> new BookNotFoundException(bookId));
+
+    return bookMapper.toDto(book);
   }
 
 }
