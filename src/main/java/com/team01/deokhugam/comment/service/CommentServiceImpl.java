@@ -8,6 +8,9 @@ import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.comment.repository.CommentRepository;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
+import com.team01.deokhugam.global.exception.comment.CommentNotFoundException;
+import com.team01.deokhugam.global.exception.comment.ForbiddenCommentAccessException;
+import com.team01.deokhugam.global.exception.user.UserNotFoundException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
@@ -34,10 +37,7 @@ public class CommentServiceImpl implements CommentService {
   @Override
   public CommentDto createComment(UUID userId, CommentCreateRequest request) {
     User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(
-                () -> new DeokhugamException(ErrorCode.USER_NOT_FOUND, Map.of("userId", userId)));
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
 
     Review review =
         reviewRepository
@@ -63,11 +63,7 @@ public class CommentServiceImpl implements CommentService {
     Comment comment =
         commentRepository
             .findDetailById(commentId)
-            .orElseThrow(
-                () ->
-                    new DeokhugamException(
-                        ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId)));
-
+            .orElseThrow(() -> new CommentNotFoundException(commentId));
     return CommentDto.from(comment);
   }
 
@@ -101,13 +97,11 @@ public class CommentServiceImpl implements CommentService {
     Comment comment =
         commentRepository
             .findDetailById(commentId)
-            .orElseThrow(
-                () ->
-                    new DeokhugamException(
-                        ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId)));
+            .orElseThrow(() -> new CommentNotFoundException(commentId));
 
     // 본인이 쓴 댓글 맞는지 확인
     validateOwner(userId, comment);
+
     String content = request.content().trim();
     comment.updateContent(content);
 
@@ -120,12 +114,10 @@ public class CommentServiceImpl implements CommentService {
     Comment comment =
         commentRepository
             .findDetailById(commentId)
-            .orElseThrow(
-                () ->
-                    new DeokhugamException(
-                        ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId)));
+            .orElseThrow(() -> new CommentNotFoundException(commentId));
 
     validateOwner(userId, comment);
+
     // 논리 삭제
     comment.softDelete();
     comment.getReview().decreaseCommentCount();
@@ -134,9 +126,7 @@ public class CommentServiceImpl implements CommentService {
   // 요청자가 댓글 작성자인지 검증
   private void validateOwner(UUID userId, Comment comment) {
     if (!comment.getUser().getId().equals(userId)) {
-      throw new DeokhugamException(
-          ErrorCode.FORBIDDEN_COMMENT_ACCESS,
-          Map.of("userId", userId, "commentId", comment.getId()));
+      throw new ForbiddenCommentAccessException(userId, comment.getId());
     }
   }
 }
