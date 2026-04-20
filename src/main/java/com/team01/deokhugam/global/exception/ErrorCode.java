@@ -14,12 +14,15 @@ public enum ErrorCode {
   INVALID_CURSOR_PAGINATION(400, "INVALID_CURSOR_PAGINATION", "cursor와 after는 함께 제공되어야 합니다."),
 
   // comment
+  COMMENT_NOT_FOUND(404, "COMMENT_NOT_FOUND", "댓글을 찾을 수 없습니다."),
+  FORBIDDEN_COMMENT_ACCESS(403, "FORBIDDEN_COMMENT_ACCESS", "댓글에 대한 권한이 없습니다."),
 
   // notification
 
   // ranking
 
   // review
+  REVIEW_NOT_FOUND(404, "REVIEW_NOT_FOUND", "리뷰를 찾을 수 없습니다."),
 
   // user
   EMAIL_ALREADY_EXISTS(409, "EMAIL_ALREADY_EXISTS", "이미 등록된 이메일입니다."),

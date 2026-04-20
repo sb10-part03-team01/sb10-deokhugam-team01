@@ -1,17 +1,17 @@
 package com.team01.deokhugam.book.dto;
 
-import com.team01.deokhugam.book.Book;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @AllArgsConstructor
 @Builder
+@Setter
 public class BookDto {
   private UUID id;
   private String title;
@@ -25,5 +25,4 @@ public class BookDto {
   private double rating;
   private OffsetDateTime createdAt;
   private OffsetDateTime updatedAt;
-
 }

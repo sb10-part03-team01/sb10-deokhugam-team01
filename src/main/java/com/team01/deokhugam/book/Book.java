@@ -34,7 +34,7 @@ public class Book extends BaseRemovableEntity {
   @Column(name = "published_date" , nullable = false)
   private LocalDate publishedDate;
 
-  @Column(name = "isbn", unique = true, length = 20)
+  @Column(name = "isbn", unique = true, updatable = false, length = 20)
   private String isbn;
 
   @Column(name = "thumbnail_url", length = 255)
@@ -59,5 +59,25 @@ public class Book extends BaseRemovableEntity {
 
   public void addThumbnail(String thumbnailUrl){
     this.thumbnailUrl = thumbnailUrl;
+  }
+
+  public void updateTitle(String newTitle){
+    this.title = newTitle;
+  }
+
+  public void updateAuthor(String newAuthor){
+    this.author = newAuthor;
+  }
+
+  public void updateDescription(String newDescription){
+    this.description = newDescription;
+  }
+
+  public void updatePublisher(String newPublisher){
+    this.publisher = newPublisher;
+  }
+
+  public void updatePublishedDate(LocalDate newPublishedDate){
+    this.publishedDate = newPublishedDate;
   }
 }
