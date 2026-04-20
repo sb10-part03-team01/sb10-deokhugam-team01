@@ -109,6 +109,7 @@ public class CommentServiceImpl implements CommentService {
     return CommentDto.from(comment);
   }
 
+  // Soft Delete
   @Override
   public void deleteComment(UUID userId, UUID commentId) {
     Comment comment =
@@ -121,6 +122,20 @@ public class CommentServiceImpl implements CommentService {
     // 논리 삭제
     comment.softDelete();
     comment.getReview().decreaseCommentCount();
+  }
+
+  // Hard Delete
+  @Override
+  public void hardDeleteComment(UUID userId, UUID commentId) {
+    Comment comment =
+        commentRepository
+            .findDetailById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException(commentId));
+
+    validateOwner(userId, comment);
+
+    comment.getReview().decreaseCommentCount();
+    commentRepository.delete(comment);
   }
 
   // 요청자가 댓글 작성자인지 검증

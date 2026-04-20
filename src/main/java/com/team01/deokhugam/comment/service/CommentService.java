@@ -18,5 +18,9 @@ public interface CommentService {
 
   CommentDto updateComment(UUID userId, UUID commentId, CommentUpdateRequest commentUpdateRequest);
 
+  // Soft Delete
   void deleteComment(UUID userId, UUID commentId);
+
+  // Hard Delete
+  void hardDeleteComment(UUID userId, UUID commentId);
 }
