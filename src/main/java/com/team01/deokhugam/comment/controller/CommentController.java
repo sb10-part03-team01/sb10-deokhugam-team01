@@ -50,12 +50,7 @@ public class CommentController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<CursorPageResponse<CommentDto>> getComments(
-      @Parameter(
-              description = "리뷰 ID",
-              required = true,
-              example = "123e4567-e89b-12d3-a456-426614174000")
-          @RequestParam
-          UUID reviewId,
+      @Parameter(description = "리뷰 ID", required = true) @RequestParam UUID reviewId,
       @Parameter(description = "정렬 방향", example = "DESC")
           @RequestParam(required = false, defaultValue = "DESC")
           Sort.Direction direction,
@@ -100,12 +95,7 @@ public class CommentController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<CommentDto> getComment(
-      @Parameter(
-              description = "댓글 ID",
-              required = true,
-              example = "123e4567-e89b-12d3-a456-426614174000")
-          @PathVariable
-          UUID commentId) {
+      @Parameter(description = "댓글 ID", required = true) @PathVariable UUID commentId) {
     return ResponseEntity.ok(commentService.getComment(commentId));
   }
 

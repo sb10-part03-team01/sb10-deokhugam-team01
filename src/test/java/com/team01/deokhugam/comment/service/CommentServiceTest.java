@@ -1,4 +1,4 @@
-package com.team01.deokhugam.comment;
+package com.team01.deokhugam.comment.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -12,7 +12,6 @@ import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.comment.repository.CommentRepository;
-import com.team01.deokhugam.comment.service.CommentServiceImpl;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
