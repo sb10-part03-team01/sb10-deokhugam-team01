@@ -30,7 +30,7 @@ public class BookCreateRequest {
   @Size(max = 100)
   private String publisher;
 
-  @NotBlank(message = "출판일은 비어 있을 수 없다")
+  @NotNull(message = "출판일은 Null 있을 수 없다")
   private LocalDate publishedDate;
 
   @Size(max = 20)
