@@ -3,6 +3,7 @@ package com.team01.deokhugam.user.service;
 import com.team01.deokhugam.global.exception.user.EmailAlreadyExistsException;
 import com.team01.deokhugam.global.exception.user.LoginFailedException;
 import com.team01.deokhugam.global.exception.user.UserNotFoundException;
+import com.team01.deokhugam.global.exception.user.UserNotSoftDeletedException;
 import com.team01.deokhugam.global.util.PiiMasker;
 import com.team01.deokhugam.user.dto.UserDto;
 import com.team01.deokhugam.user.dto.UserLoginRequest;
@@ -97,9 +98,16 @@ public class UserService {
   @Transactional
   public void permanentDeleteUser(UUID userId) {
     log.warn("사용자 물리 삭제 시작: userId={}", userId);
-    // 물리 삭제는 이미 논리 삭제된 유저도 대상이므로 findById 사용
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new UserNotFoundException(userId));
+
+    // 논리 삭제된 유저만 물리 삭제 가능
+    // + 논리 삭제되지 않은 사용자 물리 삭제 시도할 경우 404 반환 (Swagger 명세 충족을 위함 - 409 없음)
+    // TODO: 409가 더 적절한 것 같은데, 명세에는 없음 - 명세는 즉시 물리 삭제를 의도한 게 아니였을까?
+    if (!user.isDeleted()) {
+      throw new UserNotSoftDeletedException(userId);
+    }
+
     userRepository.delete(user);
     log.warn("사용자 물리 삭제 완료: userId={}", userId);
   }
