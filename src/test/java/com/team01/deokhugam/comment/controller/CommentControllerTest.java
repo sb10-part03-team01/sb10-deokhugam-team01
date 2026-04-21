@@ -42,8 +42,6 @@ public class CommentControllerTest {
 
   @MockitoBean private CommentService commentService;
 
-  private static final String USER_ID_HEADER = AuthHeader.REQUEST_USER_ID;
-
   private CommentDto createCommentDto(UUID commentId, UUID reviewId, UUID userId, String content) {
     return new CommentDto(
         commentId,
@@ -75,7 +73,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             post("/api/comments")
-                .header(USER_ID_HEADER, userId.toString())
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
@@ -116,7 +114,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             post("/api/comments")
-                .header(USER_ID_HEADER, userId.toString())
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest());
@@ -140,7 +138,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             post("/api/comments")
-                .header(USER_ID_HEADER, userId.toString())
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isNotFound());
@@ -165,7 +163,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             patch("/api/comments/{commentId}", commentId)
-                .header(USER_ID_HEADER, userId.toString())
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
@@ -217,7 +215,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             patch("/api/comments/{commentId}", commentId)
-                .header(USER_ID_HEADER, userId.toString())
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isForbidden());
@@ -235,7 +233,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             delete("/api/comments/{commentId}", commentId)
-                .header(USER_ID_HEADER, userId.toString()))
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString()))
         .andExpect(status().isNoContent());
 
     verify(commentService).deleteComment(eq(userId), eq(commentId));
@@ -275,7 +273,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             delete("/api/comments/{commentId}", commentId)
-                .header(USER_ID_HEADER, userId.toString()))
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString()))
         .andExpect(status().isForbidden());
   }
 
@@ -296,7 +294,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             delete("/api/comments/{commentId}", commentId)
-                .header(USER_ID_HEADER, userId.toString()))
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString()))
         .andExpect(status().isNotFound());
   }
 
@@ -311,7 +309,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             delete("/api/comments/{commentId}/hard", commentId)
-                .header(USER_ID_HEADER, userId.toString()))
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString()))
         .andExpect(status().isNoContent());
 
     verify(commentService).hardDeleteComment(eq(userId), eq(commentId));
@@ -351,7 +349,7 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             delete("/api/comments/{commentId}/hard", commentId)
-                .header(USER_ID_HEADER, userId.toString()))
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString()))
         .andExpect(status().isForbidden());
   }
 
@@ -372,14 +370,14 @@ public class CommentControllerTest {
     mockMvc
         .perform(
             delete("/api/comments/{commentId}/hard", commentId)
-                .header(USER_ID_HEADER, userId.toString()))
+                .header(AuthHeader.REQUEST_USER_ID, userId.toString()))
         .andExpect(status().isNotFound());
   }
 
   // ========= Comment 조회 테스트 =========}
   @Test
   @DisplayName("댓글 목록 조회 성공")
-  void get_comments_sucess() throws Exception {
+  void get_comments_success() throws Exception {
     // given
     UUID userId1 = UUID.randomUUID();
     UUID userId2 = UUID.randomUUID();
