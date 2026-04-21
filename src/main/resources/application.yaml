@@ -61,8 +61,8 @@ deokhugam:
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:300}
   naver:
     client:
-      id: ${NAVER_CLIENT_ID}
-      secret: ${NAVER_CLIENT_SECRET}
+      id: ${NAVER_CLIENT_ID:}
+      secret: ${NAVER_CLIENT_SECRET:}
 
 logging:
   level:
