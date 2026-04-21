@@ -331,7 +331,7 @@ class BookServiceTest {
     // given
     UUID bookId = UUID.randomUUID();
 
-    given(bookRepository.findById(bookId)).willReturn(Optional.of(book));
+    given(bookRepository.findByIdAndIsDeletedTrue(bookId)).willReturn(Optional.of(book));
 
     // when
     bookService.permanentDeleteBook(bookId);
