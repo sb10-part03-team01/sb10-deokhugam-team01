@@ -14,16 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "알림 관리", description = "알림 관련 API")
 @RestController
-@RequestMapping("api/notifications")
+@RequestMapping("/api/notifications")
 public class NotificationController {
 
-  @PatchMapping("/{notificationId}")
-  public ResponseEntity<NotificationDto> confirm(
-      @PathVariable UUID notificationId,
-      @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
-      @RequestBody NotificationUpdateRequest request
-  ){
 
-  }
 
 }

@@ -155,6 +155,7 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Notification findById(UUID notificationId) {
     return notificationRepository.findById(notificationId)
         .orElseThrow(() -> new NotificationException(ErrorCode.NOTIFICATION_NOT_FOUND,
