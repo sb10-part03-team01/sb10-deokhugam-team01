@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 @Configuration
@@ -19,6 +20,9 @@ public class ExternalApiConfig {
 
   @Bean
   public RestClient naverRestClient(RestClient.Builder builder){
+    if (!StringUtils.hasText(clientId) || !StringUtils.hasText(clientSecret)) {
+      throw new IllegalStateException("네이버 API 인증 정보(자격 증명)를 설정해야 합니다");
+    }
     // 타임 아웃 설정 - 대기 시간 지나면 바로 연결 끊어버림
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
     factory.setConnectTimeout((int) Duration.ofSeconds(3).toMillis()); // 3초 (연결대기 시간)

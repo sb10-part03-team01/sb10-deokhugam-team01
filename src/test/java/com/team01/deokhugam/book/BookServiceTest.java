@@ -60,6 +60,7 @@ class BookServiceTest {
 
   @BeforeEach
   void setUp() {
+    bookService = new BookService(bookMapper, bookRepository, naverRestClient, defaultRestClient);
     // 테스트에 사용할 공통 데이터 세팅
     request = new BookCreateRequest(
         "테스트 도서",
