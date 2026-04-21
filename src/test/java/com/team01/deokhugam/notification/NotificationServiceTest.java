@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
+import com.team01.deokhugam.global.exception.notification.NotificationException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
@@ -263,8 +264,7 @@ public class NotificationServiceTest {
       mockCursorPageRequest = new CursorPageRequest(null, fixedTime, 50);
       //when,then
       assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("after 가 지정된 경우 cursor 는 필수입니다.");
+          .isInstanceOf(NotificationException.class);
 
     }
 
@@ -276,8 +276,7 @@ public class NotificationServiceTest {
       mockCursorPageRequest = new CursorPageRequest("invalid-uuid", fixedTime, 50);
       //when,then
       assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("cursor 형식이 올바르지 않습니다");
+          .isInstanceOf(NotificationException.class);
     }
 
     @Test
@@ -287,9 +286,7 @@ public class NotificationServiceTest {
       mockCursorPageRequest = new CursorPageRequest(UUID.randomUUID().toString(), null, 50);
       //when,then
       assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("cursor 가 지정된 경우 after 도 필수입니다");
-
+          .isInstanceOf(NotificationException.class);
     }
 
     @Test
@@ -304,6 +301,9 @@ public class NotificationServiceTest {
 
       List<Notification> testResult = List.of(notification1, notification2, notification3);
 
+      given(mockReview.getId()).willReturn(UUID.randomUUID());
+      given(mockReview.getContent()).willReturn("테스트내용");
+
       for (Notification n : testResult) {
         given(n.getId()).willReturn(UUID.randomUUID());
         given(n.getUser()).willReturn(mockUser);
@@ -312,8 +312,6 @@ public class NotificationServiceTest {
         given(n.isRead()).willReturn(false);
         given(n.getCreatedAt()).willReturn(fixedTime);
         given(n.getUpdatedAt()).willReturn(fixedTime);
-        given(mockReview.getId()).willReturn(UUID.randomUUID());
-        given(mockReview.getContent()).willReturn("테스트내용");
       }
 
       given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
