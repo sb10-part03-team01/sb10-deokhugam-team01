@@ -1,14 +1,12 @@
-package com.team01.deokhugam.book;
+package com.team01.deokhugam.book.entity;
 
 import com.team01.deokhugam.global.entity.BaseRemovableEntity;
-import com.team01.deokhugam.global.entity.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

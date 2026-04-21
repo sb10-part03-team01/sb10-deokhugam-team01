@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import com.team01.deokhugam.global.exception.user.EmailAlreadyExistsException;
 import com.team01.deokhugam.global.exception.user.LoginFailedException;
 import com.team01.deokhugam.global.exception.user.UserNotFoundException;
+import com.team01.deokhugam.global.exception.user.UserNotSoftDeletedException;
 import com.team01.deokhugam.user.dto.UserDto;
 import com.team01.deokhugam.user.dto.UserLoginRequest;
 import com.team01.deokhugam.user.dto.UserRegisterRequest;
@@ -289,6 +290,56 @@ class UserServiceTest {
       // when & then
       assertThatThrownBy(() -> userService.deleteUser(userId))
           .isInstanceOf(UserNotFoundException.class);
+
+      verify(userRepository, never()).delete(any(User.class));
+    }
+  }
+
+  @Nested
+  @DisplayName("permanentDeleteUser - 사용자 물리 삭제")
+  class PermanentDeleteUser {
+
+    @Test
+    @DisplayName("사용자 물리 삭제 성공")
+    void permanentDeleteUser_Success() {
+      // given
+      UUID userId = UUID.randomUUID();
+      savedUser.softDelete(); // 논리 삭제된 유저만 물리 삭제 가능
+      given(userRepository.findById(userId)).willReturn(Optional.of(savedUser));
+
+      // when
+      userService.permanentDeleteUser(userId);
+
+      // then
+      verify(userRepository).findById(userId);
+      verify(userRepository).delete(savedUser);
+    }
+
+    @Test
+    @DisplayName("사용자 물리 삭제 실패 - 존재하지 않는 사용자")
+    void permanentDeleteUser_Fail_UserNotFound() {
+      // given
+      UUID userId = UUID.randomUUID();
+      given(userRepository.findById(userId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> userService.permanentDeleteUser(userId))
+          .isInstanceOf(UserNotFoundException.class);
+
+      verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    @DisplayName("사용자 물리 삭제 실패 - 논리 삭제되지 않은 사용자")
+    void permanentDeleteUser_Fail_NotSoftDeleted() {
+      // given
+      UUID userId = UUID.randomUUID();
+      // 논리 삭제 X
+      given(userRepository.findById(userId)).willReturn(Optional.of(savedUser));
+
+      // when & then
+      assertThatThrownBy(() -> userService.permanentDeleteUser(userId))
+          .isInstanceOf(UserNotSoftDeletedException.class);
 
       verify(userRepository, never()).delete(any(User.class));
     }
