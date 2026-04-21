@@ -309,7 +309,7 @@ class BookServiceTest {
 
   @Test
   @DisplayName("도서 소프트 삭제 성공 - 도서의 상태가 삭제(isDeleted = true)로 변경된다.")
-  void deleteBook_Success() { // 💡 deleteUser -> deleteBook 으로 수정했다고 가정!
+  void deleteBook_Success() {
     // given
     UUID bookId = UUID.randomUUID();
 
@@ -337,7 +337,6 @@ class BookServiceTest {
     bookService.permanentDeleteBook(bookId);
 
     // then
-    // 💡 JPA의 실제 삭제 메서드가 호출되었는지 검증!
     verify(bookRepository).delete(book);
   }
 }

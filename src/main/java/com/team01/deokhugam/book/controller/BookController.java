@@ -96,7 +96,7 @@ public class BookController implements BookApi{
 
   @Override
   @DeleteMapping(value = "/{bookId}/hard")
-  public ResponseEntity<Void> permanentDeleteBook(UUID bookId) {
+  public ResponseEntity<Void> permanentDeleteBook(@PathVariable("bookId") UUID bookId) {
     log.info("도서 물리 삭제 요청: {}", bookId);
     bookService.permanentDeleteBook(bookId);
     log.info("도서 물리 삭제 완료: {}", bookId);

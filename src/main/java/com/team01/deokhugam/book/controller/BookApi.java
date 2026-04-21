@@ -94,7 +94,7 @@ public interface BookApi {
   );
 
   /// DELETE - /api/books/{bookId}/hard - 도서 물리 삭제
-  @Operation(summary = "도서 물리 삭제", description = "도서 식별자(UUID)를 통해 도서를 삭제(물리적 삭제) 처리합니다.")
+  @Operation(summary = "도서 물리 삭제", description = "도서 식별자(UUID)를 통해 논리 삭제가 진행된 도서를 삭제(물리적 삭제) 처리합니다.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "204", description = "도서 삭제 성공 (반환 데이터 없음)"),
       @ApiResponse(responseCode = "404", description = "존재하지 않는 도서",
