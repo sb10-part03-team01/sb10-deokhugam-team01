@@ -3,8 +3,9 @@ package com.team01.deokhugam.book.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.team01.deokhugam.book.Book;
+import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.global.config.QueryDslConfig;
+import com.team01.deokhugam.global.enums.SortDirection;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -93,7 +94,7 @@ class BookRepositoryTest {
   void testFirstPage() {
     // given
     String orderBy = "rating";
-    String direction = "DESC";
+    SortDirection direction = SortDirection.DESC;
     int limit = 2;
 
     // when
@@ -117,7 +118,7 @@ class BookRepositoryTest {
   void testSecondPage() {
     // given: 프론트가 1페이지의 마지막 데이터(해리포터1)를 기준으로 커서를 던짐
     String orderBy = "rating";
-    String direction = "DESC";
+    SortDirection direction = SortDirection.DESC;
 
     // 1페이지의 마지막 책이었던 '해리포터1'의 정보를 커서로 세팅
     String cursor = "4.5";

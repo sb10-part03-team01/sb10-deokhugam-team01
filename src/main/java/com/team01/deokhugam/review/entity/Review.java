@@ -1,6 +1,6 @@
 package com.team01.deokhugam.review.entity;
 
-import com.team01.deokhugam.book.Book;
+import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.global.entity.BaseRemovableEntity;
 import com.team01.deokhugam.user.entity.User;
 import jakarta.persistence.Column;

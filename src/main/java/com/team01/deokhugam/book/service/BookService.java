@@ -1,9 +1,12 @@
-package com.team01.deokhugam.book;
+package com.team01.deokhugam.book.service;
 
+import com.team01.deokhugam.book.BookMapper;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
+import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
@@ -63,16 +66,12 @@ public class BookService {
   }
 
   @Transactional(readOnly = true)
-  public CursorPageResponse<BookDto> findAllBooks(String keyword, String orderBy, String direction, String cursor, OffsetDateTime after, Integer limit){
+  public CursorPageResponse<BookDto> findAllBooks(String keyword, String orderBy, SortDirection direction, String cursor, OffsetDateTime after, Integer limit){
     Set<String> allowedOrderBy = Set.of("title", "rating", "reviewCount", "publishedDate");
-    Set<String> allowedDirection = Set.of("ASC", "DESC");
 
     // 추후에 커스텀 예외로 바꿀 예정
     if(!allowedOrderBy.contains(orderBy)){
       throw new IllegalArgumentException("올바른 정렬기준이 아닙니다");
-    }
-    if(!allowedDirection.contains(direction)){
-      throw new IllegalArgumentException("올바른 정렬 방향이 아닙니다");
     }
 
     int normalizedLimit = PageLimitPolicy.normalize(limit);
@@ -112,7 +111,7 @@ public class BookService {
   }
 
   @Transactional
-  public BookDto updateBook(BookUpdateRequest request, UUID bookId){
+  public BookDto updateBook(BookUpdateRequest request, UUID bookId, MultipartFile thumbnailImage){
     Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
         .orElseThrow(() -> new BookNotFoundException(bookId));
 
@@ -131,6 +130,9 @@ public class BookService {
     if(request.getPublishedDate() != null){
       book.updatePublishedDate(request.getPublishedDate());
     }
+    if(thumbnailImage != null && !thumbnailImage.isEmpty()){
+      // 추후 s3로 업로드, presignURL 가져오는 로직 추가
+    }
 
     return bookMapper.toDto(book);
   }
@@ -145,7 +147,7 @@ public class BookService {
 
   @Transactional
   public void permanentDeleteBook(UUID bookId){
-    Book book = bookRepository.findById(bookId)
+    Book book = bookRepository.findByIdAndIsDeletedTrue(bookId)
         .orElseThrow(() -> new BookNotFoundException(bookId));
 
     bookRepository.delete(book);
