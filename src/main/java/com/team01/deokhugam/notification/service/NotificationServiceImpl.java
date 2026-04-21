@@ -92,7 +92,7 @@ public class NotificationServiceImpl implements NotificationService {
         userId, request.after(), request.limit());
 
     int normalizedLimit = PageLimitPolicy.normalize(request.limit());
-    PageRequest pageable = PageRequest.of(0,  normalizedLimit + 1);
+    PageRequest pageable = PageRequest.of(0, normalizedLimit + 1);
 
     List<Notification> results;
 
@@ -101,10 +101,19 @@ public class NotificationServiceImpl implements NotificationService {
       results = notificationRepository
           .findByUserIdOrderByCreatedAtDesc(userId, pageable);
     } else {
+      if (request.cursor() == null || request.cursor().isBlank()) {
+        throw new IllegalArgumentException("after 가 지정된 경우 cursor 는 필수입니다.");
+      }
+      UUID cursorId;
+      try {
+        cursorId = UUID.fromString(request.cursor());
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("cursor 형식이 올바르지 않습니다: " + request.cursor(), e);
+      }
       log.info("[FIND_ALL_NOTIFICATION] 다음 페이지 조회 userId={}, after={}", userId, request.after());
       results = notificationRepository
           .findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(
-              userId, request.after(), UUID.fromString(request.cursor()), pageable);
+              userId, request.after(), cursorId, pageable);
     }
 
     log.info("[FIND_ALL_NOTIFICATION] 조회 완료 userId={}, 조회된 개수={}", userId, results.size());
@@ -128,7 +137,10 @@ public class NotificationServiceImpl implements NotificationService {
         dtoList,
         normalizedLimit,
         totalElements,
-        dto -> dto.id().toString(),
+        dto -> dto.id().
+
+            toString(),
+
         NotificationDto::createdAt
     );
   }

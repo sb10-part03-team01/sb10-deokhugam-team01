@@ -1,5 +1,6 @@
 package com.team01.deokhugam.notification;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -191,12 +192,10 @@ public class NotificationServiceTest {
       mockUser = mock(User.class);
       given(mockUser.getId()).willReturn(UUID.randomUUID());
       mockReview = mock(Review.class);
-      given(mockReview.getId()).willReturn(UUID.randomUUID());
-      given(mockReview.getContent()).willReturn("테스트내용");
     }
 
     @Test
-    @DisplayName("알림 목록 조회 테스트 - 첫 페이지 성공")
+    @DisplayName("알림 목록 조회 테스트 성공 - 첫 페이지")
     void NotificationFindAllSuccess() {
       //given
       mockCursorPageRequest = new CursorPageRequest(null, null, 50);
@@ -209,6 +208,8 @@ public class NotificationServiceTest {
       OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
       given(notification.getCreatedAt()).willReturn(fixedTime);
       given(notification.getUpdatedAt()).willReturn(fixedTime);
+      given(mockReview.getId()).willReturn(UUID.randomUUID());
+      given(mockReview.getContent()).willReturn("테스트내용");
 
       given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
           PageRequest.class)))
@@ -224,20 +225,21 @@ public class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("알림 목록 조회 테스트 - 다음 페이지 성공")
+    @DisplayName("알림 목록 조회 테스트 성공 - 다음 페이지")
     void NotificationFindAllSuccessNext() {
       //given
-      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-      mockCursorPageRequest = new CursorPageRequest(UUID.randomUUID().toString(), fixedTime, 50);
-
       Notification notification = mock(Notification.class);
       given(notification.getId()).willReturn(UUID.randomUUID());
       given(notification.getUser()).willReturn(mockUser);
       given(notification.getReview()).willReturn(mockReview);
       given(notification.getContent()).willReturn("알림 목록 조회 테스트");
       given(notification.isRead()).willReturn(false);
+      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+      mockCursorPageRequest = new CursorPageRequest(UUID.randomUUID().toString(), fixedTime, 50);
       given(notification.getCreatedAt()).willReturn(fixedTime);
       given(notification.getUpdatedAt()).willReturn(fixedTime);
+      given(mockReview.getId()).willReturn(UUID.randomUUID());
+      given(mockReview.getContent()).willReturn("테스트내용");
 
       given(notificationRepository.findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(
           any(UUID.class), any(OffsetDateTime.class), any(UUID.class), any(PageRequest.class)))
@@ -252,6 +254,102 @@ public class NotificationServiceTest {
       assertThat(result.content()).hasSize(1);
       assertThat(result.hasNext()).isFalse();
     }
+
+    @Test
+    @DisplayName("알림 목록 조회 테스트 실패 - after가 null이 아닌데 cursor가 null")
+    void NotificationFindAllTestFail1() {
+      //given
+      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+      mockCursorPageRequest = new CursorPageRequest(null, fixedTime, 50);
+      //when,then
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("after 가 지정된 경우 cursor 는 필수입니다.");
+
+    }
+
+    @Test
+    @DisplayName("알림 목록 조회 테스트 실패 - cursor이 잘못된 UUID 포맷인경우")
+    void NotificationFindAllTestFail2() {
+      //given
+      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+      mockCursorPageRequest = new CursorPageRequest("invalid-uuid", fixedTime, 50);
+      //when,then
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("cursor 형식이 올바르지 않습니다");
+    }
+
+    @Test
+    @DisplayName("알림 목록 조회 테스트 성공 - hasNext = true 인 경우")
+    void NotificationFindAllTestHasNext(){
+      //given
+      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+      mockCursorPageRequest = new CursorPageRequest(null, null, 2);
+      Notification notification1 = mock(Notification.class);
+      Notification notification2 = mock(Notification.class);
+      Notification notification3 = mock(Notification.class);
+
+      List<Notification> testResult = List.of(notification1, notification2, notification3);
+
+      for (Notification n : testResult) {
+        given(n.getId()).willReturn(UUID.randomUUID());
+        given(n.getUser()).willReturn(mockUser);
+        given(n.getReview()).willReturn(mockReview);
+        given(n.getContent()).willReturn("알림 내용");
+        given(n.isRead()).willReturn(false);
+        given(n.getCreatedAt()).willReturn(fixedTime);
+        given(n.getUpdatedAt()).willReturn(fixedTime);
+        given(mockReview.getId()).willReturn(UUID.randomUUID());
+        given(mockReview.getContent()).willReturn("테스트내용");
+      }
+
+      given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
+          PageRequest.class)))
+          .willReturn(testResult);
+
+      given(notificationRepository.countByUserId(any(UUID.class))).willReturn(3L);
+
+      //when
+      CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
+          mockCursorPageRequest);
+      //then
+      assertThat(result.content()).hasSize(2);
+      assertThat(result.hasNext()).isTrue();
+
+
+    }
+
+    @Test
+    @DisplayName("알림 조회 테스트 성공 - limit가 null인 경우")
+    void NotificationFindAllLimitNull(){
+      //given
+      mockCursorPageRequest = new CursorPageRequest(null, null, null);
+      Notification notification = mock(Notification.class);
+      given(notification.getId()).willReturn(UUID.randomUUID());
+      given(notification.getUser()).willReturn(mockUser);
+      given(notification.getReview()).willReturn(mockReview);
+      given(notification.getContent()).willReturn("알림 목록 조회 테스트");
+      given(notification.isRead()).willReturn(false);
+      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+      given(notification.getCreatedAt()).willReturn(fixedTime);
+      given(notification.getUpdatedAt()).willReturn(fixedTime);
+      given(mockReview.getId()).willReturn(UUID.randomUUID());
+      given(mockReview.getContent()).willReturn("테스트내용");
+
+      given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
+          PageRequest.class)))
+          .willReturn(List.of(notification));
+      given(notificationRepository.countByUserId(any(UUID.class))).willReturn(1L);
+      //when
+      CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
+          mockCursorPageRequest);
+      //then
+      assertThat(result.content()).hasSize(1);
+      assertThat(result.hasNext()).isFalse();
+
+    }
+
 
   }
 
