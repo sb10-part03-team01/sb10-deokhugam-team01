@@ -43,11 +43,11 @@ public class BookService {
   public BookService(BookMapper bookMapper,
       BookRepository bookRepository,
       @Qualifier("naverRestClient") RestClient naverRestClient,
-      @Qualifier("naverRestClient") RestClient restClientBuilder) {
+      @Qualifier("defaultRestClient") RestClient defaultRestClient) {
     this.bookMapper = bookMapper;
     this.bookRepository = bookRepository;
     this.naverRestClient = naverRestClient;
-    this.defaultRestClient = restClientBuilder;
+    this.defaultRestClient = defaultRestClient;
   }
 
   @Transactional
@@ -183,7 +183,7 @@ public class BookService {
         .retrieve()
         .body(NaverBookResponse.class);
 
-    if(response == null || response.items().isEmpty()){
+    if (response == null || response.items() == null || response.items().isEmpty()) {
       throw new IllegalArgumentException("해당 isbn으로 검색된 도서가 없습니다.");
     }
 

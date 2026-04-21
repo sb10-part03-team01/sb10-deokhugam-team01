@@ -8,7 +8,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-public class NaverApiConfig {
+public class ExternalApiConfig {
   @Value("${deokhugam.naver.client.id}")
   private String clientId;
 

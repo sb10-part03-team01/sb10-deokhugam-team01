@@ -46,7 +46,10 @@ class BookServiceTest {
   private BookMapper bookMapper;
 
   @Mock
-  private RestClient.Builder restClientBuilder;
+  private RestClient naverRestClient;
+
+  @Mock
+  private RestClient defaultRestClient;
 
   @InjectMocks
   private BookService bookService;
