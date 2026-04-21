@@ -11,7 +11,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
   /*
   SELECT COUNT(*) > 0
-  FROM users u
+  FROM User u
   WHERE u.email = ? AND u.deletedAt IS NULL
    */
   boolean existsByEmailAndDeletedAtIsNull(String email);
