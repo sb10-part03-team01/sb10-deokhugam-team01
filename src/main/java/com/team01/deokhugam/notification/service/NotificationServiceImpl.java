@@ -1,5 +1,7 @@
 package com.team01.deokhugam.notification.service;
 
+import com.team01.deokhugam.global.exception.ErrorCode;
+import com.team01.deokhugam.global.exception.notification.NotificationException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
@@ -12,6 +14,7 @@ import com.team01.deokhugam.user.entity.User;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -98,20 +101,23 @@ public class NotificationServiceImpl implements NotificationService {
 
     if (request.after() == null) {
       if (request.cursor() != null && !request.cursor().isBlank()) {
-        throw new IllegalArgumentException("cursor 가 지정된 경우 after 도 필수입니다.");
+        throw new NotificationException(ErrorCode.INVALID_CURSOR_PAGINATION,
+            Map.of("cursor", request.cursor()));
       }
       log.info("[FIND_ALL_NOTIFICATION] 첫 페이지 조회 userId={}", userId);
       results = notificationRepository
           .findByUserIdOrderByCreatedAtDesc(userId, pageable);
     } else {
       if (request.cursor() == null || request.cursor().isBlank()) {
-        throw new IllegalArgumentException("after 가 지정된 경우 cursor 는 필수입니다.");
+        throw new NotificationException(ErrorCode.INVALID_CURSOR_PAGINATION,
+            Map.of("after", request.after()));
       }
       UUID cursorId;
       try {
         cursorId = UUID.fromString(request.cursor());
       } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("cursor 형식이 올바르지 않습니다: " + request.cursor(), e);
+        throw new NotificationException(ErrorCode.INVALID_CURSOR_FORMAT,
+            Map.of("cursor", request.cursor()));
       }
       log.info("[FIND_ALL_NOTIFICATION] 다음 페이지 조회 userId={}, after={}", userId, request.after());
       results = notificationRepository
