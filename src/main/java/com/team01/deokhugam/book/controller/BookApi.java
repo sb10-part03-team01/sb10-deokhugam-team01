@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.http.MediaType;
@@ -34,6 +36,7 @@ public interface BookApi {
   })
   ResponseEntity<BookDto> postBook(
       @Parameter(description = "도서 기본 정보 (JSON 포맷)", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+      @Valid
       BookCreateRequest bookData,
       @Parameter(description = "도서 썸네일 이미지 (선택 사항)", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
       MultipartFile thumbnailImage
@@ -80,7 +83,7 @@ public interface BookApi {
   })
   ResponseEntity<BookDto> updateBook(
       @Parameter(description = "수정할 도서의 ID (UUID)", example = "123e4567-e89b-12d3-a456-426614174000") UUID bookId,
-      @Parameter(description = "수정할 도서 정보 (JSON 포맷)", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)) BookUpdateRequest request,
+      @Parameter(description = "수정할 도서 정보 (JSON 포맷)", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)) @Valid BookUpdateRequest request,
       @Parameter(description = "변경할 썸네일 이미지 (선택 사항)", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)) MultipartFile thumbnailImage
   );
 
@@ -119,7 +122,6 @@ public interface BookApi {
           content = @Content(mediaType = "application/json"))
   })
   ResponseEntity<NaverBookDto> getBookInfoByIsbn(
-      @Parameter(description = "검색할 도서의 ISBN 번호 (10자리 또는 13자리)", example = "9788966263158")
-      String isbn
+      @Parameter(description = "검색할 도서의 ISBN 번호 (10자리 또는 13자리)", example = "9788966263158") @NotBlank String isbn
   );
 }

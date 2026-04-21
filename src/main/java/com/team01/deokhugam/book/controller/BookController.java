@@ -9,7 +9,6 @@ import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -109,7 +108,7 @@ public class BookController implements BookApi{
 
   @Override
   @GetMapping(value = "/info")
-  public ResponseEntity<NaverBookDto> getBookInfoByIsbn(@RequestParam(required = true) @NotBlank String isbn) {
+  public ResponseEntity<NaverBookDto> getBookInfoByIsbn(@RequestParam(required = true) String isbn) {
     log.info("isbn으로 도서 정보 조회 요청: {}", isbn);
     NaverBookDto response = bookService.getBookInfoByIsbn(isbn);
 
