@@ -97,6 +97,9 @@ public class NotificationServiceImpl implements NotificationService {
     List<Notification> results;
 
     if (request.after() == null) {
+      if (request.cursor() != null && !request.cursor().isBlank()) {
+        throw new IllegalArgumentException("cursor 가 지정된 경우 after 도 필수입니다.");
+      }
       log.info("[FIND_ALL_NOTIFICATION] 첫 페이지 조회 userId={}", userId);
       results = notificationRepository
           .findByUserIdOrderByCreatedAtDesc(userId, pageable);

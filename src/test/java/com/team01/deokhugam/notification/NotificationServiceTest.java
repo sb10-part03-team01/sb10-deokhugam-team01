@@ -281,6 +281,18 @@ public class NotificationServiceTest {
     }
 
     @Test
+    @DisplayName("알림 목록 조회 테스트 실패 - after이 null이고 cursor이 null이 아닌경우")
+    void NotificationFindAllTestFail3(){
+      //given
+      mockCursorPageRequest = new CursorPageRequest(UUID.randomUUID().toString(), null, 50);
+      //when,then
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("cursor 가 지정된 경우 after 도 필수입니다");
+
+    }
+
+    @Test
     @DisplayName("알림 목록 조회 테스트 성공 - hasNext = true 인 경우")
     void NotificationFindAllTestHasNext(){
       //given
