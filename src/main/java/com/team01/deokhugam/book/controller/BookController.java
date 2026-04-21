@@ -9,6 +9,7 @@ import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -31,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 @RequestMapping("/api/books")
 public class BookController implements BookApi{
   private final BookService bookService;
@@ -106,7 +109,7 @@ public class BookController implements BookApi{
 
   @Override
   @GetMapping(value = "/info")
-  public ResponseEntity<NaverBookDto> getBookInfoByIsbn(@RequestParam(required = true) String isbn) {
+  public ResponseEntity<NaverBookDto> getBookInfoByIsbn(@RequestParam(required = true) @NotBlank String isbn) {
     log.info("isbn으로 도서 정보 조회 요청: {}", isbn);
     NaverBookDto response = bookService.getBookInfoByIsbn(isbn);
 

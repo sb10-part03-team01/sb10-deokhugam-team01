@@ -106,7 +106,7 @@ public interface BookApi {
       @Parameter(description = "삭제할 도서의 ID (UUID)", example = "123e4567-e89b-12d3-a456-426614174000") UUID bookId
   );
 
-  /// Get - /api/books/info - ISBN으로 도서 정보 조회
+  /// GET - /api/books/info - ISBN으로 도서 정보 조회
   @Operation(summary = "ISBN 도서 정보 자동 완성 (외부 연동)", description = "ISBN 번호를 통해 네이버 도서 검색 API를 호출하여 폼 자동 완성용 도서 정보를 조회합니다.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "도서 정보 조회 성공",
