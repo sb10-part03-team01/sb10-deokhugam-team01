@@ -1,11 +1,13 @@
 package com.team01.deokhugam.review.controller;
 
+import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
 import com.team01.deokhugam.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -37,7 +40,9 @@ public class ReviewController {
       @ApiResponse(responseCode = "500", description = "서버 내부 오류")
   })
   @PostMapping
-  public ResponseEntity<ReviewDto> createReview(@Valid @RequestBody ReviewCreateRequest request) {
+  public ResponseEntity<ReviewDto> createReview(
+      @Valid @RequestBody ReviewCreateRequest request
+  ) {
     return ResponseEntity.status(HttpStatus.CREATED).body(reviewService.createReview(request));
   }
 
@@ -55,4 +60,34 @@ public class ReviewController {
     return ResponseEntity.ok(reviewService.getReview(reviewId, requestUserId));
   }
 
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "리뷰 목록 조회 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청(정렬 기준 오류, 페이지네이션 파라미터 오류, 요청자 ID누락)"),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+  })
+  @GetMapping
+  public ResponseEntity<CursorPageResponseReviewDto> getReviews(
+      @RequestHeader("Deokhugam-Request-User-ID") UUID requestUserId,
+      @RequestParam(required = false) UUID userId,
+      @RequestParam(required = false) UUID bookId,
+      @RequestParam(required = false) String keyword,
+      @RequestParam(defaultValue = "createdAt") String orderBy,
+      @RequestParam(defaultValue = "DESC") String direction,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) OffsetDateTime after,
+      @RequestParam(required = false) Integer limit
+  ) {
+    return ResponseEntity.ok(reviewService.searchReviews(
+            requestUserId,
+            userId,
+            bookId,
+            keyword,
+            orderBy,
+            direction,
+            cursor,
+            after,
+            limit
+        )
+    );
+  }
 }
