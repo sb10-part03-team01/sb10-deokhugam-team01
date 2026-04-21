@@ -18,6 +18,7 @@ public enum ErrorCode {
   FORBIDDEN_COMMENT_ACCESS(403, "FORBIDDEN_COMMENT_ACCESS", "댓글에 대한 권한이 없습니다."),
 
   // notification
+  NOTIFICATION_NOT_FOUND(404, "NOTIFICATION_NOT_FOUND", "알림을 찾을 수 없습니다."),
 
   // ranking
 
