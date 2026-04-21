@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@Slf4j
 public class BookService {
 
   private final BookMapper bookMapper;
@@ -37,11 +40,14 @@ public class BookService {
   private final RestClient naverRestClient;
   private final RestClient defaultRestClient;
 
-  public BookService(BookMapper bookMapper,BookRepository bookRepository, RestClient naverRestClient, RestClient.Builder restClientBuilder) {
+  public BookService(BookMapper bookMapper,
+      BookRepository bookRepository,
+      @Qualifier("naverRestClient") RestClient naverRestClient,
+      @Qualifier("naverRestClient") RestClient restClientBuilder) {
     this.bookMapper = bookMapper;
     this.bookRepository = bookRepository;
     this.naverRestClient = naverRestClient;
-    this.defaultRestClient = restClientBuilder.build();
+    this.defaultRestClient = restClientBuilder;
   }
 
   @Transactional
@@ -167,11 +173,12 @@ public class BookService {
   }
 
   public NaverBookDto getBookInfoByIsbn(String isbn){
+    String safeIsbn = isbn.trim();
 
     NaverBookResponse response = naverRestClient.get()
         .uri(uriBuilder -> uriBuilder
             .path("/book_adv.json")
-            .queryParam("d_isbn",isbn)
+            .queryParam("d_isbn",safeIsbn)
             .build())
         .retrieve()
         .body(NaverBookResponse.class);
@@ -205,9 +212,23 @@ public class BookService {
     if(imageUrl == null || imageUrl.isBlank()){
       return null;
     }
-    return defaultRestClient.get()
-        .uri(imageUrl)
-        .retrieve()
-        .body(byte[].class);
+    // SSRF(Server-Side Request Forgery) 문제 해결
+    if (!imageUrl.startsWith("https://shopping-phinf.pstatic.net/") &&
+        !imageUrl.startsWith("https://bookthumb-phinf.pstatic.net/")) { // 네이버 도서 썸네일 도메인들
+      log.warn("허용되지 않은 이미지 호스트라서 다운로드를 차단합니다: {}", imageUrl);
+      return null;
+    }
+
+    try {
+      // 네이버 호스트만 허용했으므로 악성 거대 파일(OOM)이 올 확률은 사실상 0%.
+      return defaultRestClient.get()
+          .uri(imageUrl)
+          .retrieve()
+          .body(byte[].class);
+    } catch (Exception e) {
+      // 이미지 다운로드에 실패해도 전체 비즈니스 로직이 터지지 않도록 null 반환
+      log.warn("이미지 다운로드 실패 (URL: {}), 사유: {}", imageUrl, e.getMessage());
+      return null;
+    }
   }
 }
