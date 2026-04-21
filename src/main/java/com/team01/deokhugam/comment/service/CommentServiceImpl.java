@@ -129,12 +129,11 @@ public class CommentServiceImpl implements CommentService {
   public void hardDeleteComment(UUID userId, UUID commentId) {
     Comment comment =
         commentRepository
-            .findDetailById(commentId)
+            .findByIdAndIsDeletedTrue(commentId)
             .orElseThrow(() -> new CommentNotFoundException(commentId));
 
     validateOwner(userId, comment);
 
-    comment.getReview().decreaseCommentCount();
     commentRepository.delete(comment);
   }
 

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 import com.team01.deokhugam.book.Book;
@@ -15,6 +17,7 @@ import com.team01.deokhugam.comment.repository.CommentRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
+import com.team01.deokhugam.global.exception.comment.CommentNotFoundException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.repository.ReviewRepository;
@@ -215,7 +218,7 @@ public class CommentServiceTest {
   }
 
   @Test
-  @DisplayName("댓글 삭제")
+  @DisplayName("댓글 논리 삭제")
   void delete_comment() {
     // given
     review.increaseCommentCount();
@@ -230,6 +233,31 @@ public class CommentServiceTest {
     assertThat(comment.isDeleted()).isTrue();
     assertThat(comment.getDeletedAt()).isNotNull();
     assertThat(review.getCommentCount()).isEqualTo(beforeCount - 1);
+  }
+
+  @Test
+  @DisplayName("댓글 물리 삭제")
+  void hard_delete_comment() {
+    // given
+    given(commentRepository.findByIdAndIsDeletedTrue(commentId)).willReturn(Optional.of(comment));
+
+    // when
+    commentService.hardDeleteComment(userId, commentId);
+
+    // then
+    verify(commentRepository).delete(comment);
+  }
+
+  @Test
+  @DisplayName("댓글 물리 삭제 시 논리 삭제된 댓글이 아니면 예외 발생")
+  void hard_delete_comment_not_soft_deleted_exception() {
+    // given
+    given(commentRepository.findByIdAndIsDeletedTrue(commentId)).willReturn(Optional.empty());
+
+    // when // then
+    assertThatThrownBy(() -> commentService.hardDeleteComment(userId, commentId))
+        .isInstanceOf(CommentNotFoundException.class);
+    verify(commentRepository, never()).delete(any(Comment.class));
   }
 
   @Test

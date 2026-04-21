@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -219,6 +220,22 @@ public class CommentControllerTest {
   }
 
   // ========= Comment 삭제 테스트 =========
+  @Test
+  @DisplayName("댓글 논리 삭제 성공")
+  void delete_comment_success() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID commentId = UUID.randomUUID();
+
+    // when , then
+    mockMvc
+        .perform(
+            delete("/api/comments/{commentId}", commentId)
+                .header(USER_ID_HEADER, userId.toString()))
+        .andExpect(status().isNoContent());
+
+    verify(commentService).deleteComment(eq(userId), eq(commentId));
+  }
 
   // ========= Comment 조회 테스트 =========}
 
