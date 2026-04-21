@@ -147,7 +147,7 @@ public class BookService {
 
   @Transactional
   public void permanentDeleteBook(UUID bookId){
-    Book book = bookRepository.findById(bookId)
+    Book book = bookRepository.findByIdAndIsDeletedTrue(bookId)
         .orElseThrow(() -> new BookNotFoundException(bookId));
 
     bookRepository.delete(book);
