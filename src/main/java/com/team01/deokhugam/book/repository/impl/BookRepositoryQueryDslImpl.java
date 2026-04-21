@@ -1,12 +1,15 @@
 package com.team01.deokhugam.book.repository.impl;
 
+import static com.team01.deokhugam.book.entity.QBook.book;
+
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.team01.deokhugam.book.Book;
+import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepositoryQueryDsl;
+import com.team01.deokhugam.global.enums.SortDirection;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -14,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import static com.team01.deokhugam.book.QBook.book;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,7 +26,7 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
   @Override
   public List<Book> findBooks(String keyword,
       String orderBy,
-      String direction,
+      SortDirection direction,
       String cursor,
       OffsetDateTime after,
       int limit) {
@@ -83,8 +85,8 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
   }
 
   // OrderSpecifier<>(a,b) -> b를 기준으로 a방향으로 정렬 조건문을 반환
-  private OrderSpecifier<?> dynamicOrder(String orderBy, String direction){
-    Order order = "ASC".equals(direction) ? Order.ASC : Order.DESC;
+  private OrderSpecifier<?> dynamicOrder(String orderBy, SortDirection direction){
+    Order order = direction.equals(SortDirection.ASC) ? Order.ASC : Order.DESC;
 
     if(!StringUtils.hasText(orderBy)){
       // 정렬 기준이 없으면 생성일을 기본 정렬 기준으로 설정
@@ -101,13 +103,13 @@ public class BookRepositoryQueryDslImpl implements BookRepositoryQueryDsl {
   }
 
   // 커서, 보조커서, 정렬기준, 정렬방향에 따른 조건문
-  private BooleanExpression cursorCondition(String cursor, OffsetDateTime after, String orderBy, String direction){
+  private BooleanExpression cursorCondition(String cursor, OffsetDateTime after, String orderBy, SortDirection direction){
     if(!StringUtils.hasText(cursor) || after == null){
       // 커서가 없고 보조 커서도 없으면 조건문은 무시한다.
       return null;
     }
 
-    boolean isAsc = "ASC".equalsIgnoreCase(direction);
+    boolean isAsc = direction.equals(SortDirection.ASC);
 
     // 정렬 기준에 따라서 커서도 바뀌어야함
     // 커서 기준으로 오름차순/내림차순에 따라 where cursor < 값 or (cursor = 값 and 보조커서 <  after)인 쿼리문과 같다

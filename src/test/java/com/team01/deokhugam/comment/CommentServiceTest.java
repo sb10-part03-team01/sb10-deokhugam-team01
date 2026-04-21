@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
-import com.team01.deokhugam.book.Book;
+import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;

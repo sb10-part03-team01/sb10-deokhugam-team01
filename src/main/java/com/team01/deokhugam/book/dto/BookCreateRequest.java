@@ -26,11 +26,11 @@ public class BookCreateRequest {
   @NotBlank(message = "설명은 비어 있을 수 없다")
   private String description;
 
-  @NotNull(message = "출판사는 Null일 수 없다")
+  @NotBlank(message = "출판사는 비어 있을 수 없다")
   @Size(max = 100)
   private String publisher;
 
-  @NotBlank(message = "출판일은 비어 있을 수 없다")
+  @NotNull(message = "출판일은 Null일 수 없다")
   private LocalDate publishedDate;
 
   @Size(max = 20)
