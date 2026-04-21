@@ -31,13 +31,19 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@RequiredArgsConstructor
 public class BookService {
 
   private final BookMapper bookMapper;
   private final BookRepository bookRepository;
   private final RestClient naverRestClient;
-  private final RestClient defaultRestClient = RestClient.create();
+  private final RestClient defaultRestClient;
+
+  public BookService(BookMapper bookMapper,BookRepository bookRepository, RestClient naverRestClient, RestClient.Builder restClientBuilder) {
+    this.bookMapper = bookMapper;
+    this.bookRepository = bookRepository;
+    this.naverRestClient = naverRestClient;
+    this.defaultRestClient = restClientBuilder.build();
+  }
 
   @Transactional
   public BookDto createBook(BookCreateRequest request, MultipartFile thumbnail) {
