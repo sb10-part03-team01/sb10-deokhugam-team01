@@ -4,6 +4,7 @@ import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.service.CommentService;
+import com.team01.deokhugam.global.constant.AuthHeader;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
@@ -76,8 +77,7 @@ public class CommentController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<CommentDto> createComment(
-      @Parameter(description = "요청자 ID", required = true)
-          @RequestHeader("Deokhugam-Request-User-ID")
+      @Parameter(description = "요청자 ID", required = true) @RequestHeader(AuthHeader.REQUEST_USER_ID)
           UUID userId,
       @Valid @RequestBody CommentCreateRequest request) {
     return ResponseEntity.status(201).body(commentService.createComment(userId, request));
@@ -111,8 +111,7 @@ public class CommentController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<CommentDto> updateComment(
-      @Parameter(description = "요청자 ID", required = true)
-          @RequestHeader("Deokhugam-Request-User-ID")
+      @Parameter(description = "요청자 ID", required = true) @RequestHeader(AuthHeader.REQUEST_USER_ID)
           UUID userId,
       @Parameter(description = "댓글 ID", required = true) @PathVariable UUID commentId,
       @Valid @RequestBody CommentUpdateRequest request) {
@@ -130,8 +129,7 @@ public class CommentController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<Void> deleteComment(
-      @Parameter(description = "요청자 ID", required = true)
-          @RequestHeader("Deokhugam-Request-User-ID")
+      @Parameter(description = "요청자 ID", required = true) @RequestHeader(AuthHeader.REQUEST_USER_ID)
           UUID userId,
       @Parameter(description = "댓글 ID", required = true) @PathVariable UUID commentId) {
     commentService.deleteComment(userId, commentId);
@@ -149,8 +147,7 @@ public class CommentController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   public ResponseEntity<Void> hardDeleteComment(
-      @Parameter(description = "요청자 ID", required = true)
-          @RequestHeader("Deokhugam-Request-User-ID")
+      @Parameter(description = "요청자 ID", required = true) @RequestHeader(AuthHeader.REQUEST_USER_ID)
           UUID userId,
       @Parameter(description = "댓글 ID", required = true) @PathVariable UUID commentId) {
     commentService.hardDeleteComment(userId, commentId);

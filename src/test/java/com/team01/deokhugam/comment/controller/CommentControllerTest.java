@@ -16,6 +16,7 @@ import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.service.CommentService;
+import com.team01.deokhugam.global.constant.AuthHeader;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
@@ -41,7 +42,7 @@ public class CommentControllerTest {
 
   @MockitoBean private CommentService commentService;
 
-  private static final String USER_ID_HEADER = "Deokhugam-Request-User-ID";
+  private static final String USER_ID_HEADER = AuthHeader.REQUEST_USER_ID;
 
   private CommentDto createCommentDto(UUID commentId, UUID reviewId, UUID userId, String content) {
     return new CommentDto(
