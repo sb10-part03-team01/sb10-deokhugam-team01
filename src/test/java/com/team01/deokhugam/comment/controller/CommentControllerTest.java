@@ -428,4 +428,19 @@ public class CommentControllerTest {
 
     verify(commentService, never()).getComments(any(), any(), any());
   }
+
+  @Test
+  @DisplayName("댓글 단건 조회 실패(404) - 댓글이 존재하지 않으면")
+  void get_comment_fail_when_comment_not_found() throws Exception {
+    // given
+    UUID commentId = UUID.randomUUID();
+
+    given(commentService.getComment(eq(commentId)))
+        .willThrow(
+            new DeokhugamException(
+                ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId.toString())));
+
+    // when // then
+    mockMvc.perform(get("/api/comments/{commentId}", commentId)).andExpect(status().isNotFound());
+  }
 }

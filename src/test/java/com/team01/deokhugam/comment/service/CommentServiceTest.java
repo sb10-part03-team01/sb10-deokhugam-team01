@@ -277,6 +277,22 @@ public class CommentServiceTest {
   }
 
   @Test
+  @DisplayName("댓글 물리 삭제시 작성자가 아니면 예외 발생")
+  void hard_delete_not_author_exception() {
+    // given
+    given(commentRepository.findByIdAndIsDeletedTrue(commentId)).willReturn(Optional.of(comment));
+
+    // when // then
+    assertThatThrownBy(() -> commentService.hardDeleteComment(otherUserId, commentId))
+        .isInstanceOf(DeokhugamException.class)
+        .satisfies(
+            exception -> {
+              DeokhugamException e = (DeokhugamException) exception;
+              assertThat(e.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_COMMENT_ACCESS);
+            });
+  }
+
+  @Test
   @DisplayName("댓글 목록 조회 성공")
   void get_comments_success() {
     // given
