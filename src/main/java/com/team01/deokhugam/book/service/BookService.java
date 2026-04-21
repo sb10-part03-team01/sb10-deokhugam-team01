@@ -4,6 +4,9 @@ import com.team01.deokhugam.book.BookMapper;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
+import com.team01.deokhugam.book.dto.naver.NaverBookDto;
+import com.team01.deokhugam.book.dto.naver.NaverBookResponse;
+import com.team01.deokhugam.book.dto.naver.NaverBookResponse.NaverBookItem;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
@@ -12,7 +15,9 @@ import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.global.pagination.PageLimitPolicy;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +27,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -30,6 +36,8 @@ public class BookService {
 
   private final BookMapper bookMapper;
   private final BookRepository bookRepository;
+  private final RestClient naverRestClient;
+  private final RestClient defaultRestClient = RestClient.create();
 
   @Transactional
   public BookDto createBook(BookCreateRequest request, MultipartFile thumbnail) {
@@ -151,5 +159,50 @@ public class BookService {
         .orElseThrow(() -> new BookNotFoundException(bookId));
 
     bookRepository.delete(book);
+  }
+
+  public NaverBookDto getBookInfoByIsbn(String isbn){
+
+    NaverBookResponse response = naverRestClient.get()
+        .uri(uriBuilder -> uriBuilder
+            .path("/book_adv.json")
+            .queryParam("d_isbn",isbn)
+            .build())
+        .retrieve()
+        .body(NaverBookResponse.class);
+
+    if(response == null || response.items().isEmpty()){
+      throw new IllegalArgumentException("해당 isbn으로 검색된 도서가 없습니다.");
+    }
+
+    NaverBookItem naverBookItem = response.items().get(0);
+
+    // String으로 받은 출판일자를 date형태로 변환
+    LocalDate parsedDate = LocalDate.parse(
+        naverBookItem.publishedDate(),
+        DateTimeFormatter.ofPattern("yyyyMMdd")
+    );
+
+    byte[] imageBytes = downloadImageFromUrl(naverBookItem.thumbnailImage());
+
+    return NaverBookDto.builder()
+        .title(naverBookItem.title())
+        .author(naverBookItem.author())
+        .publisher(naverBookItem.publisher())
+        .publishedDate(parsedDate)
+        .isbn(naverBookItem.isbn())
+        .description(naverBookItem.description())
+        .thumbnailImage(imageBytes)
+        .build();
+  }
+
+  private byte[] downloadImageFromUrl(String imageUrl){
+    if(imageUrl == null || imageUrl.isBlank()){
+      return null;
+    }
+    return defaultRestClient.get()
+        .uri(imageUrl)
+        .retrieve()
+        .body(byte[].class);
   }
 }

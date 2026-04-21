@@ -3,6 +3,7 @@ package com.team01.deokhugam.book.controller;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
+import com.team01.deokhugam.book.dto.naver.NaverBookDto;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "도서 관리", description = "도서 관련 API")
 public interface BookApi {
+
   /// POST - /api/books - 도서 등록
   @Operation(summary = "새로운 도서 등록", description = "JSON 데이터와 썸네일 이미지를 함께 전송하여 새로운 도서를 등록합니다.")
   @ApiResponses(value = {
@@ -102,5 +104,22 @@ public interface BookApi {
   })
   ResponseEntity<Void> permanentDeleteBook(
       @Parameter(description = "삭제할 도서의 ID (UUID)", example = "123e4567-e89b-12d3-a456-426614174000") UUID bookId
+  );
+
+  /// Get - /api/books/info - ISBN으로 도서 정보 조회
+  @Operation(summary = "ISBN 도서 정보 자동 완성 (외부 연동)", description = "ISBN 번호를 통해 네이버 도서 검색 API를 호출하여 폼 자동 완성용 도서 정보를 조회합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "도서 정보 조회 성공",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = NaverBookDto.class))),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청 (ISBN 파라미터 누락)",
+          content = @Content(mediaType = "application/json")),
+      @ApiResponse(responseCode = "404", description = "해당 ISBN으로 검색된 도서가 없음",
+          content = @Content(mediaType = "application/json")),
+      @ApiResponse(responseCode = "500", description = "외부 API(네이버) 통신 오류",
+          content = @Content(mediaType = "application/json"))
+  })
+  ResponseEntity<NaverBookDto> getBookInfoByIsbn(
+      @Parameter(description = "검색할 도서의 ISBN 번호 (10자리 또는 13자리)", example = "9788966263158")
+      String isbn
   );
 }

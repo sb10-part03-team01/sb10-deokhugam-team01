@@ -3,6 +3,7 @@ package com.team01.deokhugam.book.controller;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
+import com.team01.deokhugam.book.dto.naver.NaverBookDto;
 import com.team01.deokhugam.book.service.BookService;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
@@ -101,5 +102,14 @@ public class BookController implements BookApi{
     bookService.permanentDeleteBook(bookId);
     log.info("도서 물리 삭제 완료: {}", bookId);
     return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  @GetMapping(value = "/info")
+  public ResponseEntity<NaverBookDto> getBookInfoByIsbn(@RequestParam(required = true) String isbn) {
+    log.info("isbn으로 도서 정보 조회 요청: {}", isbn);
+    NaverBookDto response = bookService.getBookInfoByIsbn(isbn);
+
+    return ResponseEntity.ok(response);
   }
 }
