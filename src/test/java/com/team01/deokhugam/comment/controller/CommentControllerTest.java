@@ -20,6 +20,8 @@ import com.team01.deokhugam.global.constant.AuthHeader;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
+import com.team01.deokhugam.global.exception.comment.CommentNotFoundException;
+import com.team01.deokhugam.global.exception.comment.ForbiddenCommentAccessException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.OffsetDateTime;
@@ -204,12 +206,7 @@ public class CommentControllerTest {
     CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글");
 
     given(commentService.updateComment(eq(userId), eq(commentId), any(CommentUpdateRequest.class)))
-        .willThrow(
-            new DeokhugamException(
-                ErrorCode.FORBIDDEN_COMMENT_ACCESS,
-                Map.of(
-                    "commentId", commentId.toString(),
-                    "userId", userId.toString())));
+        .willThrow(new ForbiddenCommentAccessException(userId, commentId));
 
     // when // then
     mockMvc
@@ -260,12 +257,7 @@ public class CommentControllerTest {
     UUID userId = UUID.randomUUID();
     UUID commentId = UUID.randomUUID();
 
-    willThrow(
-            new DeokhugamException(
-                ErrorCode.FORBIDDEN_COMMENT_ACCESS,
-                Map.of(
-                    "commentId", commentId.toString(),
-                    "userId", userId.toString())))
+    willThrow(new ForbiddenCommentAccessException(userId, commentId))
         .given(commentService)
         .deleteComment(eq(userId), eq(commentId));
 
@@ -284,9 +276,7 @@ public class CommentControllerTest {
     UUID userId = UUID.randomUUID();
     UUID commentId = UUID.randomUUID();
 
-    willThrow(
-            new DeokhugamException(
-                ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId.toString())))
+    willThrow(new CommentNotFoundException(commentId))
         .given(commentService)
         .deleteComment(eq(userId), eq(commentId));
 
@@ -336,12 +326,7 @@ public class CommentControllerTest {
     UUID userId = UUID.randomUUID();
     UUID commentId = UUID.randomUUID();
 
-    willThrow(
-            new DeokhugamException(
-                ErrorCode.FORBIDDEN_COMMENT_ACCESS,
-                Map.of(
-                    "commentId", commentId.toString(),
-                    "userId", userId.toString())))
+    willThrow(new ForbiddenCommentAccessException(userId, commentId))
         .given(commentService)
         .hardDeleteComment(eq(userId), eq(commentId));
 
@@ -360,9 +345,7 @@ public class CommentControllerTest {
     UUID userId = UUID.randomUUID();
     UUID commentId = UUID.randomUUID();
 
-    willThrow(
-            new DeokhugamException(
-                ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId.toString())))
+    willThrow(new CommentNotFoundException(commentId))
         .given(commentService)
         .hardDeleteComment(eq(userId), eq(commentId));
 
@@ -434,9 +417,7 @@ public class CommentControllerTest {
     UUID commentId = UUID.randomUUID();
 
     given(commentService.getComment(eq(commentId)))
-        .willThrow(
-            new DeokhugamException(
-                ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId.toString())));
+        .willThrow(new CommentNotFoundException(commentId));
 
     // when // then
     mockMvc.perform(get("/api/comments/{commentId}", commentId)).andExpect(status().isNotFound());

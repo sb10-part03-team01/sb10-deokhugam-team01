@@ -101,12 +101,15 @@ public interface CommentApi {
           UUID userId,
       @Parameter(description = "댓글 ID", required = true) UUID commentId);
 
-  @Operation(summary = "댓글 물리 삭제", description = "본인이 작성한 댓글을 물리적으로 삭제합니다.")
+  @Operation(summary = "댓글 물리 삭제", description = "논리 삭제된 본인 댓글을 물리적으로 삭제합니다.")
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "댓글 삭제 성공"),
     @ApiResponse(responseCode = "400", description = "잘못된 요청 (요청자 ID 누락)", content = @Content),
     @ApiResponse(responseCode = "403", description = "댓글 삭제 권한 없음", content = @Content),
-    @ApiResponse(responseCode = "404", description = "댓글 정보 없음", content = @Content),
+    @ApiResponse(
+        responseCode = "404",
+        description = "댓글 정보 없음 또는 논리 삭제되지 않은 댓글",
+        content = @Content),
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   ResponseEntity<Void> hardDeleteComment(
