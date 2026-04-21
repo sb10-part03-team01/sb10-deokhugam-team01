@@ -181,7 +181,7 @@ class BookControllerTest {
   }
 
   @Test
-  @DisplayName("도서 삭제 API - 정상 호출 시 204 No Content가 반환된다.")
+  @DisplayName("도서 논리 삭제 API - 정상 호출 시 204 No Content가 반환된다.")
   void deleteBook_Success() throws Exception {
 
     // when & then
@@ -192,4 +192,15 @@ class BookControllerTest {
     verify(bookService).deleteBook(bookId); // 서비스가 한 번 호출되었는지 확인
   }
 
+  @Test
+  @DisplayName("도서 물리 삭제 API - 정상 호출 시 204 No Content가 반환된다.")
+  void permanentDeleteBook_success() throws Exception{
+
+    // when & then
+    mockMvc.perform(delete("/api/books/{bookId}/hard", bookId))
+        .andDo(print())
+        .andExpect(status().isNoContent());
+
+    verify(bookService).permanentDeleteBook(bookId);
+  }
 }
