@@ -1,9 +1,11 @@
-package com.team01.deokhugam.comment;
+package com.team01.deokhugam.comment.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 import com.team01.deokhugam.book.entity.Book;
@@ -12,9 +14,10 @@ import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.comment.repository.CommentRepository;
-import com.team01.deokhugam.comment.service.CommentServiceImpl;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
+import com.team01.deokhugam.global.exception.comment.CommentNotFoundException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.repository.ReviewRepository;
@@ -32,7 +35,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
@@ -216,7 +218,7 @@ public class CommentServiceTest {
   }
 
   @Test
-  @DisplayName("댓글 삭제")
+  @DisplayName("댓글 논리 삭제")
   void delete_comment() {
     // given
     review.increaseCommentCount();
@@ -234,6 +236,31 @@ public class CommentServiceTest {
   }
 
   @Test
+  @DisplayName("댓글 물리 삭제")
+  void hard_delete_comment() {
+    // given
+    given(commentRepository.findByIdAndIsDeletedTrue(commentId)).willReturn(Optional.of(comment));
+
+    // when
+    commentService.hardDeleteComment(userId, commentId);
+
+    // then
+    verify(commentRepository).delete(comment);
+  }
+
+  @Test
+  @DisplayName("댓글 물리 삭제 시 논리 삭제된 댓글이 아니면 예외 발생")
+  void hard_delete_comment_not_soft_deleted_exception() {
+    // given
+    given(commentRepository.findByIdAndIsDeletedTrue(commentId)).willReturn(Optional.empty());
+
+    // when // then
+    assertThatThrownBy(() -> commentService.hardDeleteComment(userId, commentId))
+        .isInstanceOf(CommentNotFoundException.class);
+    verify(commentRepository, never()).delete(any(Comment.class));
+  }
+
+  @Test
   @DisplayName("댓글 삭제시 작성자가 아니면 예외 발생")
   void delete_not_author_exception() {
     // given
@@ -241,6 +268,22 @@ public class CommentServiceTest {
 
     // when // then
     assertThatThrownBy(() -> commentService.deleteComment(otherUserId, commentId))
+        .isInstanceOf(DeokhugamException.class)
+        .satisfies(
+            exception -> {
+              DeokhugamException e = (DeokhugamException) exception;
+              assertThat(e.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_COMMENT_ACCESS);
+            });
+  }
+
+  @Test
+  @DisplayName("댓글 물리 삭제시 작성자가 아니면 예외 발생")
+  void hard_delete_not_author_exception() {
+    // given
+    given(commentRepository.findByIdAndIsDeletedTrue(commentId)).willReturn(Optional.of(comment));
+
+    // when // then
+    assertThatThrownBy(() -> commentService.hardDeleteComment(otherUserId, commentId))
         .isInstanceOf(DeokhugamException.class)
         .satisfies(
             exception -> {
@@ -283,7 +326,7 @@ public class CommentServiceTest {
     given(commentRepository.countCommentsByReviewId(reviewId)).willReturn(3L);
 
     // when
-    var result = commentService.getComments(reviewId, pageRequest, Sort.Direction.DESC);
+    var result = commentService.getComments(reviewId, pageRequest, SortDirection.DESC);
 
     // then
     assertThat(result.content()).hasSize(2);

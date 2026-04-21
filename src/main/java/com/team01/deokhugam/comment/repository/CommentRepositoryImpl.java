@@ -2,6 +2,7 @@ package com.team01.deokhugam.comment.repository;
 
 import com.team01.deokhugam.comment.dto.CommentSearchCondition;
 import com.team01.deokhugam.comment.entity.Comment;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
@@ -42,7 +43,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     }
 
     // ASC면 >  -> 다음 페이지는 더 큰 값 조회
-    String comparisonOperator = condition.direction().isAscending() ? ">" : "<";
+    String comparisonOperator = condition.direction() == SortDirection.ASC ? ">" : "<";
 
     // order by 에 들어갈 문자열
     String orderDirection = condition.direction().name(); // ASC or DESC
