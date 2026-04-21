@@ -3,12 +3,11 @@ package com.team01.deokhugam.comment.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -17,10 +16,14 @@ import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.comment.service.CommentService;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
+import com.team01.deokhugam.global.pagination.CursorPageRequest;
+import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -237,6 +240,191 @@ public class CommentControllerTest {
     verify(commentService).deleteComment(eq(userId), eq(commentId));
   }
 
-  // ========= Comment 조회 테스트 =========}
+  @Test
+  @DisplayName("댓글 논리 삭제 실패(400) - 요청자 ID 헤더 누락")
+  void delete_comment_fail_without_user_id_header() throws Exception {
+    // given
+    UUID commentId = UUID.randomUUID();
 
+    // when , then 헤더 누락
+    mockMvc
+        .perform(delete("/api/comments/{commentId}", commentId))
+        .andExpect(status().isBadRequest());
+
+    verify(commentService, never()).deleteComment(any(), any());
+  }
+
+  @Test
+  @DisplayName("댓글 논리 삭제 실패(403) - 본인 댓글이 아니면")
+  void delete_comment_fail_when_forbidden() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID commentId = UUID.randomUUID();
+
+    willThrow(
+            new DeokhugamException(
+                ErrorCode.FORBIDDEN_COMMENT_ACCESS,
+                Map.of(
+                    "commentId", commentId.toString(),
+                    "userId", userId.toString())))
+        .given(commentService)
+        .deleteComment(eq(userId), eq(commentId));
+
+    // when // then
+    mockMvc
+        .perform(
+            delete("/api/comments/{commentId}", commentId)
+                .header(USER_ID_HEADER, userId.toString()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("댓글 논리 삭제 실패(404) - 댓글이 존재하지 않으면")
+  void delete_comment_fail_when_comment_not_found() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID commentId = UUID.randomUUID();
+
+    willThrow(
+            new DeokhugamException(
+                ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId.toString())))
+        .given(commentService)
+        .deleteComment(eq(userId), eq(commentId));
+
+    // when // then
+    mockMvc
+        .perform(
+            delete("/api/comments/{commentId}", commentId)
+                .header(USER_ID_HEADER, userId.toString()))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("댓글 물리 삭제 성공")
+  void hard_delete_comment_success() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID commentId = UUID.randomUUID();
+
+    // when // then
+    mockMvc
+        .perform(
+            delete("/api/comments/{commentId}/hard", commentId)
+                .header(USER_ID_HEADER, userId.toString()))
+        .andExpect(status().isNoContent());
+
+    verify(commentService).hardDeleteComment(eq(userId), eq(commentId));
+  }
+
+  @Test
+  @DisplayName("댓글 물리 삭제 실패(400) - 요청자 ID 헤더 누락")
+  void hard_delete_comment_fail_without_user_id_header() throws Exception {
+    // given
+    UUID commentId = UUID.randomUUID();
+
+    // when // then
+    mockMvc
+        .perform(delete("/api/comments/{commentId}/hard", commentId))
+        .andExpect(status().isBadRequest());
+
+    verify(commentService, never()).hardDeleteComment(any(), any());
+  }
+
+  @Test
+  @DisplayName("댓글 물리 삭제 실패(403) - 본인 댓글이 아니면")
+  void hard_delete_comment_fail_when_forbidden() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID commentId = UUID.randomUUID();
+
+    willThrow(
+            new DeokhugamException(
+                ErrorCode.FORBIDDEN_COMMENT_ACCESS,
+                Map.of(
+                    "commentId", commentId.toString(),
+                    "userId", userId.toString())))
+        .given(commentService)
+        .hardDeleteComment(eq(userId), eq(commentId));
+
+    // when // then
+    mockMvc
+        .perform(
+            delete("/api/comments/{commentId}/hard", commentId)
+                .header(USER_ID_HEADER, userId.toString()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("댓글 물리 삭제 실패(404) - 댓글이 존재하지 않거나 논리 삭제된 댓글이 아니면")
+  void hard_delete_comment_fail_when_comment_not_found() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UUID commentId = UUID.randomUUID();
+
+    willThrow(
+            new DeokhugamException(
+                ErrorCode.COMMENT_NOT_FOUND, Map.of("commentId", commentId.toString())))
+        .given(commentService)
+        .hardDeleteComment(eq(userId), eq(commentId));
+
+    // when // then
+    mockMvc
+        .perform(
+            delete("/api/comments/{commentId}/hard", commentId)
+                .header(USER_ID_HEADER, userId.toString()))
+        .andExpect(status().isNotFound());
+  }
+
+  // ========= Comment 조회 테스트 =========}
+  @Test
+  @DisplayName("댓글 목록 조회 성공")
+  void get_comments_sucess() throws Exception {
+    // given
+    UUID userId1 = UUID.randomUUID();
+    UUID userId2 = UUID.randomUUID();
+    UUID reviewId = UUID.randomUUID();
+    UUID commentId1 = UUID.randomUUID();
+    UUID commentId2 = UUID.randomUUID();
+
+    CommentDto comment1 = createCommentDto(commentId1, reviewId, userId1, "첫 번째 댓글");
+    CommentDto comment2 = createCommentDto(commentId2, reviewId, userId2, "두 번째 댓글");
+
+    CursorPageResponse<CommentDto> response =
+        new CursorPageResponse<>(
+            List.of(comment1, comment2), commentId2.toString(), comment2.createdAt(), 2, 2, false);
+
+    given(
+            commentService.getComments(
+                eq(reviewId), any(CursorPageRequest.class), eq(SortDirection.DESC)))
+        .willReturn(response);
+
+    // when , then
+    mockMvc
+        .perform(
+            get("/api/comments")
+                .param("reviewId", reviewId.toString())
+                .param("direction", "DESC")
+                .param("limit", "50"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content[0].id").value(commentId1.toString()))
+        .andExpect(jsonPath("$.content[0].reviewId").value(reviewId.toString()))
+        .andExpect(jsonPath("$.content[0].content").value("첫 번째 댓글"))
+        .andExpect(jsonPath("$.content[1].id").value(commentId2.toString()))
+        .andExpect(jsonPath("$.content[1].content").value("두 번째 댓글"))
+        .andExpect(jsonPath("$.size").value(2))
+        .andExpect(jsonPath("$.totalElements").value(2))
+        .andExpect(jsonPath("$.hasNext").value(false));
+
+    verify(commentService)
+        .getComments(eq(reviewId), any(CursorPageRequest.class), eq(SortDirection.DESC));
+  }
+
+  @Test
+  @DisplayName("댓글 목록 조회 실패(400) - reviewId가 없으면")
+  void get_comments_fail_without_review_id() throws Exception {
+    // when, then
+    mockMvc.perform(get("/api/comments")).andExpect(status().isBadRequest());
+
+    verify(commentService, never()).getComments(any(), any(), any());
+  }
 }
