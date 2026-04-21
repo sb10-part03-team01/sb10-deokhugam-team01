@@ -153,4 +153,11 @@ public class NotificationServiceImpl implements NotificationService {
         NotificationDto::createdAt
     );
   }
+
+  @Override
+  public Notification findById(UUID notificationId) {
+    return notificationRepository.findById(notificationId)
+        .orElseThrow(() -> new NotificationException(ErrorCode.NOTIFICATION_NOT_FOUND,
+            Map.of("notificationId", notificationId)));
+  }
 }
