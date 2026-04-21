@@ -20,6 +20,6 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Comment
     """)
   Optional<Comment> findDetailById(UUID id);
 
-  //
+  // 물리 삭제 - isDeleted = true 댓글 조회
   Optional<Comment> findByIdAndIsDeletedTrue(UUID id);
 }
