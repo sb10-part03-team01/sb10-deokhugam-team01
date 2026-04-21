@@ -1,5 +1,6 @@
 package com.team01.deokhugam.review.service;
 
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -18,7 +19,7 @@ public interface ReviewService {
       UUID bookId,
       String keyword,
       String orderBy,
-      String direction,
+      SortDirection direction,
       String cursor,
       OffsetDateTime after,
       Integer limit

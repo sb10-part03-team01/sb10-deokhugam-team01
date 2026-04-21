@@ -2,6 +2,7 @@ package com.team01.deokhugam.review.service;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
@@ -79,7 +80,7 @@ public class ReviewServiceImpl implements ReviewService {
       UUID bookId,
       String keyword,
       String orderBy,
-      String direction,
+      SortDirection direction,
       String cursor,
       OffsetDateTime after,
       Integer limit

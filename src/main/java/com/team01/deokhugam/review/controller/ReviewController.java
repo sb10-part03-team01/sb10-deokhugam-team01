@@ -1,5 +1,6 @@
 package com.team01.deokhugam.review.controller;
 
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/reviews")
@@ -72,7 +75,7 @@ public class ReviewController {
       @RequestParam(required = false) UUID bookId,
       @RequestParam(required = false) String keyword,
       @RequestParam(defaultValue = "createdAt") String orderBy,
-      @RequestParam(defaultValue = "DESC") String direction,
+      @RequestParam(defaultValue = "DESC") SortDirection direction,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) OffsetDateTime after,
       @RequestParam(required = false) Integer limit

@@ -1,5 +1,6 @@
 package com.team01.deokhugam.review.repository;
 
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.review.dto.ReviewSearchCondition;
 import com.team01.deokhugam.review.entity.Review;
 import jakarta.persistence.EntityManager;
@@ -23,14 +24,17 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
   public List<Review> findAllByCondition(ReviewSearchCondition condition) {
     int limit = condition.normalizedLimit();
 
-    String direction = "ASC".equalsIgnoreCase(condition.direction()) ? "ASC" : "DESC";
-    boolean isAsc = "ASC".equals(direction);
+    String direction = condition.direction() == SortDirection.ASC ? "ASC" : "DESC";
+    boolean isAsc = condition.direction() == SortDirection.ASC;
     boolean isRatingOrder = "rating".equalsIgnoreCase(condition.orderBy());
 
     OffsetDateTime after = condition.after();
     String rawCursor = condition.cursor();
 
-    if ((after == null) != (!StringUtils.hasText(rawCursor))) {
+    boolean hasCursor = StringUtils.hasText(rawCursor);
+    boolean hasAfter = after != null;
+
+    if (hasAfter != hasCursor) {
       throw new IllegalArgumentException("after와 cursor는 같이 전달 되어야 합니다.");
     }
 
@@ -175,7 +179,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
   private RatingCursor parseRatingCursor(String cursor) {
     if (!StringUtils.hasText(cursor)) {
-      return null;
+      throw new IllegalArgumentException("rating 정렬 cursor 형식이 올바르지 않습니다.");
     }
 
     String[] parts = cursor.split("\\|", 2);
