@@ -88,11 +88,13 @@ public class CommentRepositoryTest {
     Review review = persistReview(user, book, "리뷰");
 
     Comment oldest =
-        persistComment(review, user, "댓글1", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
+        persistComment(review, user, "댓글1", time(2026, 4, 20, 9, 0), time(2026, 4, 20, 9, 0));
+    Comment older =
+        persistComment(review, user, "댓글2", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
     Comment middle =
-        persistComment(review, user, "댓글2", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
+        persistComment(review, user, "댓글3", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
     Comment latest =
-        persistComment(review, user, "댓글3", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
+        persistComment(review, user, "댓글4", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
 
     CommentSearchCondition condition =
         new CommentSearchCondition(review.getId(), SortDirection.DESC, null, null, 2);
@@ -104,15 +106,17 @@ public class CommentRepositoryTest {
     List<Comment> result = commentRepository.findAllByCursor(condition);
 
     // then
-    assertThat(result).hasSize(3);
+    assertThat(result).hasSize(3); // limit(2) + 1 오버페치 검증
     assertThat(result.get(0).getId()).isEqualTo(latest.getId());
     assertThat(result.get(1).getId()).isEqualTo(middle.getId());
-    assertThat(result.get(2).getId()).isEqualTo(oldest.getId());
+    assertThat(result.get(2).getId()).isEqualTo(older.getId());
+
+    assertThat(result).extracting(Comment::getId).doesNotContain(oldest.getId());
   }
 
   @Test
-  @DisplayName("findAllByCursor - cursor와 after 중 하나만 있으면 예외 발생")
-  void find_all_by_cursor_invalid_cursor_pagination() {
+  @DisplayName("findAllByCursor - cursor만 있으면 예외 발생")
+  void find_all_by_cursor_invalid_cursor_only() {
     // given
     User user = persistUser("user@test.com", "user");
     Book book = persistBook();
@@ -121,6 +125,28 @@ public class CommentRepositoryTest {
     CommentSearchCondition condition =
         new CommentSearchCondition(
             review.getId(), SortDirection.DESC, UUID.randomUUID().toString(), null, 2);
+
+    // when // then
+    assertThatThrownBy(() -> commentRepository.findAllByCursor(condition))
+        .isInstanceOf(DeokhugamException.class)
+        .satisfies(
+            exception -> {
+              DeokhugamException e = (DeokhugamException) exception;
+              assertThat(e.getErrorCode()).isEqualTo(ErrorCode.INVALID_CURSOR_PAGINATION);
+            });
+  }
+
+  @Test
+  @DisplayName("findAllByCursor - after만 있으면 예외 발생")
+  void find_all_by_cursor_invalid_after_only() {
+    // given
+    User user = persistUser("user2@test.com", "user2");
+    Book book = persistBook();
+    Review review = persistReview(user, book, "리뷰");
+
+    CommentSearchCondition condition =
+        new CommentSearchCondition(
+            review.getId(), SortDirection.DESC, null, time(2026, 4, 20, 11, 0), 2);
 
     // when // then
     assertThatThrownBy(() -> commentRepository.findAllByCursor(condition))
