@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/comments")
@@ -41,8 +43,19 @@ public class CommentController implements CommentApi {
       @RequestParam(required = false) OffsetDateTime after,
       @RequestParam(required = false, defaultValue = "50") Integer limit) {
 
+    log.info(
+        "[COMMENT] getComments reviewId={}, direction={}, cursor={}, after={}, limit={}",
+        reviewId,
+        direction,
+        cursor,
+        after,
+        limit);
+
     CursorPageRequest pageRequest = new CursorPageRequest(cursor, after, limit);
-    return ResponseEntity.ok(commentService.getComments(reviewId, pageRequest, direction));
+    CursorPageResponse<CommentDto> response =
+        commentService.getComments(reviewId, pageRequest, direction);
+
+    return ResponseEntity.ok(response);
   }
 
   // 댓글 생성

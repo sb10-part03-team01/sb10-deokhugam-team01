@@ -2,14 +2,21 @@ package com.team01.deokhugam.review.service;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
+import com.team01.deokhugam.global.pagination.CursorPageResponse;
+import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
+import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
+import com.team01.deokhugam.review.dto.ReviewSearchCondition;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.mapper.ReviewMapper;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,7 +39,7 @@ public class ReviewServiceImpl implements ReviewService {
     Book book = bookRepository.findById(request.bookId())
         .orElseThrow(() -> new BookNotFoundException(request.bookId()));
 
-    //사용자 확인 (interface)
+    //사용자 확인
     User user = userRepository.findById(request.userId())
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -66,4 +73,56 @@ public class ReviewServiceImpl implements ReviewService {
     return reviewMapper.toDto(review);
   }
 
+  @Override
+  public CursorPageResponseReviewDto searchReviews(
+      UUID requestUserId,
+      UUID userId,
+      UUID bookId,
+      String keyword,
+      String orderBy,
+      SortDirection direction,
+      String cursor,
+      OffsetDateTime after,
+      Integer limit
+  ) {
+
+    ReviewSearchCondition condition = new ReviewSearchCondition(
+        userId,
+        bookId,
+        keyword,
+        orderBy,
+        direction,
+        cursor,
+        after,
+        limit
+    );
+
+    List<Review> reviews = reviewRepository.findAllByCondition(condition);
+
+    long totalElements = reviewRepository.countByCondition(condition);
+
+    List<ReviewDto> content = reviewMapper.toDtoList(reviews);
+
+    CursorPageResponse<ReviewDto> page = CursorPaginationUtils.of(
+        content,
+        condition.normalizedLimit(),
+        totalElements,
+        reviewDto -> {
+          if ("rating".equalsIgnoreCase(condition.orderBy())) {
+            return reviewDto.rating() + "|" + reviewDto.id();
+          }
+          return reviewDto.id().toString();
+        },
+        ReviewDto::createdAt
+    );
+
+    return new CursorPageResponseReviewDto(
+        page.content(),
+        page.nextCursor(),
+        page.nextAfter(),
+        page.size(),
+        page.totalElements(),
+        page.hasNext()
+    );
+  }
 }
