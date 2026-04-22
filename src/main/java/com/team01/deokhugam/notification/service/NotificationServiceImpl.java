@@ -9,6 +9,7 @@ import com.team01.deokhugam.global.pagination.PageLimitPolicy;
 import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
 import com.team01.deokhugam.notification.dto.NotificationDto;
 import com.team01.deokhugam.notification.entity.Notification;
+import com.team01.deokhugam.notification.mapper.NotificationMapper;
 import com.team01.deokhugam.notification.repository.NotificationRepository;
 import com.team01.deokhugam.user.entity.User;
 import java.time.OffsetDateTime;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationServiceImpl implements NotificationService {
 
   private final NotificationRepository notificationRepository;
+  private final NotificationMapper notificationMapper;
 
   @Override
   @Transactional
@@ -52,9 +54,14 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   @Transactional
-  public void confirm(Notification notification) {
+  public NotificationDto confirm(Notification notification, UUID userId) {
 
     log.info("[UPDATE_NOTIFICATION] 알림 확인 : notificationId={}", notification.getId());
+
+    if (!notification.getUser().getId().equals(userId)) {
+      throw new NotificationException(ErrorCode.NOTIFICATION_ACCESS_DENIED,
+          Map.of("notificationId", notification.getId()));
+    }
 
     if (!notification.isRead()) {
       log.info("[UPDATE_NOTIFICATION] 알림 읽음 상태로 변경 notificationId={}", notification.getId());
@@ -64,17 +71,18 @@ public class NotificationServiceImpl implements NotificationService {
       log.info("[UPDATE_NOTIFICATION] 이미 읽음 상태 입니다 notificationId={}", notification.getId());
 
     }
+    return notificationMapper.toDto(notification);
   }
 
   @Override
   @Transactional
-  public void confirmAll(User user) {
-    log.info("[UPDATE_NOTIFICATION] 전체 알림 읽음 처리 시작 userId={}", user.getId());
+  public void confirmAll(UUID userId) {
+    log.info("[UPDATE_NOTIFICATION] 전체 알림 읽음 처리 시작 userId={}", userId);
     List<Notification> unReadList = notificationRepository.findAllByUserIdAndIsReadFalse(
-        user.getId());
+        userId);
 
     unReadList.forEach(Notification::markAsRead);
-    log.info("[UPDATE_NOTIFICATION] 전체 알림 읽음 처리 완료 userId={}", user.getId());
+    log.info("[UPDATE_NOTIFICATION] 전체 알림 읽음 처리 완료 userId={}", userId);
   }
 
   @Override
@@ -130,16 +138,7 @@ public class NotificationServiceImpl implements NotificationService {
     long totalElements = notificationRepository.countByUserId(userId);
 
     List<NotificationDto> dtoList = results.stream()
-        .map(n -> new NotificationDto(
-            n.getId(),
-            n.getUser().getId(),
-            n.getReview().getId(),
-            n.getReview().getContent(),
-            n.getContent(),
-            n.isRead(),
-            n.getCreatedAt(),
-            n.getUpdatedAt()
-        ))
+        .map(notificationMapper::toDto)
         .toList();
 
     return CursorPaginationUtils.of(

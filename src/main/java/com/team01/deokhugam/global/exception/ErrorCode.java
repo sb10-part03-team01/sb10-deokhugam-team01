@@ -19,6 +19,7 @@ public enum ErrorCode {
 
   // notification
   NOTIFICATION_NOT_FOUND(404, "NOTIFICATION_NOT_FOUND", "알림을 찾을 수 없습니다."),
+  NOTIFICATION_ACCESS_DENIED(403, "NOTIFICATION_ACCESS_DENIED", "알림 수정 권한이 없습니다."),
 
   // ranking
 

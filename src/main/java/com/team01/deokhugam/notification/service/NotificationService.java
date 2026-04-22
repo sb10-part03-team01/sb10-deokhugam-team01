@@ -11,8 +11,8 @@ import java.util.UUID;
 
 public interface NotificationService {
   void create(NotificationCreateRequest request);
-  void confirm(Notification notification);
-  void confirmAll(User user);
+  NotificationDto confirm(Notification notification, UUID userId);
+  void confirmAll(UUID userId);
   void cleanupReadNotifications();
   CursorPageResponse<NotificationDto> findAll(UUID userId, CursorPageRequest request);
   Notification findById(UUID notificationId);

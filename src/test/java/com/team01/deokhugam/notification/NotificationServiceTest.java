@@ -101,10 +101,16 @@ public class NotificationServiceTest {
     @DisplayName("알림 상태 수정 테스트 성공")
     void NotificationConfirmSuccess() {
       //given
+      UUID userId = UUID.randomUUID();
+      User mockUser = mock(User.class);
+      given(mockUser.getId()).willReturn(userId);
       Notification notification = mock(Notification.class);
       given(notification.isRead()).willReturn(false);
+      given(notification.getUser()).willReturn(mockUser);
+
       //when
-      notificationService.confirm(notification);
+      notificationService.confirm(notification, userId);
+
       //then
       then(notification).should().markAsRead();
 
@@ -114,10 +120,16 @@ public class NotificationServiceTest {
     @DisplayName("알림 상태 수정 테스트 실패")
     void NotificationConfirmFail() {
       //given
+      UUID userId = UUID.randomUUID();
+      User mockUser = mock(User.class);
+      given(mockUser.getId()).willReturn(userId);
       Notification notification = mock(Notification.class);
       given(notification.isRead()).willReturn(true);
+      given(notification.getUser()).willReturn(mockUser);
+
       //when
-      notificationService.confirm(notification);
+      notificationService.confirm(notification, userId);
+
       //then
       then(notification).should(never()).markAsRead();
 
@@ -145,7 +157,7 @@ public class NotificationServiceTest {
       given(notificationRepository.findAllByUserIdAndIsReadFalse(mockUser.getId()))
           .willReturn(List.of(notification1, notification2));
       //when
-      notificationService.confirmAll(mockUser);
+      notificationService.confirmAll(mockUser.getId());
       //then
       then(notification1).should().markAsRead();
       then(notification2).should().markAsRead();
@@ -158,7 +170,7 @@ public class NotificationServiceTest {
       given(notificationRepository.findAllByUserIdAndIsReadFalse(mockUser.getId()))
           .willReturn(List.of());
       //when
-      notificationService.confirmAll(mockUser);
+      notificationService.confirmAll(mockUser.getId());
       //then
       then(notificationRepository).should(never()).saveAll(any());
     }
@@ -281,7 +293,7 @@ public class NotificationServiceTest {
 
     @Test
     @DisplayName("알림 목록 조회 테스트 실패 - after이 null이고 cursor이 null이 아닌경우")
-    void NotificationFindAllTestFail3(){
+    void NotificationFindAllTestFail3() {
       //given
       mockCursorPageRequest = new CursorPageRequest(UUID.randomUUID().toString(), null, 50);
       //when,then
@@ -291,7 +303,7 @@ public class NotificationServiceTest {
 
     @Test
     @DisplayName("알림 목록 조회 테스트 성공 - hasNext = true 인 경우")
-    void NotificationFindAllTestHasNext(){
+    void NotificationFindAllTestHasNext() {
       //given
       OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
       mockCursorPageRequest = new CursorPageRequest(null, null, 2);
@@ -332,7 +344,7 @@ public class NotificationServiceTest {
 
     @Test
     @DisplayName("알림 조회 테스트 성공 - limit가 null인 경우")
-    void NotificationFindAllLimitNull(){
+    void NotificationFindAllLimitNull() {
       //given
       mockCursorPageRequest = new CursorPageRequest(null, null, null);
       Notification notification = mock(Notification.class);
