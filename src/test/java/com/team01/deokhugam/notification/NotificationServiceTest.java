@@ -13,6 +13,7 @@ import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
 import com.team01.deokhugam.notification.dto.NotificationDto;
 import com.team01.deokhugam.notification.entity.Notification;
+import com.team01.deokhugam.notification.mapper.NotificationMapper;
 import com.team01.deokhugam.notification.repository.NotificationRepository;
 import com.team01.deokhugam.notification.service.NotificationServiceImpl;
 import com.team01.deokhugam.review.entity.Review;
@@ -40,6 +41,8 @@ public class NotificationServiceTest {
   private NotificationServiceImpl notificationService;
   @Mock
   private NotificationRepository notificationRepository;
+  @Mock
+  private NotificationMapper notificationMapper;
 
   @Nested
   @DisplayName("알림 생성 테스트")
@@ -107,9 +110,18 @@ public class NotificationServiceTest {
       Notification notification = mock(Notification.class);
       given(notification.isRead()).willReturn(false);
       given(notification.getUser()).willReturn(mockUser);
+      given(notificationRepository.findById(notification.getId()))
+          .willReturn(java.util.Optional.of(notification));
+      given(notificationMapper.toDto(any(Notification.class)))
+          .willReturn(new NotificationDto(
+              UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+              "테스트내용", "알림 내용", false,
+              OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+              OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC)
+          ));
 
       //when
-      notificationService.confirm(notification, userId);
+      notificationService.confirm(notification.getId(), userId);
 
       //then
       then(notification).should().markAsRead();
@@ -126,13 +138,44 @@ public class NotificationServiceTest {
       Notification notification = mock(Notification.class);
       given(notification.isRead()).willReturn(true);
       given(notification.getUser()).willReturn(mockUser);
+      given(notificationRepository.findById(notification.getId()))
+          .willReturn(java.util.Optional.of(notification));
+      given(notificationMapper.toDto(any(Notification.class)))
+          .willReturn(new NotificationDto(
+              UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+              "테스트내용", "알림 내용", false,
+              OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+              OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC)
+          ));
 
       //when
-      notificationService.confirm(notification, userId);
+      notificationService.confirm(notification.getId(), userId);
 
       //then
       then(notification).should(never()).markAsRead();
 
+    }
+
+    @Test
+    @DisplayName("알림 상태 수정 실패 - 요청자가 알림 소유자가 아닌 경우")
+    void NotificationConfirmAccessDenied() {
+      //given
+      UUID ownerId = UUID.randomUUID();
+      UUID requestUserId = UUID.randomUUID();
+      User mockUser = mock(User.class);
+      given(mockUser.getId()).willReturn(ownerId);
+      UUID notificationId = UUID.randomUUID();
+
+      Notification notification = mock(Notification.class);
+      given(notification.getId()).willReturn(notificationId);
+      given(notification.getUser()).willReturn(mockUser);
+      given(notificationRepository.findById(notificationId))
+          .willReturn(java.util.Optional.of(notification));
+
+      //when,then
+      assertThatThrownBy(() -> notificationService.confirm(notificationId, requestUserId))
+          .isInstanceOf(NotificationException.class);
+      then(notification).should(never()).markAsRead();
     }
   }
 
@@ -205,6 +248,14 @@ public class NotificationServiceTest {
       mockUser = mock(User.class);
       given(mockUser.getId()).willReturn(UUID.randomUUID());
       mockReview = mock(Review.class);
+      given(notificationMapper.toDto(any(Notification.class)))
+          .willReturn(new NotificationDto(
+              UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+              "테스트내용", "알림 내용", false,
+              OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+              OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC)
+          ));
+
     }
 
     @Test
@@ -213,16 +264,6 @@ public class NotificationServiceTest {
       //given
       mockCursorPageRequest = new CursorPageRequest(null, null, 50);
       Notification notification = mock(Notification.class);
-      given(notification.getId()).willReturn(UUID.randomUUID());
-      given(notification.getUser()).willReturn(mockUser);
-      given(notification.getReview()).willReturn(mockReview);
-      given(notification.getContent()).willReturn("알림 목록 조회 테스트");
-      given(notification.isRead()).willReturn(false);
-      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-      given(notification.getCreatedAt()).willReturn(fixedTime);
-      given(notification.getUpdatedAt()).willReturn(fixedTime);
-      given(mockReview.getId()).willReturn(UUID.randomUUID());
-      given(mockReview.getContent()).willReturn("테스트내용");
 
       given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
           PageRequest.class)))
@@ -241,18 +282,10 @@ public class NotificationServiceTest {
     @DisplayName("알림 목록 조회 테스트 성공 - 다음 페이지")
     void NotificationFindAllSuccessNext() {
       //given
-      Notification notification = mock(Notification.class);
-      given(notification.getId()).willReturn(UUID.randomUUID());
-      given(notification.getUser()).willReturn(mockUser);
-      given(notification.getReview()).willReturn(mockReview);
-      given(notification.getContent()).willReturn("알림 목록 조회 테스트");
-      given(notification.isRead()).willReturn(false);
       OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
       mockCursorPageRequest = new CursorPageRequest(UUID.randomUUID().toString(), fixedTime, 50);
-      given(notification.getCreatedAt()).willReturn(fixedTime);
-      given(notification.getUpdatedAt()).willReturn(fixedTime);
-      given(mockReview.getId()).willReturn(UUID.randomUUID());
-      given(mockReview.getContent()).willReturn("테스트내용");
+
+      Notification notification = mock(Notification.class);
 
       given(notificationRepository.findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(
           any(UUID.class), any(OffsetDateTime.class), any(UUID.class), any(PageRequest.class)))
@@ -266,6 +299,71 @@ public class NotificationServiceTest {
       //then
       assertThat(result.content()).hasSize(1);
       assertThat(result.hasNext()).isFalse();
+    }
+
+
+    @Test
+    @DisplayName("알림 목록 조회 테스트 성공 - hasNext = true 인 경우")
+    void NotificationFindAllTestHasNext() {
+      //given
+      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+      mockCursorPageRequest = new CursorPageRequest(null, null, 2);
+      Notification notification1 = mock(Notification.class);
+      Notification notification2 = mock(Notification.class);
+      Notification notification3 = mock(Notification.class);
+
+      List<Notification> testResult = List.of(notification1, notification2, notification3);
+
+      given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
+          PageRequest.class)))
+          .willReturn(testResult);
+
+      given(notificationRepository.countByUserId(any(UUID.class))).willReturn(3L);
+
+      //when
+      CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
+          mockCursorPageRequest);
+      //then
+      assertThat(result.content()).hasSize(2);
+      assertThat(result.hasNext()).isTrue();
+
+
+    }
+
+    @Test
+    @DisplayName("알림 조회 테스트 성공 - limit가 null인 경우")
+    void NotificationFindAllLimitNull() {
+      //given
+      mockCursorPageRequest = new CursorPageRequest(null, null, null);
+      Notification notification = mock(Notification.class);
+
+      given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
+          PageRequest.class)))
+          .willReturn(List.of(notification));
+      given(notificationRepository.countByUserId(any(UUID.class))).willReturn(1L);
+      //when
+      CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
+          mockCursorPageRequest);
+      //then
+      assertThat(result.content()).hasSize(1);
+      assertThat(result.hasNext()).isFalse();
+
+    }
+
+
+  }
+
+  @Nested
+  @DisplayName("알림 목록 조회 실패 테스트")
+  class NotificationFindAllFailTest {
+
+    private User mockUser;
+    private CursorPageRequest mockCursorPageRequest;
+
+    @BeforeEach
+    void setup() {
+      mockUser = mock(User.class);
+      given(mockUser.getId()).willReturn(UUID.randomUUID());
     }
 
     @Test
@@ -300,79 +398,5 @@ public class NotificationServiceTest {
       assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
           .isInstanceOf(NotificationException.class);
     }
-
-    @Test
-    @DisplayName("알림 목록 조회 테스트 성공 - hasNext = true 인 경우")
-    void NotificationFindAllTestHasNext() {
-      //given
-      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-      mockCursorPageRequest = new CursorPageRequest(null, null, 2);
-      Notification notification1 = mock(Notification.class);
-      Notification notification2 = mock(Notification.class);
-      Notification notification3 = mock(Notification.class);
-
-      List<Notification> testResult = List.of(notification1, notification2, notification3);
-
-      given(mockReview.getId()).willReturn(UUID.randomUUID());
-      given(mockReview.getContent()).willReturn("테스트내용");
-
-      for (Notification n : testResult) {
-        given(n.getId()).willReturn(UUID.randomUUID());
-        given(n.getUser()).willReturn(mockUser);
-        given(n.getReview()).willReturn(mockReview);
-        given(n.getContent()).willReturn("알림 내용");
-        given(n.isRead()).willReturn(false);
-        given(n.getCreatedAt()).willReturn(fixedTime);
-        given(n.getUpdatedAt()).willReturn(fixedTime);
-      }
-
-      given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
-          PageRequest.class)))
-          .willReturn(testResult);
-
-      given(notificationRepository.countByUserId(any(UUID.class))).willReturn(3L);
-
-      //when
-      CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
-          mockCursorPageRequest);
-      //then
-      assertThat(result.content()).hasSize(2);
-      assertThat(result.hasNext()).isTrue();
-
-
-    }
-
-    @Test
-    @DisplayName("알림 조회 테스트 성공 - limit가 null인 경우")
-    void NotificationFindAllLimitNull() {
-      //given
-      mockCursorPageRequest = new CursorPageRequest(null, null, null);
-      Notification notification = mock(Notification.class);
-      given(notification.getId()).willReturn(UUID.randomUUID());
-      given(notification.getUser()).willReturn(mockUser);
-      given(notification.getReview()).willReturn(mockReview);
-      given(notification.getContent()).willReturn("알림 목록 조회 테스트");
-      given(notification.isRead()).willReturn(false);
-      OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-      given(notification.getCreatedAt()).willReturn(fixedTime);
-      given(notification.getUpdatedAt()).willReturn(fixedTime);
-      given(mockReview.getId()).willReturn(UUID.randomUUID());
-      given(mockReview.getContent()).willReturn("테스트내용");
-
-      given(notificationRepository.findByUserIdOrderByCreatedAtDesc(any(UUID.class), any(
-          PageRequest.class)))
-          .willReturn(List.of(notification));
-      given(notificationRepository.countByUserId(any(UUID.class))).willReturn(1L);
-      //when
-      CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
-          mockCursorPageRequest);
-      //then
-      assertThat(result.content()).hasSize(1);
-      assertThat(result.hasNext()).isFalse();
-
-    }
-
-
   }
-
 }

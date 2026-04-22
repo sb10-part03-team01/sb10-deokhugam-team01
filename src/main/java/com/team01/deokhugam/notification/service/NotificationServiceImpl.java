@@ -54,7 +54,8 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   @Transactional
-  public NotificationDto confirm(Notification notification, UUID userId) {
+  public NotificationDto confirm(UUID notificationId, UUID userId) {
+    Notification notification = findById(notificationId);
 
     log.info("[UPDATE_NOTIFICATION] 알림 확인 : notificationId={}", notification.getId());
 

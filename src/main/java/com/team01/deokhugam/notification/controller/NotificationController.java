@@ -2,7 +2,6 @@ package com.team01.deokhugam.notification.controller;
 
 import com.team01.deokhugam.notification.dto.NotificationDto;
 import com.team01.deokhugam.notification.dto.NotificationUpdateRequest;
-import com.team01.deokhugam.notification.entity.Notification;
 import com.team01.deokhugam.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
@@ -29,8 +28,11 @@ public class NotificationController {
       @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
       @RequestBody NotificationUpdateRequest request
   ) {
-    Notification notification = notificationService.findById(notificationId);
-    NotificationDto dto = notificationService.confirm(notification, userId);
+    if (!request.confirmed()) {
+      return ResponseEntity.badRequest().build();
+    }
+
+    NotificationDto dto = notificationService.confirm(notificationId, userId);
     return ResponseEntity.ok(dto);
   }
 
