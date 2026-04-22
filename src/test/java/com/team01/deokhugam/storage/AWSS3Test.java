@@ -37,8 +37,6 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 Spring 컨텍스트 없이 순수 AWS SDK(S3Client, S3Presigner)만 사용하여
 S3의 기본 동작(업로드/다운로드/Presigned URL 생성을 검증
 
-프로젝트 루트의 .env 파일에서 AWS 자격증명을 java.util.Properties로 직접 로드
-
 upload -> download -> generatePresignedUrl 순서로 실행
  */
 // 환경 변수가 존재하고, 값이 비어 있지 않을 때만 테스트를 실행하도록 설정
@@ -58,8 +56,8 @@ public class AWSS3Test {
   // .env에서 AWS 자격증명으로 로드하고 클라이언트를 초기화
   // @BeforeAll 시점에는 테스트 인스턴스 생성되지 않았으므로 관련된 것 static으로 선언
   @BeforeAll
-  static void setUp() throws IOException {
-    // System.getenv(): 실행 중인 운영체제의 환경변수 값을 읽어올 때 사용하나느 메서드
+  static void setUp() {
+    // System.getenv(): 실행 중인 운영체제의 환경변수 값을 읽어올 때 사용하는 메서드
     String accessKey = System.getenv("AWS_S3_ACCESS_KEY"); // IAM 액세스 키
     String secretKey = System.getenv("AWS_S3_SECRET_KEY"); // IAM 시크릿 키
     String region = System.getenv("AWS_S3_REGION");        // AWS 리전
@@ -110,7 +108,6 @@ public class AWSS3Test {
     testKey = "test/" + UUID.randomUUID();
   }
 
-  // 콘솔 및 브라우저에서 확인 시 주석 처리할 것
   @AfterEach
   void cleanup() {
     try {
@@ -227,7 +224,7 @@ public class AWSS3Test {
     URL url = presigned.url();
     assertThat(url).isNotNull();
 
-    // Presigned URU 실제 GET 겆믕
+    // Presigned URU 실제 GET 검증
     // Presigned URL로 실제 HTTP GET 요청을 보내 객체를 내려받음
     HttpRequest request = HttpRequest.newBuilder(URI.create(url.toString()))
         .GET()
