@@ -15,6 +15,7 @@ spring:
     init:
       mode: never # schema.sql 무시. H2 호환 스키마 자동 생성
 
+deokhugam:
   user:
     cleanup:
       # 테스트 환경에서는 테스트 용이성을 위해 3분으로 설정
