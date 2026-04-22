@@ -40,39 +40,19 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     String comparisonOperator = isAsc ? ">" : "<";
 
+    QueryParts queryParts = buildFilterQueryParts(condition);
+
     StringBuilder jpql = new StringBuilder(
         """
             select r
             from Review r
             join fetch r.user u
             join fetch r.book b
-            where r.isDeleted = false
             """
     );
+    jpql.append(queryParts.whereClause());
 
-    Map<String, Object> params = new HashMap<>();
-
-    if (condition.userId() != null) {
-      jpql.append(" and r.user.id = :userId ");
-      params.put("userId", condition.userId());
-    }
-
-    if (condition.bookId() != null) {
-      jpql.append(" and r.book.id = :bookId ");
-      params.put("bookId", condition.bookId());
-    }
-
-    if (condition.keyword() != null && !condition.keyword().isBlank()) {
-      jpql.append(
-          """
-              and (
-                lower(u.nickname) like lower(:keyword) escape '\\'
-                or lower(r.content) like lower(:keyword) escape '\\'
-              )
-              """
-      );
-      params.put("keyword", "%" + escapeLikeKeyword(condition.keyword()) + "%");
-    }
+    Map<String, Object> params = new HashMap<>(queryParts.params());
 
     if (after != null) {
       if (isRatingOrder) {
@@ -126,43 +106,56 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
   @Override
   public long countByCondition(ReviewSearchCondition condition) {
+    QueryParts queryParts = buildFilterQueryParts(condition);
+
     StringBuilder jpql = new StringBuilder(
         """
             select count(r)
             from Review r
-            join r.user u
-            where r.isDeleted = false
             """
     );
 
+    if (queryParts.requiresUserJoin()) {
+      jpql.append(" join r.user u ");
+    }
+
+    jpql.append(queryParts.whereClause());
+
+    TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+    queryParts.params().forEach(query::setParameter);
+
+    return query.getSingleResult();
+  }
+
+  private QueryParts buildFilterQueryParts(ReviewSearchCondition condition) {
+    StringBuilder whereClause = new StringBuilder(" where r.isDeleted = false ");
     Map<String, Object> params = new HashMap<>();
+    boolean requiresUserJoin = false;
 
     if (condition.userId() != null) {
-      jpql.append(" and r.user.id = :userId ");
+      whereClause.append(" and r.user.id = :userId ");
       params.put("userId", condition.userId());
     }
 
     if (condition.bookId() != null) {
-      jpql.append(" and r.book.id = :bookId ");
+      whereClause.append(" and r.book.id = :bookId ");
       params.put("bookId", condition.bookId());
     }
 
     if (condition.keyword() != null && !condition.keyword().isBlank()) {
-      jpql.append(
+      requiresUserJoin = true;
+      whereClause.append(
           """
-              and (
-                lower(u.nickname) like lower(:keyword) escape '\\'
-                or lower(r.content) like lower(:keyword) escape '\\'
-              )
+               and (
+                 lower(u.nickname) like lower(:keyword) escape '\\'
+                 or lower(r.content) like lower(:keyword) escape '\\'
+               )
               """
       );
       params.put("keyword", "%" + escapeLikeKeyword(condition.keyword()) + "%");
     }
 
-    TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
-    params.forEach(query::setParameter);
-
-    return query.getSingleResult();
+    return new QueryParts(whereClause.toString(), params, requiresUserJoin);
   }
 
   private UUID parseUuidCursor(String cursor) {
@@ -192,6 +185,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
       if (!Double.isFinite(rating)) {
         throw new IllegalArgumentException("rating 정렬 cursor 형식이 올바르지 않습니다.");
       }
+
       UUID id = UUID.fromString(parts[1]);
       return new RatingCursor(rating, id);
     } catch (IllegalArgumentException e) {
@@ -199,14 +193,22 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     }
   }
 
-  private record RatingCursor(double rating, UUID id) {
-
-  }
-
   private String escapeLikeKeyword(String keyword) {
     return keyword.trim()
         .replace("\\", "\\\\")
         .replace("%", "\\%")
         .replace("_", "\\_");
+  }
+
+  private record RatingCursor(double rating, UUID id) {
+
+  }
+
+  private record QueryParts(
+      String whereClause,
+      Map<String, Object> params,
+      boolean requiresUserJoin
+  ) {
+
   }
 }
