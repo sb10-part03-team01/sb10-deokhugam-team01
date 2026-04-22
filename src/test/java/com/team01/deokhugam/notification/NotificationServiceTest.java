@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.notification.NotificationException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
@@ -273,7 +274,7 @@ public class NotificationServiceTest {
       given(notificationRepository.countByUserId(any(UUID.class))).willReturn(1L);
       //when
       CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
-          mockCursorPageRequest);
+          mockCursorPageRequest, SortDirection.DESC);
       //then
       assertThat(result.content()).hasSize(1);
       assertThat(result.hasNext()).isFalse();
@@ -296,7 +297,7 @@ public class NotificationServiceTest {
 
       //when
       CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
-          mockCursorPageRequest);
+          mockCursorPageRequest, SortDirection.DESC);
 
       //then
       assertThat(result.content()).hasSize(1);
@@ -324,7 +325,7 @@ public class NotificationServiceTest {
 
       //when
       CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
-          mockCursorPageRequest);
+          mockCursorPageRequest, SortDirection.DESC);
       //then
       assertThat(result.content()).hasSize(2);
       assertThat(result.hasNext()).isTrue();
@@ -345,7 +346,7 @@ public class NotificationServiceTest {
       given(notificationRepository.countByUserId(any(UUID.class))).willReturn(1L);
       //when
       CursorPageResponse<NotificationDto> result = notificationService.findAll(mockUser.getId(),
-          mockCursorPageRequest);
+          mockCursorPageRequest, SortDirection.DESC);
       //then
       assertThat(result.content()).hasSize(1);
       assertThat(result.hasNext()).isFalse();
@@ -375,7 +376,7 @@ public class NotificationServiceTest {
       OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
       mockCursorPageRequest = new CursorPageRequest(null, fixedTime, 50);
       //when,then
-      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest, SortDirection.DESC))
           .isInstanceOf(NotificationException.class);
 
     }
@@ -387,7 +388,7 @@ public class NotificationServiceTest {
       OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
       mockCursorPageRequest = new CursorPageRequest("invalid-uuid", fixedTime, 50);
       //when,then
-      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest, SortDirection.DESC))
           .isInstanceOf(NotificationException.class);
     }
 
@@ -397,7 +398,7 @@ public class NotificationServiceTest {
       //given
       mockCursorPageRequest = new CursorPageRequest(UUID.randomUUID().toString(), null, 50);
       //when,then
-      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest))
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest, SortDirection.DESC))
           .isInstanceOf(NotificationException.class);
     }
   }
