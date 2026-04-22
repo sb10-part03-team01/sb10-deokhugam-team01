@@ -23,9 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -36,6 +38,8 @@ public class CommentServiceImpl implements CommentService {
 
   @Override
   public CommentDto createComment(UUID userId, CommentCreateRequest request) {
+    log.info("[COMMENT] create userId={}, reviewId={}", userId, request.reviewId());
+
     User user =
         userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
 
@@ -79,6 +83,14 @@ public class CommentServiceImpl implements CommentService {
         new CommentSearchCondition(
             reviewId, direction, pageRequest.cursor(), pageRequest.after(), pageRequest.limit());
 
+    log.debug(
+        "[COMMENT] getComments reviewId={}, direction={}, cursor={}, after={}, limit={}",
+        reviewId,
+        direction,
+        pageRequest.cursor(),
+        pageRequest.after(),
+        condition.normalizedLimit());
+
     List<Comment> comments = commentRepository.findAllByCursor(condition);
     long totalElements = commentRepository.countCommentsByReviewId(reviewId);
 
@@ -94,6 +106,8 @@ public class CommentServiceImpl implements CommentService {
 
   @Override
   public CommentDto updateComment(UUID userId, UUID commentId, CommentUpdateRequest request) {
+    log.info("[COMMENT] update commentId={}, userId={}", commentId, userId);
+
     Comment comment =
         commentRepository
             .findDetailById(commentId)
@@ -112,6 +126,8 @@ public class CommentServiceImpl implements CommentService {
   // Soft Delete
   @Override
   public void deleteComment(UUID userId, UUID commentId) {
+    log.info("[COMMENT] softDelete commentId={}, userId={}", commentId, userId);
+
     Comment comment =
         commentRepository
             .findDetailById(commentId)
@@ -127,6 +143,8 @@ public class CommentServiceImpl implements CommentService {
   // Hard Delete
   @Override
   public void hardDeleteComment(UUID userId, UUID commentId) {
+    log.info("[COMMENT] hardDelete commentId={}, userId={}", commentId, userId);
+
     Comment comment =
         commentRepository
             .findByIdAndIsDeletedTrue(commentId)
@@ -140,6 +158,11 @@ public class CommentServiceImpl implements CommentService {
   // 요청자가 댓글 작성자인지 검증
   private void validateOwner(UUID userId, Comment comment) {
     if (!comment.getUser().getId().equals(userId)) {
+      log.warn(
+          "[COMMENT] forbidden commentId={}, requestUserId={}, ownerUserId={}",
+          comment.getId(),
+          userId,
+          comment.getUser().getId());
       throw new ForbiddenCommentAccessException(userId, comment.getId());
     }
   }
