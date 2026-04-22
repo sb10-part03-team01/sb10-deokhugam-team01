@@ -105,12 +105,14 @@ public class NotificationServiceTest {
     void NotificationConfirmSuccess() {
       //given
       UUID userId = UUID.randomUUID();
+      UUID notificationId = UUID.randomUUID();
       User mockUser = mock(User.class);
       given(mockUser.getId()).willReturn(userId);
       Notification notification = mock(Notification.class);
+      given(notification.getId()).willReturn(notificationId);
       given(notification.isRead()).willReturn(false);
       given(notification.getUser()).willReturn(mockUser);
-      given(notificationRepository.findById(notification.getId()))
+      given(notificationRepository.findById(notificationId))
           .willReturn(java.util.Optional.of(notification));
       given(notificationMapper.toDto(any(Notification.class)))
           .willReturn(new NotificationDto(
@@ -121,7 +123,7 @@ public class NotificationServiceTest {
           ));
 
       //when
-      notificationService.confirm(notification.getId(), userId);
+      notificationService.confirm(notificationId, userId);
 
       //then
       then(notification).should().markAsRead();
