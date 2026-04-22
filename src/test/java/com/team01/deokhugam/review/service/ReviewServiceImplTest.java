@@ -1,16 +1,22 @@
 package com.team01.deokhugam.review.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
+import com.team01.deokhugam.global.exception.review.ReviewUpdateForbidden;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -340,5 +346,30 @@ class ReviewServiceImplTest {
     verify(review).update("수정된 리뷰", 4.5);
     assertThat(result.content()).isEqualTo("수정된 리뷰");
     assertThat(result.rating()).isEqualTo(4.5);
+  }
+
+  @Test
+  @DisplayName("리뷰 수정 - 권한 없는 사용자가 수정 시 예외 발생")
+  void updateReview_fail_whenRequesterIsNotAuthor() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID authorId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    User author = mock(User.class);
+    Review review = mock(Review.class);
+    ReviewUpdateRequest request = new ReviewUpdateRequest("수정 시도", 4.5);
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
+    given(review.getUser()).willReturn(author);
+    given(author.getId()).willReturn(authorId);
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.updateReview(reviewId, requestUserId, request))
+        .isInstanceOf(ReviewUpdateForbidden.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_UPDATE_FORBIDDEN);
+
+    verify(review, never()).update(anyString(), anyDouble());
   }
 }

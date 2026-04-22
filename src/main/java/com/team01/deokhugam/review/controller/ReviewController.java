@@ -1,5 +1,6 @@
 package com.team01.deokhugam.review.controller;
 
+import com.team01.deokhugam.global.constant.AuthHeader;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
@@ -60,7 +61,7 @@ public class ReviewController {
   @GetMapping("/{reviewId}")
   public ResponseEntity<ReviewDto> getReview(
       @PathVariable UUID reviewId,
-      @RequestHeader("Deokhugam-Request-User-ID") UUID requestUserId
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
   ) {
     return ResponseEntity.ok(reviewService.getReview(reviewId, requestUserId));
   }
@@ -72,7 +73,7 @@ public class ReviewController {
   })
   @GetMapping
   public ResponseEntity<CursorPageResponseReviewDto> getReviews(
-      @RequestHeader("Deokhugam-Request-User-ID") UUID requestUserId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
       @RequestParam(required = false) UUID userId,
       @RequestParam(required = false) UUID bookId,
       @RequestParam(required = false) String keyword,
@@ -106,7 +107,7 @@ public class ReviewController {
   @PatchMapping("/{reviewId}")
   public ResponseEntity<ReviewDto> updateReview(
       @PathVariable UUID reviewId,
-      @RequestHeader("Deokhugam-Request-User-ID") UUID requestUserId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
       @Valid @RequestBody ReviewUpdateRequest request
   ) {
     ReviewDto response = reviewService.updateReview(reviewId, requestUserId, request);

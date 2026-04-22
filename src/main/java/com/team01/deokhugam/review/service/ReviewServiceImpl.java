@@ -4,6 +4,7 @@ import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
+import com.team01.deokhugam.global.exception.review.ReviewUpdateForbidden;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
@@ -128,15 +129,16 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
+  @Transactional
   public ReviewDto updateReview(UUID reviewId, UUID requestUserId, ReviewUpdateRequest request) {
-    
+
     // 리뷰  존재 검증
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
 
     // 사용자가 쓴 리뷰인지 검증
     if (!review.getUser().getId().equals(requestUserId)) {
-      throw new IllegalArgumentException("리뷰를 수정할 권한이 없습니다.");
+      throw new ReviewUpdateForbidden(reviewId, requestUserId);
     }
 
     // 리뷰 수정

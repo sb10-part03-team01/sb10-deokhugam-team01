@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.exception.review.ReviewUpdateForbidden;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -248,5 +249,25 @@ class ReviewControllerTest {
         .andExpect(jsonPath("$.id").value(reviewId.toString()))
         .andExpect(jsonPath("$.content").value("수정된 리뷰"))
         .andExpect(jsonPath("$.rating").value(4.5));
+  }
+
+  @Test
+  @DisplayName("리뷰 수정 - 권한 없는 사용자면 403 반환")
+  void updateReview_fail_whenForbidden() throws Exception {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    ReviewUpdateRequest request = new ReviewUpdateRequest("수정 시도", 4.5);
+
+    given(reviewService.updateReview(reviewId, requestUserId, request))
+        .willThrow(new ReviewUpdateForbidden(reviewId, requestUserId));
+
+    // when & then
+    mockMvc.perform(patch("/api/reviews/{reviewId}", reviewId)
+            .header("Deokhugam-Request-User-ID", requestUserId)
+            .contentType(APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isForbidden());
   }
 }
