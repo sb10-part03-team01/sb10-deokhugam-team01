@@ -10,6 +10,7 @@ import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
 import com.team01.deokhugam.review.dto.ReviewSearchCondition;
+import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.mapper.ReviewMapper;
 import com.team01.deokhugam.review.repository.ReviewRepository;
@@ -124,5 +125,23 @@ public class ReviewServiceImpl implements ReviewService {
         page.totalElements(),
         page.hasNext()
     );
+  }
+
+  @Override
+  public ReviewDto updateReview(UUID reviewId, UUID requestUserId, ReviewUpdateRequest request) {
+    
+    // 리뷰  존재 검증
+    Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+        .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+
+    // 사용자가 쓴 리뷰인지 검증
+    if (!review.getUser().getId().equals(requestUserId)) {
+      throw new IllegalArgumentException("리뷰를 수정할 권한이 없습니다.");
+    }
+
+    // 리뷰 수정
+    review.update(request.content(), request.rating());
+
+    return reviewMapper.toDto(review);
   }
 }
