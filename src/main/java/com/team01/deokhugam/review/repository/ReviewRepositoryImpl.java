@@ -66,12 +66,12 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
       jpql.append(
           """
               and (
-                lower(u.nickname) like lower(:keyword)
-                or lower(r.content) like lower(:keyword)
+                lower(u.nickname) like lower(:keyword) escape '\\'
+                or lower(r.content) like lower(:keyword) escape '\\'
               )
               """
       );
-      params.put("keyword", "%" + condition.keyword().trim() + "%");
+      params.put("keyword", "%" + escapeLikeKeyword(condition.keyword()) + "%");
     }
 
     if (after != null) {
@@ -151,12 +151,12 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
       jpql.append(
           """
               and (
-                lower(u.nickname) like lower(:keyword)
-                or lower(r.content) like lower(:keyword)
+                lower(u.nickname) like lower(:keyword) escape '\\'
+                or lower(r.content) like lower(:keyword) escape '\\'
               )
               """
       );
-      params.put("keyword", "%" + condition.keyword().trim() + "%");
+      params.put("keyword", "%" + escapeLikeKeyword(condition.keyword()) + "%");
     }
 
     TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
@@ -189,6 +189,9 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     try {
       double rating = Double.parseDouble(parts[0]);
+      if (!Double.isFinite(rating)) {
+        throw new IllegalArgumentException("rating 정렬 cursor 형식이 올바르지 않습니다.");
+      }
       UUID id = UUID.fromString(parts[1]);
       return new RatingCursor(rating, id);
     } catch (IllegalArgumentException e) {
@@ -198,5 +201,12 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
   private record RatingCursor(double rating, UUID id) {
 
+  }
+
+  private String escapeLikeKeyword(String keyword) {
+    return keyword.trim()
+        .replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_");
   }
 }

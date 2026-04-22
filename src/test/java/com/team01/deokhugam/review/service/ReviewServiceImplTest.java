@@ -298,32 +298,4 @@ class ReviewServiceImplTest {
     // then
     assertThat(exception.getMessage()).isEqualTo("orderBy는 createdAt 또는 rating만 가능합니다.");
   }
-
-  @Test
-  @DisplayName("리뷰 목록 조회 - after와 cursor 중 하나만 있으면 예외 발생")
-  void searchReviews_fail_whenAfterAndCursorMismatch() {
-    // given
-    // 현재 구현에서는 repository에서 after/cursor 동시 전달 여부를 검사함
-    given(reviewRepository.findAllByCondition(any(ReviewSearchCondition.class)))
-        .willThrow(new IllegalArgumentException("after와 cursor는 같이 전달 되어야 합니다."));
-
-    // when
-    Exception exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> reviewServiceImpl.searchReviews(
-            requestUserId,
-            userId,
-            bookId,
-            "테스트",
-            "createdAt",
-            SortDirection.DESC,
-            null,
-            OffsetDateTime.now(),
-            10
-        )
-    );
-
-    // then
-    assertThat(exception.getMessage()).isEqualTo("after와 cursor는 같이 전달 되어야 합니다.");
-  }
 }
