@@ -56,7 +56,7 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 
     // AWS SDK v2 BOM
-    implementation platform('software.amazon.awssdk:bom:2.20.70')
+    implementation platform('software.amazon.awssdk:bom:2.42.33')
 
     // S3와의 통신을 위한 AWS SDK v2 라이브러리
     implementation 'software.amazon.awssdk:s3'
