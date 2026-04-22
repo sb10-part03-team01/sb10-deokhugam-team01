@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -121,6 +122,22 @@ public class BookController implements BookApi{
       @RequestPart("image") MultipartFile image
   ) {
     log.info("OCR로 ISBN 조회 요청");
+
+    // 빈파일 검증
+    if(image.isEmpty()){
+      throw new IllegalArgumentException("이미지가 비어 있습니다");
+    }
+    // 파일 크기 검증 1MB 초과시 예외
+    long maxSize = 1024 * 1024;
+    if (image.getSize() > maxSize) {
+      throw new IllegalArgumentException("파일 크기가 1MB를 초과했습니다");
+    }
+    // 파일 형식 검증
+    String contentType = image.getContentType();
+    if(!StringUtils.hasText(contentType) ||
+        !(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/jpg"))){
+      throw new IllegalArgumentException("지원하지 않는 파일 형식입니다. JPG, PNG 이미지만 업로드 가능합니다.");
+    }
 
     String response = bookService.getIsbnByOcr(image);
 

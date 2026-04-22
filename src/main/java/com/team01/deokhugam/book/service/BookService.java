@@ -224,6 +224,9 @@ public class BookService {
   }
 
   public String getIsbnByOcr(MultipartFile image){
+    if (!StringUtils.hasText(ocrApiKey)) {
+      throw new IllegalStateException("OCR SPACE API 인증 정보(자격 증명)를 설정해야 합니다");
+    }
     try {
       MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
       formData.add("apikey", ocrApiKey);
