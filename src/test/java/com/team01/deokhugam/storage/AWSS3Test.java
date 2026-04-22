@@ -8,10 +8,12 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -36,7 +38,8 @@ S3의 기본 동작(업로드/다운로드/Presigned URL 생성을 검증
 
 upload -> download -> generatePresignedUrl 순서로 실행
  */
-// @EnabledIfEnvironmentVariable: 특정 환경 변수의 값이 설정한 조건과 일치할 때만 테스트를 실행
+// 환경 변수가 존재하고, 값이 비어 있지 않을 때만 테스트를 실행하도록 설정
+@EnabledIfEnvironmentVariable(named = "AWS_S3_ACCESS_KEY", matches = ".+")
 public class AWSS3Test {
 
   // S3 업로드/다운로드용 클라이언트
@@ -60,15 +63,15 @@ public class AWSS3Test {
       properties.load(fis);
     }
 
-    // getProperty(String key): 지정한 키에 해당하는 값을 가져옴
-    String accessKey = properties.getProperty("AWS_S3_ACCESS_KEY"); // IAM 액세스 키
-    String secretKey = properties.getProperty("AWS_S3_SECRET_KEY"); // IAM 시크릿 키
-    String region = properties.getProperty("AWS_S3_REGION");        // AWS 리전
-    bucketName = properties.getProperty("AWS_S3_BUCKET");           // S3 버킷 이름
+    // System.getenv(): 실행 중인 운영체제의 환경변수 값을 읽어올 때 사용하나느 메서드
+    String accessKey = System.getenv("AWS_S3_ACCESS_KEY"); // IAM 액세스 키
+    String secretKey = System.getenv("AWS_S3_SECRET_KEY"); // IAM 시크릿 키
+    String region = System.getenv("AWS_S3_REGION");        // AWS 리전
+    bucketName = System.getenv("AWS_S3_BUCKET");           // S3 버킷 이름
 
     // 하나라도 누락될 경우 바로 실패 (fail fast)
     if (accessKey == null || secretKey == null || region == null || bucketName == null) {
-      throw new IllegalStateException("AWS S3 설정이 .env 파일에 올바르게 정의되지 않았습니다.");
+      throw new IllegalStateException("AWS S3 환경변수가 설정되지 않았습니다.");
     }
 
     // StaticCredentialsProvider: 코드 내에 직접 정의한 고정된 자격 증명(Access Key, Secret Key)을
@@ -91,6 +94,17 @@ public class AWSS3Test {
         .region(awsRegion)
         .credentialsProvider(credentials)
         .build();
+  }
+
+  // AWS 클라이언트 리소스(HTTP 커넥션 풀, 내부 스레드) 정리
+  @AfterAll
+  static void tearDown() {
+    if (s3Client != null) {
+      s3Client.close();
+    }
+    if (s3Presigner != null) {
+      s3Presigner.close();
+    }
   }
 
   // 각 테스트 메서드 실행 전 호출 - 고유한 테스트 키를 생성
@@ -216,8 +230,5 @@ public class AWSS3Test {
     // then
     URL url = presigned.url();
     assertThat(url).isNotNull();
-    // 생성된 URL을 콘솔에 출력하여 확인 (브라우저에서 직접 테스트)
-    System.out.println("Presigned URL: " + url);
   }
-
 }
