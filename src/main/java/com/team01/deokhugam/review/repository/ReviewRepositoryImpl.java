@@ -185,7 +185,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
       if (!Double.isFinite(rating)) {
         throw new IllegalArgumentException("rating 정렬 cursor 형식이 올바르지 않습니다.");
       }
-
       UUID id = UUID.fromString(parts[1]);
       return new RatingCursor(rating, id);
     } catch (IllegalArgumentException e) {
