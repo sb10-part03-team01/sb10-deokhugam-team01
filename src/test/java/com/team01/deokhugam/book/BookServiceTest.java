@@ -51,6 +51,9 @@ class BookServiceTest {
   @Mock
   private RestClient defaultRestClient;
 
+  @Mock
+  private RestClient ocrRestClient;
+
   @InjectMocks
   private BookService bookService;
 
@@ -60,7 +63,7 @@ class BookServiceTest {
 
   @BeforeEach
   void setUp() {
-    bookService = new BookService(bookMapper, bookRepository, naverRestClient, defaultRestClient);
+    bookService = new BookService(bookMapper, bookRepository, naverRestClient, defaultRestClient, ocrRestClient);
     // 테스트에 사용할 공통 데이터 세팅
     request = new BookCreateRequest(
         "테스트 도서",

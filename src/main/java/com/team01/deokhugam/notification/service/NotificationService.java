@@ -1,5 +1,6 @@
 package com.team01.deokhugam.notification.service;
 
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
@@ -14,6 +15,6 @@ public interface NotificationService {
   NotificationDto confirm(UUID notificationId, UUID userId);
   void confirmAll(UUID userId);
   void cleanupReadNotifications();
-  CursorPageResponse<NotificationDto> findAll(UUID userId, CursorPageRequest request);
+  CursorPageResponse<NotificationDto> findAll(UUID userId, CursorPageRequest request, SortDirection direction);
   Notification findById(UUID notificationId);
 }

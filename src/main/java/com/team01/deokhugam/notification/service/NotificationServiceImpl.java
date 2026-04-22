@@ -1,5 +1,6 @@
 package com.team01.deokhugam.notification.service;
 
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.exception.notification.NotificationException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
@@ -99,7 +100,7 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   @Transactional(readOnly = true)
-  public CursorPageResponse<NotificationDto> findAll(UUID userId, CursorPageRequest request) {
+  public CursorPageResponse<NotificationDto> findAll(UUID userId, CursorPageRequest request, SortDirection direction) {
     log.info("[FIND_ALL_NOTIFICATION] 알림 목록 조회 시작 userId={}, after={}, limit={}",
         userId, request.after(), request.limit());
 
@@ -114,8 +115,9 @@ public class NotificationServiceImpl implements NotificationService {
             Map.of("cursor", request.cursor()));
       }
       log.info("[FIND_ALL_NOTIFICATION] 첫 페이지 조회 userId={}", userId);
-      results = notificationRepository
-          .findByUserIdOrderByCreatedAtDesc(userId, pageable);
+      results = direction == SortDirection.ASC
+          ? notificationRepository.findByUserIdOrderByCreatedAtAsc(userId, pageable)
+          : notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
     } else {
       if (request.cursor() == null || request.cursor().isBlank()) {
         throw new NotificationException(ErrorCode.INVALID_CURSOR_PAGINATION,
@@ -129,9 +131,9 @@ public class NotificationServiceImpl implements NotificationService {
             Map.of("cursor", request.cursor()));
       }
       log.info("[FIND_ALL_NOTIFICATION] 다음 페이지 조회 userId={}, after={}", userId, request.after());
-      results = notificationRepository
-          .findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(
-              userId, request.after(), cursorId, pageable);
+      results = direction == SortDirection.ASC
+          ? notificationRepository.findByUserIdAndCreatedAtAfterOrderByCreatedAtAsc(userId, request.after(), cursorId, pageable)
+          : notificationRepository.findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(userId, request.after(), cursorId, pageable);
     }
 
     log.info("[FIND_ALL_NOTIFICATION] 조회 완료 userId={}, 조회된 개수={}", userId, results.size());
