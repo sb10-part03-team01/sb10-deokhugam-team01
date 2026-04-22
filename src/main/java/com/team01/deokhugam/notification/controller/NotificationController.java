@@ -50,7 +50,7 @@ public class NotificationController {
 
   @GetMapping
   public ResponseEntity<CursorPageResponse<NotificationDto>> findAll(
-      @RequestParam UUID userId,
+      @RequestHeader("Deokhugam-Request-User-ID") UUID userId,
       @RequestParam(defaultValue = "DESC") SortDirection direction,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) OffsetDateTime after,
