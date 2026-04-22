@@ -34,6 +34,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.RestClient;
 
 @ExtendWith(MockitoExtension.class)
 class BookServiceTest {
@@ -44,6 +45,12 @@ class BookServiceTest {
   @Mock
   private BookMapper bookMapper;
 
+  @Mock
+  private RestClient naverRestClient;
+
+  @Mock
+  private RestClient defaultRestClient;
+
   @InjectMocks
   private BookService bookService;
 
@@ -53,6 +60,7 @@ class BookServiceTest {
 
   @BeforeEach
   void setUp() {
+    bookService = new BookService(bookMapper, bookRepository, naverRestClient, defaultRestClient);
     // 테스트에 사용할 공통 데이터 세팅
     request = new BookCreateRequest(
         "테스트 도서",

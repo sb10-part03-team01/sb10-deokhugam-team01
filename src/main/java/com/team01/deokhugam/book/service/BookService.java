@@ -4,6 +4,9 @@ import com.team01.deokhugam.book.BookMapper;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
+import com.team01.deokhugam.book.dto.naver.NaverBookDto;
+import com.team01.deokhugam.book.dto.naver.NaverBookResponse;
+import com.team01.deokhugam.book.dto.naver.NaverBookResponse.NaverBookItem;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
@@ -12,24 +15,40 @@ import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.global.pagination.PageLimitPolicy;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@RequiredArgsConstructor
+@Slf4j
 public class BookService {
 
   private final BookMapper bookMapper;
   private final BookRepository bookRepository;
+  private final RestClient naverRestClient;
+  private final RestClient defaultRestClient;
+
+  public BookService(BookMapper bookMapper,
+      BookRepository bookRepository,
+      @Qualifier("naverRestClient") RestClient naverRestClient,
+      @Qualifier("defaultRestClient") RestClient defaultRestClient) {
+    this.bookMapper = bookMapper;
+    this.bookRepository = bookRepository;
+    this.naverRestClient = naverRestClient;
+    this.defaultRestClient = defaultRestClient;
+  }
 
   @Transactional
   public BookDto createBook(BookCreateRequest request, MultipartFile thumbnail) {
@@ -151,5 +170,65 @@ public class BookService {
         .orElseThrow(() -> new BookNotFoundException(bookId));
 
     bookRepository.delete(book);
+  }
+
+  public NaverBookDto getBookInfoByIsbn(String isbn){
+    String safeIsbn = isbn.trim();
+
+    NaverBookResponse response = naverRestClient.get()
+        .uri(uriBuilder -> uriBuilder
+            .path("/book_adv.json")
+            .queryParam("d_isbn",safeIsbn)
+            .build())
+        .retrieve()
+        .body(NaverBookResponse.class);
+
+    if (response == null || response.items() == null || response.items().isEmpty()) {
+      throw new IllegalArgumentException("해당 isbn으로 검색된 도서가 없습니다.");
+    }
+
+    NaverBookItem naverBookItem = response.items().get(0);
+
+    // String으로 받은 출판일자를 date형태로 변환
+    LocalDate parsedDate = LocalDate.parse(
+        naverBookItem.publishedDate(),
+        DateTimeFormatter.ofPattern("yyyyMMdd")
+    );
+
+    byte[] imageBytes = downloadImageFromUrl(naverBookItem.thumbnailImage());
+
+    return NaverBookDto.builder()
+        .title(naverBookItem.title())
+        .author(naverBookItem.author())
+        .publisher(naverBookItem.publisher())
+        .publishedDate(parsedDate)
+        .isbn(naverBookItem.isbn())
+        .description(naverBookItem.description())
+        .thumbnailImage(imageBytes)
+        .build();
+  }
+
+  private byte[] downloadImageFromUrl(String imageUrl){
+    if(imageUrl == null || imageUrl.isBlank()){
+      return null;
+    }
+    // SSRF(Server-Side Request Forgery) 문제 해결
+    if (!imageUrl.startsWith("https://shopping-phinf.pstatic.net/") &&
+        !imageUrl.startsWith("https://bookthumb-phinf.pstatic.net/")) { // 네이버 도서 썸네일 도메인들
+      log.warn("허용되지 않은 이미지 호스트라서 다운로드를 차단합니다: {}", imageUrl);
+      return null;
+    }
+
+    try {
+      // 네이버 호스트만 허용했으므로 악성 거대 파일(OOM)이 올 확률은 사실상 0%.
+      return defaultRestClient.get()
+          .uri(imageUrl)
+          .retrieve()
+          .body(byte[].class);
+    } catch (Exception e) {
+      // 이미지 다운로드에 실패해도 전체 비즈니스 로직이 터지지 않도록 null 반환
+      log.warn("이미지 다운로드 실패 (URL: {}), 사유: {}", imageUrl, e.getMessage());
+      return null;
+    }
   }
 }
