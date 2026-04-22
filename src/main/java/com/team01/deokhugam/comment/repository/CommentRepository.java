@@ -8,10 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface CommentRepository extends JpaRepository<Comment, UUID>, CommentRepositoryCustom {
 
-  // 단건 조회 or 삭제
-  Optional<Comment> findByIdAndIsDeletedFalse(UUID id);
-
-  // 상세 조회,수정 (fetch join)
+  // 상세 조회,수정, 삭제 (fetch join) isDeleted = false 찾는 용
   @Query(
       """
     select c
@@ -22,4 +19,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Comment
       and c.isDeleted = false
     """)
   Optional<Comment> findDetailById(UUID id);
+
+  // 물리 삭제 - isDeleted = true 댓글 조회
+  Optional<Comment> findByIdAndIsDeletedTrue(UUID id);
 }

@@ -15,6 +15,13 @@ spring:
     init:
       mode: never # schema.sql 무시. H2 호환 스키마 자동 생성
 
+  user:
+    cleanup:
+      # 테스트 환경에서는 테스트 용이성을 위해 3분으로 설정
+      retention-minutes: 3
+      # 1분마다 cleanupSoftDeletedUsers 실행 (빠른 테스트용)
+      cron: "0 * * * * *"
+
 logging:
   level:
     com.team01.deokhugam: debug

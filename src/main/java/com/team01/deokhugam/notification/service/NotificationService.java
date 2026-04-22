@@ -15,4 +15,5 @@ public interface NotificationService {
   void confirmAll(User user);
   void cleanupReadNotifications();
   CursorPageResponse<NotificationDto> findAll(UUID userId, CursorPageRequest request);
+  Notification findById(UUID notificationId);
 }
