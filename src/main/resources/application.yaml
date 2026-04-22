@@ -63,6 +63,9 @@ deokhugam:
     client:
       id: ${NAVER_CLIENT_ID:}
       secret: ${NAVER_CLIENT_SECRET:}
+  ocr:
+    api:
+      key: ${OCR_API_KEY}
 
 logging:
   level:

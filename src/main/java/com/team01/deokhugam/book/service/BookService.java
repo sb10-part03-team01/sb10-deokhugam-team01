@@ -4,6 +4,7 @@ import com.team01.deokhugam.book.BookMapper;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
+import com.team01.deokhugam.book.dto.OcrSpaceResponse;
 import com.team01.deokhugam.book.dto.naver.NaverBookDto;
 import com.team01.deokhugam.book.dto.naver.NaverBookResponse;
 import com.team01.deokhugam.book.dto.naver.NaverBookResponse.NaverBookItem;
@@ -22,11 +23,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,15 +46,23 @@ public class BookService {
   private final BookRepository bookRepository;
   private final RestClient naverRestClient;
   private final RestClient defaultRestClient;
+  private final RestClient ocrRestClient;
+
+  // isbn패턴 정규표현식: 978 혹은 979로 시작해서 (-)와 숫자가 조합되서 나오는 10자리~20자리의 문자열
+  private static final Pattern ISBN_PATTERN = Pattern.compile("97[89][0-9\\s-]{10,20}");
+  @Value("${deokhugam.ocr.api.key}")
+  private String ocrApiKey;
 
   public BookService(BookMapper bookMapper,
       BookRepository bookRepository,
       @Qualifier("naverRestClient") RestClient naverRestClient,
-      @Qualifier("defaultRestClient") RestClient defaultRestClient) {
+      @Qualifier("defaultRestClient") RestClient defaultRestClient,
+      @Qualifier("ocrRestClient") RestClient ocrRestClient) {
     this.bookMapper = bookMapper;
     this.bookRepository = bookRepository;
     this.naverRestClient = naverRestClient;
     this.defaultRestClient = defaultRestClient;
+    this.ocrRestClient = ocrRestClient;
   }
 
   @Transactional
@@ -206,6 +221,47 @@ public class BookService {
         .description(naverBookItem.description())
         .thumbnailImage(imageBytes)
         .build();
+  }
+
+  public String getIsbnByOcr(MultipartFile image){
+    try {
+      MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
+      formData.add("apikey", ocrApiKey);
+      formData.add("file", image.getResource());
+      formData.add("language", "kor");
+      formData.add("isOverlayRequired", "false");
+      formData.add("OCREngine", "2"); // 숫자 및 특수문자 인식에 더 강한 엔진 사용
+
+      OcrSpaceResponse response = ocrRestClient.post()
+          .uri("/parse/image")
+          .contentType(MediaType.MULTIPART_FORM_DATA)
+          .body(formData)
+          .retrieve()
+          .body(OcrSpaceResponse.class);
+
+      if (response == null || response.isErroredOnProcessing() || response.parsedResults().isEmpty()) {
+        throw new IllegalArgumentException("이미지에서 텍스트를 추출할 수 없습니다.");
+      }
+
+      // parseResults에는 페이지의 개수만큼 parseText가 담김
+      // parseText는 한 페이지의 모든 문자열을 담은 문자열로 반환됨
+      String parsedText = response.parsedResults().get(0).parsedText();
+      // 그 모든 문자열에서 내가 정한 패턴의 문자열만 추출
+      Matcher matcher = ISBN_PATTERN.matcher(parsedText);
+
+      // 해당 패턴의 문자열을 찾았다면
+      if (matcher.find()) {
+        String rawIsbn = matcher.group().replaceAll("[^0-9]", "");
+        // 만약 13자리 이상나온다면 13자리까지만 반환함
+        return rawIsbn.length() >= 13 ? rawIsbn.substring(0,13) : rawIsbn;
+      }
+      log.error("OCR 처리 중 오류 발생: {}", parsedText);
+      throw new IllegalArgumentException("이미지에서 ISBN 형식을 찾을 수 없습니다.");
+    }
+    catch (Exception e){
+      log.error("OCR 처리 중 오류 발생: {}", e.getMessage());
+      throw new RuntimeException("OCR 이미지 처리 중 서버 오류가 발생했습니다.");
+    }
   }
 
   private byte[] downloadImageFromUrl(String imageUrl){

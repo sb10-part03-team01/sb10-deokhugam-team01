@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.http.MediaType;
@@ -123,5 +124,16 @@ public interface BookApi {
   })
   ResponseEntity<NaverBookDto> getBookInfoByIsbn(
       @Parameter(description = "검색할 도서의 ISBN 번호 (10자리 또는 13자리)", example = "9788966263158") @NotBlank String isbn
+  );
+
+  @Operation(summary = "OCR 기반 ISBN 추출", description = "도서 바코드 이미지를 업로드하여 ISBN 13자리 숫자를 추출합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "ISBN 추출 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청 (이미지 누락, 바코드 인식 불가, ISBN 형식 없음)"),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류 (OCR API 통신 실패 등)")
+  })
+  ResponseEntity<String> getIsbnByOcr(
+      @Parameter(description = "도서 바코드 이미지 파일", content = @Content(mediaType = "multipart/form-data"))
+      @NotNull(message = "이미지 파일은 필수입니다.") MultipartFile image
   );
 }
