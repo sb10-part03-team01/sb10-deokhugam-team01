@@ -2,11 +2,14 @@ package com.team01.deokhugam.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Properties;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -56,13 +59,6 @@ public class AWSS3Test {
   // @BeforeAll 시점에는 테스트 인스턴스 생성되지 않았으므로 관련된 것 static으로 선언
   @BeforeAll
   static void setUp() throws IOException {
-    // java.util.Properties를 사용하여 .env 파일을 "키=값" 형식으로 파싱
-    Properties properties = new Properties();
-    try (FileInputStream fis = new FileInputStream(".env")) {
-      // 스트림으로부터 속성 목록을 읽어옴
-      properties.load(fis);
-    }
-
     // System.getenv(): 실행 중인 운영체제의 환경변수 값을 읽어올 때 사용하나느 메서드
     String accessKey = System.getenv("AWS_S3_ACCESS_KEY"); // IAM 액세스 키
     String secretKey = System.getenv("AWS_S3_SECRET_KEY"); // IAM 시크릿 키
@@ -199,7 +195,7 @@ public class AWSS3Test {
   //  - 내부적 원리는 -> Digital Signature
   //  - URL이 만료되거나, 서명이 유효하지 않으면 403 Forbidden이 반환됨
   @Test
-  void generatePresignedUrl() {
+  void generatePresignedUrl() throws Exception {
     // given
     String content = "test-presignedURL-content";
     s3Client.putObject(
@@ -230,5 +226,16 @@ public class AWSS3Test {
     // then
     URL url = presigned.url();
     assertThat(url).isNotNull();
+
+    // Presigned URU 실제 GET 겆믕
+    // Presigned URL로 실제 HTTP GET 요청을 보내 객체를 내려받음
+    HttpRequest request = HttpRequest.newBuilder(URI.create(url.toString()))
+        .GET()
+        .build();
+    HttpResponse<String> response = HttpClient.newHttpClient()
+        .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).isEqualTo(content);
   }
 }
