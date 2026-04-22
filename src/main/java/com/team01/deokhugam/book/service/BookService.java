@@ -239,7 +239,12 @@ public class BookService {
           .retrieve()
           .body(OcrSpaceResponse.class);
 
-      if (response == null || response.isErroredOnProcessing() || response.parsedResults().isEmpty()) {
+      List<OcrSpaceResponse.ParsedResult> parsedResults =
+          response == null ? null : response.parsedResults();
+      // ocr 응답 데이터의 npe, 응답 데이터는 있지만 안의 요소가 npe, 안의 요소인 리스트는 있지만 리스트의 요소가 npe,
+      // 리스트의 요소는 있지만 그 요소가 공백일때의 방어로직
+      if (response == null || response.isErroredOnProcessing() || parsedResults == null
+          || response.parsedResults().isEmpty() || !StringUtils.hasText(parsedResults.get(0).parsedText())) {
         throw new IllegalArgumentException("이미지에서 텍스트를 추출할 수 없습니다.");
       }
 
@@ -250,12 +255,13 @@ public class BookService {
       Matcher matcher = ISBN_PATTERN.matcher(parsedText);
 
       // 해당 패턴의 문자열을 찾았다면
-      if (matcher.find()) {
+      while(matcher.find()) {
+        // 숫자를 제외하고 모두 없앰
         String rawIsbn = matcher.group().replaceAll("[^0-9]", "");
-        // 만약 13자리 이상나온다면 13자리까지만 반환함
+        // 만약 길이가 13 이상이면 길이 13에 맞게 반환
         return rawIsbn.length() >= 13 ? rawIsbn.substring(0,13) : rawIsbn;
       }
-      log.error("OCR 처리 중 오류 발생: {}", parsedText);
+
       throw new IllegalArgumentException("이미지에서 ISBN 형식을 찾을 수 없습니다.");
     }
     catch (Exception e){

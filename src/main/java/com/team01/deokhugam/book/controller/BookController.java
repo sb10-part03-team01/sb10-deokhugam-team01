@@ -120,7 +120,7 @@ public class BookController implements BookApi{
   public ResponseEntity<String> getIsbnByOcr(
       @RequestPart("image") MultipartFile image
   ) {
-    log.info("OCR로 ISBN 조회 요청: {}", image.getOriginalFilename());
+    log.info("OCR로 ISBN 조회 요청");
 
     String response = bookService.getIsbnByOcr(image);
 
