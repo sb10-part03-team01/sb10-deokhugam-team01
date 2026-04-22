@@ -259,7 +259,10 @@ public class BookService {
         // 숫자를 제외하고 모두 없앰
         String rawIsbn = matcher.group().replaceAll("[^0-9]", "");
         // 만약 길이가 13 이상이면 길이 13에 맞게 반환
-        return rawIsbn.length() >= 13 ? rawIsbn.substring(0,13) : rawIsbn;
+        String isbn = rawIsbn.length() >= 13 ? rawIsbn.substring(0, 13) : null;
+        if (isbn != null) {
+          return isbn;
+        }
       }
 
       throw new IllegalArgumentException("이미지에서 ISBN 형식을 찾을 수 없습니다.");
