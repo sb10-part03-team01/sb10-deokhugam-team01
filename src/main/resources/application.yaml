@@ -65,7 +65,7 @@ deokhugam:
       secret: ${NAVER_CLIENT_SECRET:}
   ocr:
     api:
-      key: ${OCR_API_KEY}
+      key: ${OCR_API_KEY:}
 
 logging:
   level:

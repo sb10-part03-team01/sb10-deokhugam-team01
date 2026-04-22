@@ -231,7 +231,7 @@ public class BookService {
       MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
       formData.add("apikey", ocrApiKey);
       formData.add("file", image.getResource());
-      formData.add("language", "kor");
+      formData.add("language", "auto");
       formData.add("isOverlayRequired", "false");
       formData.add("OCREngine", "2"); // 숫자 및 특수문자 인식에 더 강한 엔진 사용
 
@@ -247,7 +247,7 @@ public class BookService {
       // ocr 응답 데이터의 npe, 응답 데이터는 있지만 안의 요소가 npe, 안의 요소인 리스트는 있지만 리스트의 요소가 npe,
       // 리스트의 요소는 있지만 그 요소가 공백일때의 방어로직
       if (response == null || response.isErroredOnProcessing() || parsedResults == null
-          || response.parsedResults().isEmpty() || !StringUtils.hasText(parsedResults.get(0).parsedText())) {
+          || parsedResults.isEmpty() || !StringUtils.hasText(parsedResults.get(0).parsedText())) {
         throw new IllegalArgumentException("이미지에서 텍스트를 추출할 수 없습니다.");
       }
 
