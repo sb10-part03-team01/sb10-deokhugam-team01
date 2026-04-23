@@ -16,7 +16,11 @@ import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
+import com.team01.deokhugam.global.exception.review.ReviewAlreadyExistsException;
+import com.team01.deokhugam.global.exception.review.ReviewNotFoundException;
+import com.team01.deokhugam.global.exception.review.ReviewNotSoftDeletedException;
 import com.team01.deokhugam.global.exception.review.ReviewUpdateForbiddenException;
+import com.team01.deokhugam.global.exception.user.UserNotFoundException;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -127,7 +131,7 @@ class ReviewServiceImplTest {
     given(userRepository.findById(userId)).willReturn(Optional.empty());
 
     Exception exception = assertThrows(
-        IllegalArgumentException.class,
+        UserNotFoundException.class,
         () -> reviewServiceImpl.createReview(reviewCreateRequest)
     );
 
@@ -149,7 +153,7 @@ class ReviewServiceImplTest {
         .willReturn(true);
 
     Exception exception = assertThrows(
-        IllegalArgumentException.class,
+        ReviewAlreadyExistsException.class,
         () -> reviewServiceImpl.createReview(reviewCreateRequest)
     );
 
@@ -181,7 +185,7 @@ class ReviewServiceImplTest {
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.empty());
 
     Exception exception = assertThrows(
-        IllegalArgumentException.class,
+        ReviewNotFoundException.class,
         () -> reviewServiceImpl.getReview(reviewId, requestUserId)
     );
 
@@ -338,7 +342,7 @@ class ReviewServiceImplTest {
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.empty());
 
     assertThatThrownBy(() -> reviewServiceImpl.deleteReview(reviewId, requestUserId))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(ReviewNotFoundException.class)
         .hasMessage("리뷰를 찾을 수 없습니다.");
   }
 
@@ -382,7 +386,7 @@ class ReviewServiceImplTest {
     given(reviewRepository.findById(reviewId)).willReturn(Optional.empty());
 
     assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(ReviewNotFoundException.class)
         .hasMessage("리뷰를 찾을 수 없습니다.");
   }
 
@@ -416,7 +420,7 @@ class ReviewServiceImplTest {
     given(review.isDeleted()).willReturn(false);
 
     assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(ReviewNotSoftDeletedException.class)
         .hasMessage("논리 삭제된 리뷰만 물리 삭제할 수 있습니다.");
 
     verify(reviewRepository, never()).delete(any(Review.class));
