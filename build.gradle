@@ -62,6 +62,9 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
     // JUnit Platform Launcher
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //batch
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
 }
 
 // *-plain.jar 생성되지 않도록 설정
