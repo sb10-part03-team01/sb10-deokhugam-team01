@@ -1,6 +1,7 @@
 package com.team01.deokhugam.poweruser.service;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
@@ -25,31 +26,35 @@ public class PowerUserServiceImpl implements PowerUserService {
 
   @Override
   @Transactional(readOnly = true)
-  public CursorPageResponse<PowerUserDto> getRanking(DashboardPeriod period, String direction,
+  public CursorPageResponse<PowerUserDto> getRanking(DashboardPeriod period, SortDirection direction,
       String cursor, OffsetDateTime after, int limit) {
 
     List<PowerUser> results;
 
     int normalizedLimit = PageLimitPolicy.normalize(limit);
     PageRequest pageable = PageRequest.of(0, normalizedLimit + 1);
+    boolean asc = direction == SortDirection.ASC;
 
     if (after == null) {
       if (cursor != null && !cursor.isBlank()) {
         throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, Map.of("cursor", cursor));
       }
-      results = direction.equals("ASC")
+      results = asc
           ? powerUserRepository.findByPeriodOrderByRankAsc(period, pageable)
           : powerUserRepository.findByPeriodOrderByRankDesc(period, pageable);
     } else {
       if (cursor == null || cursor.isBlank()) {
         throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, Map.of("after", after));
       }
-      long rankCursor = Long.parseLong(cursor);
-      results = direction.equals("ASC")
-          ? powerUserRepository.findByPeriodAndRankGreaterThanOrderByRankAsc(period, rankCursor,
-          pageable)
-          : powerUserRepository.findByPeriodAndRankLessThanOrderByRankDesc(period, rankCursor,
-              pageable);
+      long rankCursor;
+      try {
+        rankCursor = Long.parseLong(cursor);
+      } catch (NumberFormatException e) {
+        throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("cursor", cursor));
+      }
+      results = asc
+          ? powerUserRepository.findByPeriodAndRankGreaterThanAndCreatedAtAfterOrderByRankAscCreatedAtAsc(period, rankCursor, after, pageable)
+          : powerUserRepository.findByPeriodAndRankLessThanAndCreatedAtBeforeOrderByRankDescCreatedAtDesc(period, rankCursor, after, pageable);
     }
 
     List<PowerUserDto> dtoList = results.stream()
