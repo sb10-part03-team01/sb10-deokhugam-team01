@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -27,7 +28,8 @@ import lombok.NoArgsConstructor;
       @UniqueConstraint(
           name = "uk_popular_books_period_book",
           columnNames = {"period_type", "calculated_date", "book_id"})
-    })
+    },
+    indexes = {@Index(name = "idx_popular_books_book_id", columnList = "book_id")})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PopularBook extends BaseEntity {

@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
+// PostgreSQL용 schema.sql을 H2 테스트 DB에 그대로 실행해서 타입 호환 에러 방지
 @Import(QuerydslTestConfig.class)
 @DataJpaTest
 @TestPropertySource(

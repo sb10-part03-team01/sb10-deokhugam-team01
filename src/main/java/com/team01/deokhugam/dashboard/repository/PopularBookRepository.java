@@ -5,4 +5,4 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PopularBookRepository
-    extends JpaRepository<PopularBook, UUID>, PopularBookCustom {}
+    extends JpaRepository<PopularBook, UUID>, PopularBookRepositoryCustom {}
