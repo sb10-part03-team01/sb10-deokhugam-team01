@@ -16,6 +16,7 @@ import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.book.service.BookService;
+import com.team01.deokhugam.book.storage.S3ThumbnailStorage;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
@@ -54,6 +55,9 @@ class BookServiceTest {
   @Mock
   private RestClient ocrRestClient;
 
+  @Mock
+  private S3ThumbnailStorage s3ThumbnailStorage;
+
   @InjectMocks
   private BookService bookService;
 
@@ -63,7 +67,7 @@ class BookServiceTest {
 
   @BeforeEach
   void setUp() {
-    bookService = new BookService(bookMapper, bookRepository, naverRestClient, defaultRestClient, ocrRestClient);
+    bookService = new BookService(bookMapper, bookRepository, naverRestClient, defaultRestClient, ocrRestClient, s3ThumbnailStorage);
     // 테스트에 사용할 공통 데이터 세팅
     request = new BookCreateRequest(
         "테스트 도서",

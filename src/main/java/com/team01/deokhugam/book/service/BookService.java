@@ -10,12 +10,14 @@ import com.team01.deokhugam.book.dto.naver.NaverBookResponse;
 import com.team01.deokhugam.book.dto.naver.NaverBookResponse.NaverBookItem;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.book.storage.ThumbnailStorage;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.global.pagination.PageLimitPolicy;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,6 +34,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -47,6 +51,7 @@ public class BookService {
   private final RestClient naverRestClient;
   private final RestClient defaultRestClient;
   private final RestClient ocrRestClient;
+  private final ThumbnailStorage thumbnailStorage;
 
   // isbn패턴 정규표현식: 978 혹은 979로 시작해서 (-)와 숫자가 조합되서 나오는 10자리~20자리의 문자열
   private static final Pattern ISBN_PATTERN = Pattern.compile("97[89][0-9\\s-]{10,20}");
@@ -57,12 +62,14 @@ public class BookService {
       BookRepository bookRepository,
       @Qualifier("naverRestClient") RestClient naverRestClient,
       @Qualifier("defaultRestClient") RestClient defaultRestClient,
-      @Qualifier("ocrRestClient") RestClient ocrRestClient) {
+      @Qualifier("ocrRestClient") RestClient ocrRestClient,
+      ThumbnailStorage thumbnailStorage) {
     this.bookMapper = bookMapper;
     this.bookRepository = bookRepository;
     this.naverRestClient = naverRestClient;
     this.defaultRestClient = defaultRestClient;
     this.ocrRestClient = ocrRestClient;
+    this.thumbnailStorage = thumbnailStorage;
   }
 
   @Transactional
@@ -85,7 +92,27 @@ public class BookService {
         build();
     // 썸네일 저장
     if (thumbnail != null && !thumbnail.isEmpty()) {
-      // 추후 s3로 업로드, presignURL 가져오는 로직 추가
+      String s3Url;
+      try {
+        s3Url = thumbnailStorage.upload(thumbnail);
+        book.addThumbnail(s3Url);
+      } catch (IOException e){
+        throw new RuntimeException("파일 업로드중 문제가 발생했습니다",e);
+      }
+
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        // 트랜직션이 커밋되는 롤백되는 상관없이 완료가 되면
+        @Override
+        public void afterCompletion(int status) {
+          // 만약 롤백으로 완료되면
+          if (status == STATUS_ROLLED_BACK)
+          {
+            // 새로운 이미지를 삭제함
+            thumbnailStorage.delete(s3Url);
+          }
+        }
+      });
+
     }
     // 만약 두 사용자가 동시에 같은 isbn으로 등록시 둘다 중복 검사에서는 통과하지만 등록시에는 uinque제약 조건으로
     // DataIntegrityViolationException가 발생하기 때문에 해당 예외 발생시 커스텀 예외로 응답하도록 함
@@ -145,7 +172,7 @@ public class BookService {
   }
 
   @Transactional
-  public BookDto updateBook(BookUpdateRequest request, UUID bookId, MultipartFile thumbnailImage){
+  public BookDto updateBook(BookUpdateRequest request, UUID bookId, MultipartFile thumbnailImage) {
     Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
         .orElseThrow(() -> new BookNotFoundException(bookId));
 
@@ -165,7 +192,39 @@ public class BookService {
       book.updatePublishedDate(request.getPublishedDate());
     }
     if(thumbnailImage != null && !thumbnailImage.isEmpty()){
-      // 추후 s3로 업로드, presignURL 가져오는 로직 추가
+      String oldThumbnailUrl = book.getThumbnailUrl();
+      String newS3Url;
+
+      try {
+        newS3Url = thumbnailStorage.upload(thumbnailImage);
+        book.updateThumbnailUrl(newS3Url);
+      } catch (IOException e){
+        throw new RuntimeException("파일 업로드중 오류가 발생했습니다",e);
+      }
+      // 트랜잭션 롤백시 s3의 데이터 유실 문제 해결
+      // 만약 s3의 원래 이미지를 삭제하고 새로운 이미지를 넣고 난 뒤에 트랜잭션이 롤백되면 db는 제대로 롤백되지만
+      // s3는 데이터가 롤백되지 않는 문제가 있음
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        // 트랜잭션이 커밋된다면
+        @Override
+        public void afterCommit() {
+          if (oldThumbnailUrl != null) {
+            // 원래 데이터 삭제 진행
+            thumbnailStorage.delete(oldThumbnailUrl);
+          }
+        }
+
+        // 트랜직션이 커밋되는 롤백되는 상관없이 완료가 되면
+        @Override
+        public void afterCompletion(int status) {
+          // 만약 롤백으로 완료되면
+          if (status == STATUS_ROLLED_BACK)
+            {
+              // 새로운 이미지를 삭제함
+              thumbnailStorage.delete(newS3Url);
+            }
+        }
+      });
     }
 
     return bookMapper.toDto(book);
@@ -183,6 +242,11 @@ public class BookService {
   public void permanentDeleteBook(UUID bookId){
     Book book = bookRepository.findByIdAndIsDeletedTrue(bookId)
         .orElseThrow(() -> new BookNotFoundException(bookId));
+
+    // 완전 db에서도 삭제되면 저장소의 썸네일도 삭제
+    if (book.getThumbnailUrl() != null) {
+      thumbnailStorage.delete(book.getThumbnailUrl());
+    }
 
     bookRepository.delete(book);
   }
