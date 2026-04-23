@@ -5,9 +5,9 @@ import com.team01.deokhugam.global.exception.ErrorCode;
 import java.util.Map;
 import java.util.UUID;
 
-public class ReviewUpdateForbidden extends DeokhugamException {
+public class ReviewUpdateForbiddenException extends DeokhugamException {
 
-  public ReviewUpdateForbidden(UUID reviewId, UUID requestUserId) {
+  public ReviewUpdateForbiddenException(UUID reviewId, UUID requestUserId) {
     super(
         ErrorCode.REVIEW_UPDATE_FORBIDDEN,
         Map.of(
