@@ -65,6 +65,15 @@ dependencies {
 
     //batch
     implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+    // AWS SDK v2 BOM
+    implementation platform('software.amazon.awssdk:bom:2.42.33')
+
+    // S3와의 통신을 위한 AWS SDK v2 라이브러리
+    implementation 'software.amazon.awssdk:s3'
+
+    // AWS 인증 처리 모듈
+    implementation 'software.amazon.awssdk:auth'
 }
 
 // *-plain.jar 생성되지 않도록 설정
