@@ -18,6 +18,11 @@ spring:
     open-in-view: false
   config:
     import: optional:file:.env[.properties]
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
 
 management:
   endpoints:
