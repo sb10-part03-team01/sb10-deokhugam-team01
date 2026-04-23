@@ -27,6 +27,7 @@ src/main/resources/project-deokhugam-fe-v2-2.0.3/
 # Security - 환경 변수 / 시크릿 (이미지에 절대 포함 금지)
 .env
 .env.*
+*.pem
 !.env.example
 
 # Docker 관련 파일 자체 (빌드 컨텍스트에 불필요)
