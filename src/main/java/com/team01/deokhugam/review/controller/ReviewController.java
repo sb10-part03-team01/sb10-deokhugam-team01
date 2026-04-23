@@ -1,9 +1,11 @@
 package com.team01.deokhugam.review.controller;
 
+import com.team01.deokhugam.global.constant.AuthHeader;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
+import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import com.team01.deokhugam.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -58,7 +61,7 @@ public class ReviewController {
   @GetMapping("/{reviewId}")
   public ResponseEntity<ReviewDto> getReview(
       @PathVariable UUID reviewId,
-      @RequestHeader("Deokhugam-Request-User-ID") UUID requestUserId
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
   ) {
     return ResponseEntity.ok(reviewService.getReview(reviewId, requestUserId));
   }
@@ -70,7 +73,7 @@ public class ReviewController {
   })
   @GetMapping
   public ResponseEntity<CursorPageResponseReviewDto> getReviews(
-      @RequestHeader("Deokhugam-Request-User-ID") UUID requestUserId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
       @RequestParam(required = false) UUID userId,
       @RequestParam(required = false) UUID bookId,
       @RequestParam(required = false) String keyword,
@@ -92,5 +95,22 @@ public class ReviewController {
             limit
         )
     );
+  }
+
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "리뷰 수정 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청 (입력값 검증 실패)"),
+      @ApiResponse(responseCode = "403", description = "리뷰 수정 권한 없음"),
+      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+  })
+  @PatchMapping("/{reviewId}")
+  public ResponseEntity<ReviewDto> updateReview(
+      @PathVariable UUID reviewId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
+      @Valid @RequestBody ReviewUpdateRequest request
+  ) {
+    ReviewDto response = reviewService.updateReview(reviewId, requestUserId, request);
+    return ResponseEntity.ok(response);
   }
 }
