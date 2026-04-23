@@ -63,6 +63,9 @@ dependencies {
     // JUnit Platform Launcher
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    //batch
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+
     // AWS SDK v2 BOM
     implementation platform('software.amazon.awssdk:bom:2.42.33')
 

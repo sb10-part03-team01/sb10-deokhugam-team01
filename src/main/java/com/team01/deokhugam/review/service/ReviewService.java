@@ -4,6 +4,7 @@ import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
+import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -24,4 +25,6 @@ public interface ReviewService {
       OffsetDateTime after,
       Integer limit
   );
+
+  ReviewDto updateReview(UUID reviewId, UUID requestUserId, ReviewUpdateRequest request);
 }

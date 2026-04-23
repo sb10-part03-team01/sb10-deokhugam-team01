@@ -1,18 +1,27 @@
 package com.team01.deokhugam.review.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
+import com.team01.deokhugam.global.exception.review.ReviewUpdateForbidden;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
 import com.team01.deokhugam.review.dto.ReviewSearchCondition;
+import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.mapper.ReviewMapper;
 import com.team01.deokhugam.review.repository.ReviewRepository;
@@ -70,9 +79,9 @@ class ReviewServiceImplTest {
         new ReviewCreateRequest(bookId, userId, "테스트 리뷰", 4.5);
 
     // Book/User 내부 필드는 안 쓰므로 mock 객체로 대체
-    Book book = org.mockito.Mockito.mock(Book.class);
-    User user = org.mockito.Mockito.mock(User.class);
-    Review savedReview = org.mockito.Mockito.mock(Review.class);
+    Book book = mock(Book.class);
+    User user = mock(User.class);
+    Review savedReview = mock(Review.class);
 
     // 서비스가 최종적으로 반환할 DTO
     ReviewDto reviewDto = new ReviewDto(
@@ -128,7 +137,7 @@ class ReviewServiceImplTest {
         new ReviewCreateRequest(bookId, userId, "테스트 리뷰", 4.5);
 
     // 도서는 존재
-    Book book = org.mockito.Mockito.mock(Book.class);
+    Book book = mock(Book.class);
     given(bookRepository.findById(bookId)).willReturn(Optional.of(book));
 
     // 유저는 존재하지 않음
@@ -151,8 +160,8 @@ class ReviewServiceImplTest {
     ReviewCreateRequest reviewCreateRequest =
         new ReviewCreateRequest(bookId, userId, "테스트 리뷰", 4.5);
 
-    Book book = org.mockito.Mockito.mock(Book.class);
-    User user = org.mockito.Mockito.mock(User.class);
+    Book book = mock(Book.class);
+    User user = mock(User.class);
 
     // 도서/유저는 존재
     given(bookRepository.findById(bookId)).willReturn(Optional.of(book));
@@ -176,7 +185,7 @@ class ReviewServiceImplTest {
   @DisplayName("리뷰 상세 조회 - 성공")
   void getReview_success() {
     // given
-    Review review = org.mockito.Mockito.mock(Review.class);
+    Review review = mock(Review.class);
 
     ReviewDto reviewDto = new ReviewDto(
         reviewId, bookId, "테스트 책", "thumb.jpg", userId, "tester",
@@ -216,7 +225,7 @@ class ReviewServiceImplTest {
   @DisplayName("리뷰 목록 조회 - 성공")
   void searchReviews_success() {
     // given
-    Review review = org.mockito.Mockito.mock(Review.class);
+    Review review = mock(Review.class);
 
     ReviewDto reviewDto = new ReviewDto(
         reviewId, bookId, "테스트 책", "thumb.jpg", userId, "tester",
@@ -297,5 +306,70 @@ class ReviewServiceImplTest {
 
     // then
     assertThat(exception.getMessage()).isEqualTo("orderBy는 createdAt 또는 rating만 가능합니다.");
+  }
+
+  @Test
+  @DisplayName("리뷰 수정 - 성공")
+  void updateReview_success() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    User user = mock(User.class);
+    Review review = mock(Review.class);
+    ReviewUpdateRequest request = new ReviewUpdateRequest("수정된 리뷰", 4.5);
+    ReviewDto reviewDto = new ReviewDto(
+        reviewId,
+        UUID.randomUUID(),
+        "테스트 책",
+        "thumb.jpg",
+        requestUserId,
+        "테스트 유저",
+        "수정된 리뷰",
+        4.5,
+        0,
+        0,
+        false,
+        OffsetDateTime.now(),
+        OffsetDateTime.now()
+    );
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
+    given(review.getUser()).willReturn(user);
+    given(user.getId()).willReturn(requestUserId);
+    given(reviewMapper.toDto(review)).willReturn(reviewDto);
+
+    // when
+    ReviewDto result = reviewServiceImpl.updateReview(reviewId, requestUserId, request);
+
+    // then
+    verify(review).update("수정된 리뷰", 4.5);
+    assertThat(result.content()).isEqualTo("수정된 리뷰");
+    assertThat(result.rating()).isEqualTo(4.5);
+  }
+
+  @Test
+  @DisplayName("리뷰 수정 - 권한 없는 사용자가 수정 시 예외 발생")
+  void updateReview_fail_whenRequesterIsNotAuthor() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID authorId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    User author = mock(User.class);
+    Review review = mock(Review.class);
+    ReviewUpdateRequest request = new ReviewUpdateRequest("수정 시도", 4.5);
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
+    given(review.getUser()).willReturn(author);
+    given(author.getId()).willReturn(authorId);
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.updateReview(reviewId, requestUserId, request))
+        .isInstanceOf(ReviewUpdateForbidden.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_UPDATE_FORBIDDEN);
+
+    verify(review, never()).update(anyString(), anyDouble());
   }
 }
