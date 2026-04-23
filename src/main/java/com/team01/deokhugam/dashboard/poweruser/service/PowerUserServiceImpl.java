@@ -1,4 +1,4 @@
-package com.team01.deokhugam.poweruser.service;
+package com.team01.deokhugam.dashboard.poweruser.service;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
@@ -7,8 +7,8 @@ import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.global.pagination.PageLimitPolicy;
-import com.team01.deokhugam.poweruser.entity.PowerUser;
-import com.team01.deokhugam.poweruser.repository.PowerUserRepository;
+import com.team01.deokhugam.dashboard.poweruser.entity.PowerUser;
+import com.team01.deokhugam.dashboard.poweruser.repository.PowerUserRepository;
 import com.team01.deokhugam.user.dto.PowerUserDto;
 import java.time.OffsetDateTime;
 import java.util.List;

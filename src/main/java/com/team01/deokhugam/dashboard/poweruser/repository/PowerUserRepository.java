@@ -1,7 +1,7 @@
-package com.team01.deokhugam.poweruser.repository;
+package com.team01.deokhugam.dashboard.poweruser.repository;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
-import com.team01.deokhugam.poweruser.entity.PowerUser;
+import com.team01.deokhugam.dashboard.poweruser.entity.PowerUser;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;

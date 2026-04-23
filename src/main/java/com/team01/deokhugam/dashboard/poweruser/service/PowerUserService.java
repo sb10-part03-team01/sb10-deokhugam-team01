@@ -1,4 +1,4 @@
-package com.team01.deokhugam.poweruser.service;
+package com.team01.deokhugam.dashboard.poweruser.service;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;

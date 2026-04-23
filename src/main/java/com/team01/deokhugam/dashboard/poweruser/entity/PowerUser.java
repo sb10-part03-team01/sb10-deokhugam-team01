@@ -1,4 +1,4 @@
-package com.team01.deokhugam.poweruser.entity;
+package com.team01.deokhugam.dashboard.poweruser.entity;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.global.entity.BaseEntity;
