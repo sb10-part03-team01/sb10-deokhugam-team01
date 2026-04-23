@@ -10,6 +10,8 @@ on:
       - synchronize      # PR에 새 커밋이 푸시됐을 때
       - reopened         # 닫혔던 PR이 다시 열릴 때
       - ready_for_review # Draft PR이 Ready로 바뀔 때
+  push:
+    branches: [ dev, main ] # 머지 후 dev/main 기준 CI 및 Codecov 갱신용
 
 # 권한 설정: 이 워크플로우가 가진 GitHub 토큰의 권한 범위
 permissions:
