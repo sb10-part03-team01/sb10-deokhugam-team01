@@ -130,13 +130,12 @@ class ReviewServiceImplTest {
     given(bookRepository.findById(bookId)).willReturn(Optional.of(book));
     given(userRepository.findById(userId)).willReturn(Optional.empty());
 
-    Exception exception = assertThrows(
-        UserNotFoundException.class,
-        () -> reviewServiceImpl.createReview(reviewCreateRequest)
-    );
-
-    assertThat(exception.getMessage()).isEqualTo("사용자를 찾을 수 없습니다.");
+    assertThatThrownBy(() -> reviewServiceImpl.createReview(reviewCreateRequest))
+        .isInstanceOf(UserNotFoundException.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.USER_NOT_FOUND);
   }
+
 
   @Test
   @DisplayName("리뷰 생성 - 같은 유저가 같은 도서에 중복 리뷰 작성 시 예외 발생")
@@ -152,12 +151,10 @@ class ReviewServiceImplTest {
     given(reviewRepository.existsByBook_IdAndUser_IdAndIsDeletedFalse(bookId, userId))
         .willReturn(true);
 
-    Exception exception = assertThrows(
-        ReviewAlreadyExistsException.class,
-        () -> reviewServiceImpl.createReview(reviewCreateRequest)
-    );
-
-    assertThat(exception.getMessage()).isEqualTo("해당 도서에 작성한 리뷰가 있습니다.");
+    assertThatThrownBy(() -> reviewServiceImpl.createReview(reviewCreateRequest))
+        .isInstanceOf(ReviewAlreadyExistsException.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_ALREADY_EXISTS);
   }
 
   @Test
@@ -184,12 +181,10 @@ class ReviewServiceImplTest {
   void getReview_fail_whenReviewNotFound() {
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.empty());
 
-    Exception exception = assertThrows(
-        ReviewNotFoundException.class,
-        () -> reviewServiceImpl.getReview(reviewId, requestUserId)
-    );
-
-    assertThat(exception.getMessage()).isEqualTo("리뷰를 찾을 수 없습니다.");
+    assertThatThrownBy(() -> reviewServiceImpl.getReview(reviewId, requestUserId))
+        .isInstanceOf(ReviewNotFoundException.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);
   }
 
   @Test
@@ -343,7 +338,8 @@ class ReviewServiceImplTest {
 
     assertThatThrownBy(() -> reviewServiceImpl.deleteReview(reviewId, requestUserId))
         .isInstanceOf(ReviewNotFoundException.class)
-        .hasMessage("리뷰를 찾을 수 없습니다.");
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);
   }
 
   @Test
@@ -387,7 +383,8 @@ class ReviewServiceImplTest {
 
     assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
         .isInstanceOf(ReviewNotFoundException.class)
-        .hasMessage("리뷰를 찾을 수 없습니다.");
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);
   }
 
   @Test
@@ -421,7 +418,8 @@ class ReviewServiceImplTest {
 
     assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
         .isInstanceOf(ReviewNotSoftDeletedException.class)
-        .hasMessage("논리 삭제된 리뷰만 물리 삭제할 수 있습니다.");
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_NOT_SOFT_DELETED);
 
     verify(reviewRepository, never()).delete(any(Review.class));
   }
