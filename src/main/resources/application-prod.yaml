@@ -1,12 +1,11 @@
-server:
-  port: 80
-
 spring:
   datasource:
     url: ${RDS_SPRING_DATASOURCE_URL}
     username: ${RDS_SPRING_DATASOURCE_USERNAME}
     password: ${RDS_SPRING_DATASOURCE_PASSWORD}
   jpa:
+    hibernate:
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: false
@@ -20,6 +19,10 @@ logging:
     org.hibernate.SQL: info
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
   endpoint:
     health:
       show-details: never
