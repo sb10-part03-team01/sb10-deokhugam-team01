@@ -12,7 +12,6 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -29,8 +28,9 @@ public class PopularBookRepositoryImpl implements PopularBookRepositoryCustom {
       String cursor,
       OffsetDateTime after,
       int limit) {
-    // cursor UUID로 변환
-    UUID parsedCursor = parseCursor(cursor);
+
+    // cursor를 rank로 변환
+    Integer parsedCursor = parseCursor(cursor);
 
     // (cursor, after) 검증
     if ((after == null) != (parsedCursor == null)) {
@@ -44,54 +44,49 @@ public class PopularBookRepositoryImpl implements PopularBookRepositoryCustom {
       throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, details);
     }
 
-    // 방향 설정
     String comparisonOperator = direction == SortDirection.ASC ? ">" : "<";
     String orderDirection = direction.name();
 
-    // 최신 calculated_date 가져오기 쿼리
+    // 최신 calculated_date 기준 + rank 정렬
     StringBuilder jpql =
         new StringBuilder(
             """
-        select pb
-        from PopularBook pb
-        join fetch pb.book b
-        where pb.periodType = :period
-          and pb.calculatedDate = (
-            select max(pb2.calculatedDate)
-            from PopularBook pb2
-            where pb2.periodType = :period
-          )
-        """);
+            select pb
+            from PopularBook pb
+            join fetch pb.book b
+            where pb.periodType = :period
+              and pb.calculatedDate = (
+                select max(pb2.calculatedDate)
+                from PopularBook pb2
+                where pb2.periodType = :period
+              )
+            """);
 
-    boolean hasCursorCondition = after != null;
+    boolean hasCursorCondition = parsedCursor != null;
 
-    // 커서 조건
+    // 커서 조건: rank 기준
     if (hasCursorCondition) {
       jpql.append(
           """
-          and (
-            pb.createdAt %s :after
-            or (pb.createdAt = :after and pb.id %s :cursor)
-          )
+            and pb.rank %s :cursor
           """
-              .formatted(comparisonOperator, comparisonOperator));
+              .formatted(comparisonOperator));
     }
 
-    // 정렬
+    // 정렬: rank 기준
     jpql.append(
         """
 
-        order by pb.createdAt %s, pb.id %s
+        order by pb.rank %s
         """
-            .formatted(orderDirection, orderDirection));
-    // 쿼리 실행
+            .formatted(orderDirection));
+
     TypedQuery<PopularBook> query =
         em.createQuery(jpql.toString(), PopularBook.class)
             .setParameter("period", period)
             .setMaxResults(limit + 1);
 
     if (hasCursorCondition) {
-      query.setParameter("after", after);
       query.setParameter("cursor", parsedCursor);
     }
 
@@ -117,17 +112,17 @@ public class PopularBookRepositoryImpl implements PopularBookRepositoryCustom {
         .getSingleResult();
   }
 
-  private UUID parseCursor(String cursor) {
+  private Integer parseCursor(String cursor) {
     if (!StringUtils.hasText(cursor)) {
       return null;
     }
 
     try {
-      return UUID.fromString(cursor);
-    } catch (IllegalArgumentException e) {
+      return Integer.parseInt(cursor);
+    } catch (NumberFormatException e) {
       Map<String, Object> details = new HashMap<>();
       details.put("cursor", cursor);
-      details.put("rule", "cursor는 UUID 형식이어야 합니다.");
+      details.put("rule", "cursor는 rank를 의미하는 정수 형식이어야 합니다.");
 
       throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, details);
     }
