@@ -34,6 +34,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -175,17 +177,39 @@ public class BookService {
       book.updatePublishedDate(request.getPublishedDate());
     }
     if(thumbnailImage != null && !thumbnailImage.isEmpty()){
-      if(book.getThumbnailUrl() != null){
-        thumbnailStorage.delete(book.getThumbnailUrl());
-      }
+      String oldThumbnailUrl = book.getThumbnailUrl();
+      String newS3Url;
 
       try {
-        String s3Url = thumbnailStorage.upload(thumbnailImage);
-        book.updateThumbnailUrl(s3Url);
+        newS3Url = thumbnailStorage.upload(thumbnailImage);
+        book.updateThumbnailUrl(newS3Url);
       } catch (IOException e){
         throw new RuntimeException("파일 업로드중 오류가 발생했습니다",e);
       }
+      // 트랜잭션 롤백시 s3의 데이터 유실 문제 해결
+      // 만약 s3의 원래 이미지를 삭제하고 새로운 이미지를 넣고 난 뒤에 트랜잭션이 롤백되면 db는 제대로 롤백되지만
+      // s3는 데이터가 롤백되지 않는 문제가 있음
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        // 트랜잭션이 커밋된다면
+        @Override
+        public void afterCommit() {
+          if (oldThumbnailUrl != null) {
+            // 원래 데이터 삭제 진행
+            thumbnailStorage.delete(oldThumbnailUrl);
+          }
+        }
 
+        // 트랜직션이 커밋되는 롤백되는 상관없이 완료가 되면
+        @Override
+        public void afterCompletion(int status) {
+          // 만약 롤백으로 완료되면
+          if (status == STATUS_ROLLED_BACK)
+            {
+              // 새로운 이미지를 삭제함
+              thumbnailStorage.delete(newS3Url);
+            }
+        }
+      });
     }
 
     return bookMapper.toDto(book);
@@ -203,6 +227,11 @@ public class BookService {
   public void permanentDeleteBook(UUID bookId){
     Book book = bookRepository.findByIdAndIsDeletedTrue(bookId)
         .orElseThrow(() -> new BookNotFoundException(bookId));
+
+    // 완전 db에서도 삭제되면 저장소의 썸네일도 삭제
+    if (book.getThumbnailUrl() != null) {
+      thumbnailStorage.delete(book.getThumbnailUrl());
+    }
 
     bookRepository.delete(book);
   }
