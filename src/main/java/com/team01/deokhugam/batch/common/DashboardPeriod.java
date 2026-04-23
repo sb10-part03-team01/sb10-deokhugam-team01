@@ -1,6 +1,6 @@
 package com.team01.deokhugam.batch.common;
 
-import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -9,17 +9,20 @@ public enum DashboardPeriod {
 
   private static final ZoneId SERVICE_ZONE = ZoneId.of("Asia/Seoul");
 
-  public LocalDateTime getStartDateTime() {
-    return getStartDateTime(Clock.system(SERVICE_ZONE));
-  }
-
-  public LocalDateTime getStartDateTime(Clock clock) {
-    LocalDateTime now = LocalDateTime.now(clock);
+  public LocalDateTime getStartDateTime(LocalDate baseDate) {
     return switch (this) {
-      case DAILY -> now.minusDays(1);
-      case WEEKLY -> now.minusWeeks(1);
-      case MONTHLY -> now.minusMonths(1);
+      case DAILY -> baseDate.minusDays(1).atStartOfDay();
+      case WEEKLY -> baseDate.minusWeeks(1).atStartOfDay();
+      case MONTHLY -> baseDate.minusMonths(1).atStartOfDay();
       case ALL_TIME -> LocalDateTime.of(2000, 1, 1, 0, 0);
     };
+  }
+
+  public LocalDateTime getEndDateTime(LocalDate baseDate) {
+    return baseDate.atStartOfDay();
+  }
+
+  public static LocalDate today() {
+    return LocalDate.now(SERVICE_ZONE);
   }
 }
