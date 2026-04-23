@@ -1,6 +1,6 @@
-package com.team01.deokhugam.dashboard.controller;
+package com.team01.deokhugam.dashboard.popularbook.controller;
 
-import com.team01.deokhugam.dashboard.dto.PopularBookDto;
+import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
 import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "도서 관리", description = "도서 관련 API")
-public interface DashboardApi {
+public interface PopularBookApi {
 
   @Operation(summary = "인기 도서 목록 조회", description = "기간별 인기 도서 목록을 조회합니다.")
   @ApiResponses(

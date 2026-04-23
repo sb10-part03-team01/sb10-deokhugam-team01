@@ -1,7 +1,7 @@
-package com.team01.deokhugam.dashboard.controller;
+package com.team01.deokhugam.dashboard.popularbook.controller;
 
-import com.team01.deokhugam.dashboard.dto.PopularBookDto;
-import com.team01.deokhugam.dashboard.service.DashBoardService;
+import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
+import com.team01.deokhugam.dashboard.popularbook.service.PopularBookService;
 import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
-public class DashboardController {
+public class PopularBookController implements PopularBookApi {
 
-  private final DashBoardService dashBoardService;
+  private final PopularBookService popularBookService;
 
   @GetMapping("/books/popular")
   public ResponseEntity<CursorPageResponse<PopularBookDto>> getPopularBooks(
@@ -39,7 +39,7 @@ public class DashboardController {
         limit);
 
     CursorPageResponse<PopularBookDto> response =
-        dashBoardService.findPopularBooks(period, direction, cursor, after, limit);
+        popularBookService.findPopularBooks(period, direction, cursor, after, limit);
     return ResponseEntity.ok(response);
   }
 }

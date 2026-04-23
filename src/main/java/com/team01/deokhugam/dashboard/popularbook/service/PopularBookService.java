@@ -1,8 +1,8 @@
-package com.team01.deokhugam.dashboard.service;
+package com.team01.deokhugam.dashboard.popularbook.service;
 
-import com.team01.deokhugam.dashboard.dto.PopularBookDto;
-import com.team01.deokhugam.dashboard.entity.PopularBook;
-import com.team01.deokhugam.dashboard.repository.PopularBookRepository;
+import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
+import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
+import com.team01.deokhugam.dashboard.popularbook.repository.PopularBookRepository;
 import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class DashBoardService {
+public class PopularBookService {
 
   private final PopularBookRepository popularBookRepository;
 

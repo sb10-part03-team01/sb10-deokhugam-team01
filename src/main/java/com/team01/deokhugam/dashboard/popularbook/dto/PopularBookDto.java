@@ -1,6 +1,6 @@
-package com.team01.deokhugam.dashboard.dto;
+package com.team01.deokhugam.dashboard.popularbook.dto;
 
-import com.team01.deokhugam.dashboard.entity.PopularBook;
+import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
 import com.team01.deokhugam.global.enums.RankingPeriod;
 import java.time.OffsetDateTime;
 import java.util.UUID;
