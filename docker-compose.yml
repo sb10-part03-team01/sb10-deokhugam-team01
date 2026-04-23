@@ -3,6 +3,9 @@
 # 데이터 포함 삭제: docker compose down -v
 # 볼륨 확인: docker volume ls
 
+# 용도: 로컬 개발 환경 전용 (dev 프로필 고정)
+# 운영 배포는 CD 파이프라인(ECS/EC2 등)에서 Dockerfile 이미지 직접 실행
+
 services:
   deokhugam:
     build:
@@ -10,7 +13,7 @@ services:
       # dockerfile - 사용할 Dockerfile의 경로 (context 경로를 기준으로 한 상대 경로)
       dockerfile: Dockerfile
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_PROFILES_ACTIVE: dev
       SERVER_PORT: ${SERVER_PORT}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
