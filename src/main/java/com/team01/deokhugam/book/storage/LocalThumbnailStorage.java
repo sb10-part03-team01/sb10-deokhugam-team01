@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class LocalThumbnailStorage implements ThumbnailStorage {
 
-  @Value("${deokhugam.storage.local.root-path")
+  @Value("${deokhugam.storage.local.root-path}")
   private String uploadDir;
 
   @PostConstruct

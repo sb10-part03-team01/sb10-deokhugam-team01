@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface ThumbnailStorage {
   String upload(MultipartFile image) throws IOException;
 
-  void delete(String s3Url);
+  void delete(String key);
 
   // mapstruct가 해당 이름으로 찾을 수 있게함
   @Named("toPresignedUrl")

@@ -63,7 +63,7 @@ public class S3ThumbnailStorage implements ThumbnailStorage{
     String extension = "";
 
     if(imageOriginalName != null && imageOriginalName.contains(".")){
-      extension = imageOriginalName.substring(imageOriginalName.indexOf("."));
+      extension = imageOriginalName.substring(imageOriginalName.lastIndexOf("."));
     }
     // 고유한 파일명 생성 = UUID, 확장자
     String key = UUID.randomUUID().toString() + extension;
@@ -89,6 +89,9 @@ public class S3ThumbnailStorage implements ThumbnailStorage{
 
   @Override
   public String generatePresignUrl(String key) {
+    if (!StringUtils.hasText(key)) {
+      return null;
+    }
 
     // 어떤 파일을 가져올지 요청
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()

@@ -92,12 +92,27 @@ public class BookService {
         build();
     // 썸네일 저장
     if (thumbnail != null && !thumbnail.isEmpty()) {
+      String s3Url;
       try {
-        String s3Url = thumbnailStorage.upload(thumbnail);
+        s3Url = thumbnailStorage.upload(thumbnail);
         book.addThumbnail(s3Url);
       } catch (IOException e){
-        throw new RuntimeException("파일 업로드중 문제가 발생했습니다");
+        throw new RuntimeException("파일 업로드중 문제가 발생했습니다",e);
       }
+
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        // 트랜직션이 커밋되는 롤백되는 상관없이 완료가 되면
+        @Override
+        public void afterCompletion(int status) {
+          // 만약 롤백으로 완료되면
+          if (status == STATUS_ROLLED_BACK)
+          {
+            // 새로운 이미지를 삭제함
+            thumbnailStorage.delete(s3Url);
+          }
+        }
+      });
+
     }
     // 만약 두 사용자가 동시에 같은 isbn으로 등록시 둘다 중복 검사에서는 통과하지만 등록시에는 uinque제약 조건으로
     // DataIntegrityViolationException가 발생하기 때문에 해당 예외 발생시 커스텀 예외로 응답하도록 함
