@@ -78,4 +78,8 @@ public class Book extends BaseRemovableEntity {
   public void updatePublishedDate(LocalDate newPublishedDate){
     this.publishedDate = newPublishedDate;
   }
+
+  public void updateThumbnailUrl(String newUrl) {
+    this.thumbnailUrl = newUrl;
+  }
 }

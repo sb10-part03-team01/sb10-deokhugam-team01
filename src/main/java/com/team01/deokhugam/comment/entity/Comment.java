@@ -19,8 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(
     name = "comments",
     indexes = {
-      @Index(name = "idx_comment_review_created_at_id", columnList = "review_id, created_at, id"),
-      @Index(name = "idx_comments_user_id", columnList = "user_id")
+      @Index(name = "idx_comment_review_created_at_id", columnList = "review_id, created_at, id")
     })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends BaseRemovableEntity {
