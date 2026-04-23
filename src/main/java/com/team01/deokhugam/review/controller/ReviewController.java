@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -112,5 +113,37 @@ public class ReviewController {
   ) {
     ReviewDto response = reviewService.updateReview(reviewId, requestUserId, request);
     return ResponseEntity.ok(response);
+  }
+
+  @ApiResponses({
+      @ApiResponse(responseCode = "204", description = "리뷰 논리 삭제 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청(요청자 ID누락)"),
+      @ApiResponse(responseCode = "403", description = "리뷰 삭제 권한 없음"),
+      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+  })
+  @DeleteMapping("/{reviewId}")
+  public ResponseEntity<Void> deleteReview(
+      @PathVariable UUID reviewId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
+  ) {
+    reviewService.deleteReview(reviewId, requestUserId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @ApiResponses({
+      @ApiResponse(responseCode = "204", description = "리뷰 물리 삭제 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청(요청자 ID누락, 논리 삭제되지 않은 리뷰)"),
+      @ApiResponse(responseCode = "403", description = "리뷰 삭제 권한 없음"),
+      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+  })
+  @DeleteMapping("/{reviewId}/hard")
+  public ResponseEntity<Void> hardDeleteReview(
+      @PathVariable UUID reviewId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
+  ) {
+    reviewService.hardDeleteReview(reviewId, requestUserId);
+    return ResponseEntity.noContent().build();
   }
 }

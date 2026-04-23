@@ -372,4 +372,148 @@ class ReviewServiceImplTest {
 
     verify(review, never()).update(anyString(), anyDouble());
   }
+
+  @Test
+  @DisplayName("리뷰 논리 삭제 - 성공")
+  void deleteReview_success() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    User author = mock(User.class);
+    Review review = mock(Review.class);
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
+    given(review.getUser()).willReturn(author);
+    given(author.getId()).willReturn(requestUserId);
+
+    // when
+    reviewServiceImpl.deleteReview(reviewId, requestUserId);
+
+    // then
+    verify(review).softDelete();
+  }
+
+  @Test
+  @DisplayName("리뷰 논리 삭제 - 리뷰가 없으면 예외 발생")
+  void deleteReview_fail_whenReviewNotFound() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.deleteReview(reviewId, requestUserId))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("리뷰를 찾을 수 없습니다.");
+  }
+
+  @Test
+  @DisplayName("리뷰 논리 삭제 - 권한 없는 사용자가 삭제 시 예외 발생")
+  void deleteReview_fail_whenRequesterIsNotAuthor() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID authorId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    User author = mock(User.class);
+    Review review = mock(Review.class);
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
+    given(review.getUser()).willReturn(author);
+    given(author.getId()).willReturn(authorId);
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.deleteReview(reviewId, requestUserId))
+        .isInstanceOf(ReviewUpdateForbidden.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_UPDATE_FORBIDDEN);
+
+    verify(review, never()).softDelete();
+  }
+
+  @Test
+  @DisplayName("리뷰 물리 삭제 - 성공")
+  void hardDeleteReview_success() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    User author = mock(User.class);
+    Review review = mock(Review.class);
+
+    given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
+    given(review.getUser()).willReturn(author);
+    given(author.getId()).willReturn(requestUserId);
+    given(review.isDeleted()).willReturn(true);
+
+    // when
+    reviewServiceImpl.hardDeleteReview(reviewId, requestUserId);
+
+    // then
+    verify(reviewRepository).delete(review);
+  }
+
+  @Test
+  @DisplayName("리뷰 물리 삭제 - 리뷰가 없으면 예외 발생")
+  void hardDeleteReview_fail_whenReviewNotFound() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    given(reviewRepository.findById(reviewId)).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("리뷰를 찾을 수 없습니다.");
+  }
+
+  @Test
+  @DisplayName("리뷰 물리 삭제 - 권한 없는 사용자가 삭제 시 예외 발생")
+  void hardDeleteReview_fail_whenRequesterIsNotAuthor() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID authorId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    User author = mock(User.class);
+    Review review = mock(Review.class);
+
+    given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
+    given(review.getUser()).willReturn(author);
+    given(author.getId()).willReturn(authorId);
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
+        .isInstanceOf(ReviewUpdateForbidden.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_UPDATE_FORBIDDEN);
+
+    verify(reviewRepository, never()).delete(any(Review.class));
+  }
+
+  @Test
+  @DisplayName("리뷰 물리 삭제 - 논리 삭제되지 않은 리뷰면 예외 발생")
+  void hardDeleteReview_fail_whenReviewIsNotSoftDeleted() {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    User author = mock(User.class);
+    Review review = mock(Review.class);
+
+    given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
+    given(review.getUser()).willReturn(author);
+    given(author.getId()).willReturn(requestUserId);
+    given(review.isDeleted()).willReturn(false);
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("논리 삭제된 리뷰만 물리 삭제할 수 있습니다.");
+
+    verify(reviewRepository, never()).delete(any(Review.class));
+  }
 }

@@ -146,4 +146,41 @@ public class ReviewServiceImpl implements ReviewService {
 
     return reviewMapper.toDto(review);
   }
+
+  @Override
+  @Transactional
+  public void deleteReview(UUID reviewId, UUID requestUserId) {
+    // 리뷰  존재 검증
+    Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+        .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+
+    // 사용자가 쓴 리뷰인지 검증
+    if (!review.getUser().getId().equals(requestUserId)) {
+      throw new ReviewUpdateForbidden(reviewId, requestUserId);
+    }
+
+    // 리뷰 논리 삭제
+    review.softDelete();
+  }
+
+  @Override
+  @Transactional
+  public void hardDeleteReview(UUID reviewId, UUID requestUserId) {
+    // 리뷰 존재 검증
+    Review review = reviewRepository.findById(reviewId)
+        .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+
+    // 사용자가 쓴 리뷰인지 검증
+    if (!review.getUser().getId().equals(requestUserId)) {
+      throw new ReviewUpdateForbidden(reviewId, requestUserId);
+    }
+
+    // 논리 삭제된 리뷰인지 검증
+    if (!review.isDeleted()) {
+      throw new IllegalArgumentException("논리 삭제된 리뷰만 물리 삭제할 수 있습니다.");
+    }
+
+    // 물리 삭제
+    reviewRepository.delete(review);
+  }
 }
