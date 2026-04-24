@@ -24,10 +24,13 @@ import com.team01.deokhugam.global.exception.user.UserNotFoundException;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
+import com.team01.deokhugam.review.dto.ReviewLikeDto;
 import com.team01.deokhugam.review.dto.ReviewSearchCondition;
 import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import com.team01.deokhugam.review.entity.Review;
+import com.team01.deokhugam.review.entity.ReviewLike;
 import com.team01.deokhugam.review.mapper.ReviewMapper;
+import com.team01.deokhugam.review.repository.ReviewLikeRepository;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
@@ -57,6 +60,9 @@ class ReviewServiceImplTest {
 
   @Mock
   private ReviewMapper reviewMapper;
+
+  @Mock
+  private ReviewLikeRepository reviewLikeRepository;
 
   @InjectMocks
   private ReviewServiceImpl reviewServiceImpl;
@@ -93,7 +99,7 @@ class ReviewServiceImplTest {
 
     given(bookRepository.findById(bookId)).willReturn(Optional.of(book));
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
-    given(reviewRepository.existsByBook_IdAndUser_IdAndIsDeletedFalse(bookId, userId))
+    given(reviewRepository.existsByBookIdAndUserIdAndIsDeletedFalse(bookId, userId))
         .willReturn(false);
     given(reviewRepository.save(any(Review.class))).willReturn(savedReview);
     given(reviewMapper.toDto(savedReview)).willReturn(reviewDto);
@@ -148,7 +154,7 @@ class ReviewServiceImplTest {
 
     given(bookRepository.findById(bookId)).willReturn(Optional.of(book));
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
-    given(reviewRepository.existsByBook_IdAndUser_IdAndIsDeletedFalse(bookId, userId))
+    given(reviewRepository.existsByBookIdAndUserIdAndIsDeletedFalse(bookId, userId))
         .willReturn(true);
 
     assertThatThrownBy(() -> reviewServiceImpl.createReview(reviewCreateRequest))
@@ -200,7 +206,10 @@ class ReviewServiceImplTest {
     given(reviewRepository.findAllByCondition(any(ReviewSearchCondition.class)))
         .willReturn(List.of(review));
     given(reviewRepository.countByCondition(any(ReviewSearchCondition.class))).willReturn(1L);
-    given(reviewMapper.toDtoList(any())).willReturn(List.of(reviewDto));
+    given(reviewMapper.toDto(review)).willReturn(reviewDto);
+    given(review.getId()).willReturn(reviewId);
+    given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, requestUserId))
+        .willReturn(false);
 
     CursorPageResponseReviewDto result = reviewServiceImpl.searchReviews(
         requestUserId,
@@ -216,6 +225,7 @@ class ReviewServiceImplTest {
 
     assertThat(result.content()).hasSize(1);
     assertThat(result.totalElements()).isEqualTo(1);
+    assertThat(result.content().get(0).likedByMe()).isFalse();
   }
 
   @Test
@@ -223,8 +233,8 @@ class ReviewServiceImplTest {
   void searchReviews_returnsEmpty_whenNoMatchedResult() {
     given(reviewRepository.findAllByCondition(any(ReviewSearchCondition.class)))
         .willReturn(List.of());
-    given(reviewRepository.countByCondition(any(ReviewSearchCondition.class))).willReturn(0L);
-    given(reviewMapper.toDtoList(any())).willReturn(List.of());
+    given(reviewRepository.countByCondition(any(ReviewSearchCondition.class)))
+        .willReturn(0L);
 
     CursorPageResponseReviewDto result = reviewServiceImpl.searchReviews(
         requestUserId,
@@ -422,5 +432,83 @@ class ReviewServiceImplTest {
         .isEqualTo(ErrorCode.REVIEW_NOT_SOFT_DELETED);
 
     verify(reviewRepository, never()).delete(any(Review.class));
+  }
+
+  @Test
+  @DisplayName("리뷰 좋아요 - 좋아요 추가 정상 반영")
+  void reviewLike_increase_success() {
+    // given
+    Review review = mock(Review.class);
+    User user = mock(User.class);
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
+    given(userRepository.findById(requestUserId)).willReturn(Optional.of(user));
+    given(reviewLikeRepository.findByReviewIdAndUserId(reviewId, requestUserId))
+        .willReturn(Optional.empty());
+
+    //when
+    ReviewLikeDto result = reviewServiceImpl.toggleLike(reviewId, requestUserId);
+
+    // then
+    verify(reviewLikeRepository).save(any(ReviewLike.class));
+    verify(review).increaseLikeCount();
+    verify(review, never()).decreaseLikeCount();
+    assertThat(result.liked()).isTrue();
+    assertThat(result.reviewId()).isEqualTo(reviewId);
+    assertThat(result.userId()).isEqualTo(requestUserId);
+  }
+
+  @Test
+  @DisplayName("리뷰 좋아요 - 좋아요 감소 정상 반영")
+  void reviewLike_decrease_success() {
+    // given
+    Review review = mock(Review.class);
+    User user = mock(User.class);
+    ReviewLike reviewLike = mock(ReviewLike.class);
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
+    given(userRepository.findById(requestUserId)).willReturn(Optional.of(user));
+    given(reviewLikeRepository.findByReviewIdAndUserId(reviewId, requestUserId))
+        .willReturn(Optional.of(reviewLike));
+
+    //when
+    ReviewLikeDto result = reviewServiceImpl.toggleLike(reviewId, requestUserId);
+
+    // then
+    verify(reviewLikeRepository).delete(reviewLike);
+    verify(review).decreaseLikeCount();
+    verify(review, never()).increaseLikeCount();
+    assertThat(result.liked()).isFalse();
+    assertThat(result.reviewId()).isEqualTo(reviewId);
+    assertThat(result.userId()).isEqualTo(requestUserId);
+  }
+
+  @Test
+  @DisplayName("리뷰 좋아요 - 논리삭제 되었거나 리뷰가 없을 시 예외 발생")
+  void reviewLike_fail_whenReviewNotFound() {
+    // given
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.toggleLike(reviewId, requestUserId))
+        .isInstanceOf(ReviewNotFoundException.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("리뷰 좋아요 - 사용자가 없을 시 예외 발생")
+  void reviewLike_fail_whenUserIsNotFound() {
+    // given
+    Review review = mock(Review.class);
+
+    given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
+    given(userRepository.findById(requestUserId)).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> reviewServiceImpl.toggleLike(reviewId, requestUserId))
+        .isInstanceOf(UserNotFoundException.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.USER_NOT_FOUND);
   }
 }
