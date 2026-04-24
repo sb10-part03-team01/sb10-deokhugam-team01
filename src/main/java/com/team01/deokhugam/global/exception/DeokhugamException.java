@@ -16,4 +16,10 @@ public class DeokhugamException extends RuntimeException{
     this.details = details;
     this.timeStamp = Instant.now();
   }
+
+  public DeokhugamException(ErrorCode errorCode){
+    this.errorCode = errorCode;
+    this.details = null;
+    this.timeStamp = Instant.now();
+  }
 }

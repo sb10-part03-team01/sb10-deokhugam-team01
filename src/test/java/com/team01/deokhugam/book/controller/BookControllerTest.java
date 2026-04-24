@@ -1,11 +1,13 @@
 package com.team01.deokhugam.book.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,8 +15,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team01.deokhugam.book.dto.BookCreateRequest;
 import com.team01.deokhugam.book.dto.BookDto;
 import com.team01.deokhugam.book.dto.BookUpdateRequest;
+import com.team01.deokhugam.book.dto.naver.NaverBookDto;
 import com.team01.deokhugam.book.service.BookService;
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -202,5 +207,114 @@ class BookControllerTest {
         .andExpect(status().isNoContent());
 
     verify(bookService).permanentDeleteBook(bookId);
+  }
+
+  // =========================================================================
+  // 네이버 도서 정보 조회 API 테스트
+  // =========================================================================
+
+  @Test
+  @DisplayName("도서 정보 조회 API - 정상적인 ISBN을 보내면 200 응답과 NaverBookDto가 반환된다.")
+  void getBookInfoByIsbn_Success() throws Exception {
+    // given
+    String isbn = "9788966263134";
+    NaverBookDto naverBookDto = NaverBookDto.builder()
+        .title("테스트 네이버 도서")
+        .author("네이버 저자")
+        .publisher("네이버 출판사")
+        .publishedDate(LocalDate.of(2023, 10, 1))
+        .isbn(isbn)
+        .description("네이버 책 설명")
+        .build();
+
+    given(bookService.getBookInfoByIsbn(isbn)).willReturn(naverBookDto);
+
+    // when & then
+    mockMvc.perform(get("/api/books/info")
+            .param("isbn", isbn)
+            .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.title").value("테스트 네이버 도서"))
+        .andExpect(jsonPath("$.isbn").value(isbn));
+  }
+
+  // =========================================================================
+  // OCR 바코드 스캔 API 테스트 (문지기 로직 검증)
+  // =========================================================================
+
+  @Test
+  @DisplayName("OCR 바코드 스캔 API - 정상적인 이미지를 보내면 200 응답과 추출된 ISBN 문자열이 반환된다.")
+  void getIsbnByOcr_Success() throws Exception {
+    // given
+    MockMultipartFile image = new MockMultipartFile(
+        "image", "test.jpg", MediaType.IMAGE_JPEG_VALUE, "valid image content".getBytes()
+    );
+
+    given(bookService.getIsbnByOcr(any())).willReturn("9788966263134");
+
+    // when & then
+    // OCR은 JSON 응답이 아니라 단순 문자열(String) 응답이므로 content().string()으로 검증!
+    mockMvc.perform(multipart("/api/books/isbn/ocr")
+            .file(image))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().string("9788966263134"));
+  }
+
+  @Test
+  @DisplayName("OCR 바코드 스캔 API 실패 - 빈 파일을 업로드하면 EMPTY_FILE_UPLOADED 예외 발생")
+  void getIsbnByOcr_Fail_EmptyFile() throws Exception {
+    // given (0 byte 파일)
+    MockMultipartFile image = new MockMultipartFile(
+        "image", "test.jpg", MediaType.IMAGE_JPEG_VALUE, new byte[0]
+    );
+
+    // when & then
+    mockMvc.perform(multipart("/api/books/isbn/ocr").file(image))
+        // @WebMvcTest 환경에서는 GlobalExceptionAdvice가 로드되지 않으므로,
+        // 컨트롤러가 직접 던진 예외 객체를 까서 확인하는 방식이 가장 정확합니다!
+        .andExpect(result -> assertThat(result.getResolvedException()).isInstanceOf(DeokhugamException.class))
+        .andExpect(result -> {
+          DeokhugamException ex = (DeokhugamException) result.getResolvedException();
+          assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.EMPTY_FILE_UPLOADED);
+        });
+  }
+
+  @Test
+  @DisplayName("OCR 바코드 스캔 API 실패 - 1MB 초과 파일을 업로드하면 FILE_SIZE_EXCEEDED 예외 발생")
+  void getIsbnByOcr_Fail_SizeExceeded() throws Exception {
+    // given (1MB + 1byte 크기의 가짜 데이터)
+    byte[] largeData = new byte[1024 * 1024 + 1];
+    MockMultipartFile image = new MockMultipartFile(
+        "image", "heavy.jpg", MediaType.IMAGE_JPEG_VALUE, largeData
+    );
+
+    // when & then
+    mockMvc.perform(multipart("/api/books/isbn/ocr").file(image))
+        .andExpect(result -> assertThat(result.getResolvedException()).isInstanceOf(
+            DeokhugamException.class))
+        .andExpect(result -> {
+          DeokhugamException ex = (DeokhugamException) result.getResolvedException();
+          assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FILE_SIZE_EXCEEDED);
+          assertThat(ex.getDetails()).containsKey("size"); // detail 값도 잘 들어갔는지 검증!
+        });
+  }
+
+  @Test
+  @DisplayName("OCR 바코드 스캔 API 실패 - 지원하지 않는 파일 형식(PDF 등) 업로드 시 INVALID_FILE 예외 발생")
+  void getIsbnByOcr_Fail_InvalidContentType() throws Exception {
+    // given (MediaType이 application/pdf)
+    MockMultipartFile image = new MockMultipartFile(
+        "image", "document.pdf", MediaType.APPLICATION_PDF_VALUE, "pdf content".getBytes()
+    );
+
+    // when & then
+    mockMvc.perform(multipart("/api/books/isbn/ocr").file(image))
+        .andExpect(result -> assertThat(result.getResolvedException()).isInstanceOf(DeokhugamException.class))
+        .andExpect(result -> {
+          DeokhugamException ex = (DeokhugamException) result.getResolvedException();
+          assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INVALID_FILE);
+        });
   }
 }
