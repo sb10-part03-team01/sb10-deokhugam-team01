@@ -3,6 +3,7 @@ package com.team01.deokhugam.batch.service;
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.dashboard.poweruser.entity.PowerUser;
 import com.team01.deokhugam.dashboard.poweruser.repository.PowerUserRepository;
+import com.team01.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DashboardBatchService {
   private final PowerUserRepository powerUserRepository;
+  private final UserRepository userRepository;
 
   @Transactional
   public void calculatePowerUserRanking(LocalDate baseDate) {
@@ -45,7 +47,7 @@ public class DashboardBatchService {
       for (int i = 0; i < rank.size(); i++) {
         UUID userId = rank.get(i).getKey();
         rankings.add(PowerUser.builder()
-            .user(/* TODO: userRepository.findById(userId) */)
+            .user(userRepository.findById(userId).orElseThrow())
             .period(period)
             .calculatedDate(OffsetDateTime.now(ZoneOffset.UTC))
             .rank(i + 1)
