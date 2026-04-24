@@ -1,8 +1,11 @@
 package com.team01.deokhugam.user.controller;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
+import com.team01.deokhugam.dashboard.poweruser.service.PowerUserService;
 import com.team01.deokhugam.global.constant.AuthHeader;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.user.UserAccessDeniedException;
+import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.user.dto.PowerUserDto;
 import com.team01.deokhugam.user.dto.UserDto;
 import com.team01.deokhugam.user.dto.UserLoginRequest;
@@ -32,9 +35,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController implements UserApi {
 
   private final UserService userService;
+  private final PowerUserService powerUserService;
 
-  public UserController(UserService userService) {
+  public UserController(UserService userService, PowerUserService powerUserService) {
     this.userService = userService;
+    this.powerUserService  = powerUserService;
   }
 
   /// POST - /api/users - 회원가입
@@ -96,7 +101,19 @@ public class UserController implements UserApi {
   }
 
   /// GET - /api/users/power - 파워 유저 목록 조회
-
+  @GetMapping("/power")
+  public ResponseEntity<CursorPageResponse<PowerUserDto>> findPowerUser(
+      @RequestParam(defaultValue = "DAILY") DashboardPeriod period,
+      @RequestParam(defaultValue = "ASC") SortDirection direction,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) OffsetDateTime after,
+      @RequestParam(defaultValue = "50") int limit
+  ){
+    log.info("파워 유저 조회 요청");
+    CursorPageResponse<PowerUserDto> result = powerUserService.getRanking(period,direction,cursor,after,limit);
+    log.info("파워 유저 조회 완료");
+    return ResponseEntity.ok(result);
+  }
 
   /// DELETE - /api/users/{userId}/hard - 사용자 물리 삭제
   @DeleteMapping("/{userId}/hard")
