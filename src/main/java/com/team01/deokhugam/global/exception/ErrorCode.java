@@ -7,10 +7,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ErrorCode {
   // book
-  BOOK_NOT_FOUND(404, "BOOK_NOT_FOUND", "도서를 찾을 수 없습니다"),
+  INVALID_BOOK_SORT_FIELD(400, "INVALID_BOOK_SORT_FIELD", "알맞은 정렬 기준이 아닙니다."),
+  ISBN_UNIDENTIFIABLE(400,"ISBN_UNIDENTIFIABLE","ISBN을 식별 할 수 없습니다."),
+  INVALID_FILE(400, "INVALID_FILE","유효하지 않은 파일입니다"),
+  EMPTY_FILE_UPLOADED(400, "EMPTY_FILE_UPLOADED", "비어있는 파일입니다."),
+  BOOK_NOT_FOUND(404, "BOOK_NOT_FOUND", "해당하는 도서를 찾을 수 없습니다"),
+  NAVER_BOOK_NOT_FOUND(404, "NAVER_BOOK_NOT_FOUND", "해당 ISBN의 도서를 찾을 수 없습니다"),
   DUPLICATED_ISBN(409, "DUPLICATED_ISBN", "중복된 ISBN이 존재합니다."),
   INVALID_CURSOR_FORMAT(400, "INVALID_CURSOR_FORMAT", "cursor 형식이 올바르지 않습니다."),
   INVALID_CURSOR_PAGINATION(400, "INVALID_CURSOR_PAGINATION", "cursor와 after는 함께 제공되어야 합니다."),
+  FILE_SIZE_EXCEEDED(413, "FILE_SIZE_EXCEEDED", "제한된 파일 크기를 초과했습니다."),
+  UNSUPPORTED_FILE_FORMAT(415, "UNSUPPORTED_FILE_FORMAT", "지원하지 않는 파일 형식입니다."),
+  THUMBNAIL_UPLOAD_FAIL(500, "THUMBNAIL_UPLOAD_FAIL", "썸네일 업로드에 실패했습니다"),
+  API_CREDENTIAL_FAIL(500, "API_CREDENTIAL_FAIL", "해당 API 자격 증명에 실패했습니다"),
+  API_SERVER_ERROR(502 ,"API_SERVER_ERROR", "API 서버 오류가 발생했습니다"),
 
   // comment
   COMMENT_NOT_FOUND(404, "COMMENT_NOT_FOUND", "댓글을 찾을 수 없습니다."),
