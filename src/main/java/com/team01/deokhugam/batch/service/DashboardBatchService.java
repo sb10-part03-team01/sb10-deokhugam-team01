@@ -26,13 +26,13 @@ public class DashboardBatchService {
   public void calculatePowerUserRanking(LocalDate baseDate) {
 
     for (DashboardPeriod period : DashboardPeriod.values()) {
-      //1. 기간 시작/종료 시간
+      // 1. 기간 시작/종료 시간
       OffsetDateTime start = period.getStartDateTime(baseDate).atOffset(ZoneOffset.UTC);
       OffsetDateTime end = period.getEndDateTime(baseDate).atOffset(ZoneOffset.UTC);
-      // 2.유저별 데이터 조회
-      // TODO: 유저별 리뷰 인기점수 합 조회
-      // TODO: 유저별 좋아요 수 조회
-      // TODO: 유저별 댓글 수 조회
+      // 2. 유저별 데이터 조회
+      // TODO: 유저별 리뷰 인기점수 합 조회 (start, end 사용)
+      // TODO: 유저별 좋아요 수 조회 (start, end 사용)
+      // TODO: 유저별 댓글 수 조회 (start, end 사용)
       // 3. 점수 계산
       Map<UUID, Double> activityScoreMap = new HashMap<>();
       // activityScoreMap.put(userId, (reviewScoreSum * 0.5) + (likeCount * 0.2) + (commentCount * 0.3));
@@ -40,6 +40,9 @@ public class DashboardBatchService {
       List<Map.Entry<UUID, Double>> rank = activityScoreMap.entrySet().stream()
           .sorted(Map.Entry.<UUID, Double>comparingByValue().reversed())
           .toList();
+      if (rank.isEmpty()) {
+        continue;
+      }
       // 5. 기존 삭제
       powerUserRepository.deleteByPeriod(period);
       // 6. 저장

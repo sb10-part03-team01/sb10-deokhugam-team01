@@ -156,17 +156,26 @@ public interface UserApi {
   /// GET - /api/users/power - 파워 유저 목록 조회
   @Operation(summary = "파워 유저 목록 조회", description = "기간별 파워 유저 목록을 조회합니다.")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "파워 유저 목록 조회 성공"),
+      @ApiResponse(
+          responseCode = "200", description = "파워 유저 목록 조회 성공",
+          content = @Content(schema = @Schema(implementation = CursorPageResponse.class))
+      ),
       @ApiResponse(responseCode = "400", description = "잘못된 요청 (랭킹 기간 오류, 정렬 방향 오류 등)"),
       @ApiResponse(responseCode = "500", description = "서버 내부 오류")
   })
   ResponseEntity<CursorPageResponse<PowerUserDto>> findPowerUser(
+      @Parameter(description = "랭킹 기간", example = "DAILY")
       @RequestParam(defaultValue = "DAILY") DashboardPeriod period,
+      @Parameter(description = "정렬 방향", example = "ASC")
       @RequestParam(defaultValue = "ASC") SortDirection direction,
+      @Parameter(description = "이전 페이지의 마지막 rank(커서)")
       @RequestParam(required = false) String cursor,
+      @Parameter(description = "이전 페이지 마지막 항목의 생성 시각")
       @RequestParam(required = false) OffsetDateTime after,
+      @Parameter(description = "페이지 크기 (1~100)")
       @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit
   );
+
 
   /// DELETE - /api/users/{userId}/hard - 사용자 물리 삭제
   @Operation(summary = "사용자 물리 삭제", description = "사용자를 물리적으로 삭제합니다.")
