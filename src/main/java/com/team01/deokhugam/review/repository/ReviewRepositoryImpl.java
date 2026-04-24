@@ -1,6 +1,8 @@
 package com.team01.deokhugam.review.repository;
 
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.review.dto.ReviewSearchCondition;
 import com.team01.deokhugam.review.entity.Review;
 import jakarta.persistence.EntityManager;
@@ -35,9 +37,11 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     boolean hasAfter = after != null;
 
     if (hasAfter != hasCursor) {
-      throw new IllegalArgumentException("after와 cursor는 같이 전달 되어야 합니다.");
+      throw new DeokhugamException(
+          ErrorCode.INVALID_CURSOR_PAGINATION,
+          Map.of("rule", "cursor와 after는 함께 제공되어야 합니다.")
+      );
     }
-
     String comparisonOperator = isAsc ? ">" : "<";
 
     QueryParts queryParts = buildFilterQueryParts(condition);
@@ -166,29 +170,29 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     try {
       return UUID.fromString(cursor);
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("cursor 형식이 올바르지 않습니다.");
+      throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("cursor", cursor));
     }
   }
 
   private RatingCursor parseRatingCursor(String cursor) {
     if (!StringUtils.hasText(cursor)) {
-      throw new IllegalArgumentException("rating 정렬 cursor 형식이 올바르지 않습니다.");
+      throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("cursor", cursor));
     }
 
     String[] parts = cursor.split("\\|", 2);
     if (parts.length != 2) {
-      throw new IllegalArgumentException("rating 정렬 cursor 형식이 올바르지 않습니다.");
+      throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("cursor", cursor));
     }
 
     try {
       double rating = Double.parseDouble(parts[0]);
       if (!Double.isFinite(rating)) {
-        throw new IllegalArgumentException("rating 정렬 cursor 형식이 올바르지 않습니다.");
+        throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("cursor", cursor));
       }
       UUID id = UUID.fromString(parts[1]);
       return new RatingCursor(rating, id);
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("rating 정렬 cursor 형식이 올바르지 않습니다.");
+      throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("cursor", cursor));
     }
   }
 

@@ -7,6 +7,8 @@ import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.global.config.JpaConfig;
 import com.team01.deokhugam.global.config.QueryDslConfig;
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.review.dto.ReviewSearchCondition;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.user.entity.User;
@@ -68,7 +70,6 @@ class ReviewRepositoryImplTest {
   @Test
   @DisplayName("리뷰 목록 조회 - createdAt 기준 내림차순 정렬 성공")
   void findAllByCondition_orderByCreatedAtDesc_success() {
-    // given
     ReviewSearchCondition condition = new ReviewSearchCondition(
         null,
         null,
@@ -80,10 +81,8 @@ class ReviewRepositoryImplTest {
         10
     );
 
-    // when
     List<Review> result = reviewRepository.findAllByCondition(condition);
 
-    // then
     assertThat(result).hasSize(4);
     assertThat(result.get(0).getContent()).isEqualTo("리뷰 테스트 4");
     assertThat(result.get(1).getContent()).isEqualTo("리뷰 테스트 3");
@@ -94,7 +93,6 @@ class ReviewRepositoryImplTest {
   @Test
   @DisplayName("리뷰 목록 조회 - rating 기준 내림차순 정렬 성공")
   void findAllByCondition_orderByRatingDesc_success() {
-    // given
     ReviewSearchCondition condition = new ReviewSearchCondition(
         null,
         null,
@@ -106,10 +104,8 @@ class ReviewRepositoryImplTest {
         10
     );
 
-    // when
     List<Review> result = reviewRepository.findAllByCondition(condition);
 
-    // then
     assertThat(result).hasSize(4);
     assertThat(result.get(0).getRating()).isEqualTo(5.0);
     assertThat(result.get(1).getRating()).isEqualTo(4.0);
@@ -120,7 +116,6 @@ class ReviewRepositoryImplTest {
   @Test
   @DisplayName("리뷰 목록 조회 - userId 조건으로 필터링 성공")
   void findAllByCondition_filterByUserId_success() {
-    // given
     ReviewSearchCondition condition = new ReviewSearchCondition(
         user1.getId(),
         null,
@@ -132,10 +127,8 @@ class ReviewRepositoryImplTest {
         10
     );
 
-    // when
     List<Review> result = reviewRepository.findAllByCondition(condition);
 
-    // then
     assertThat(result).hasSize(2);
     assertThat(result)
         .extracting(Review::getContent)
@@ -145,7 +138,6 @@ class ReviewRepositoryImplTest {
   @Test
   @DisplayName("리뷰 목록 조회 - bookId 조건으로 필터링 성공")
   void findAllByCondition_filterByBookId_success() {
-    // given
     ReviewSearchCondition condition = new ReviewSearchCondition(
         null,
         book1.getId(),
@@ -157,10 +149,8 @@ class ReviewRepositoryImplTest {
         10
     );
 
-    // when
     List<Review> result = reviewRepository.findAllByCondition(condition);
 
-    // then
     assertThat(result).hasSize(2);
     assertThat(result)
         .extracting(Review::getContent)
@@ -170,7 +160,6 @@ class ReviewRepositoryImplTest {
   @Test
   @DisplayName("리뷰 목록 조회 - keyword 조건으로 필터링 성공")
   void findAllByCondition_filterByKeyword_success() {
-    // given
     ReviewSearchCondition condition = new ReviewSearchCondition(
         null,
         null,
@@ -182,10 +171,8 @@ class ReviewRepositoryImplTest {
         10
     );
 
-    // when
     List<Review> result = reviewRepository.findAllByCondition(condition);
 
-    // then
     assertThat(result).hasSize(4);
     assertThat(result)
         .extracting(Review::getContent)
@@ -195,7 +182,6 @@ class ReviewRepositoryImplTest {
   @Test
   @DisplayName("리뷰 목록 조회 - after와 cursor로 다음 페이지 조회 성공")
   void findAllByCondition_cursorPaging_success() {
-    // given
     ReviewSearchCondition firstCondition = new ReviewSearchCondition(
         null,
         null,
@@ -209,7 +195,6 @@ class ReviewRepositoryImplTest {
 
     List<Review> firstPage = reviewRepository.findAllByCondition(firstCondition);
 
-    // when
     Review lastReviewOfFirstPage = firstPage.get(1);
 
     ReviewSearchCondition secondCondition = new ReviewSearchCondition(
@@ -225,7 +210,6 @@ class ReviewRepositoryImplTest {
 
     List<Review> secondPage = reviewRepository.findAllByCondition(secondCondition);
 
-    // then
     assertThat(firstPage).hasSize(3);
     assertThat(secondPage).hasSize(2);
     assertThat(secondPage)
@@ -236,7 +220,6 @@ class ReviewRepositoryImplTest {
   @Test
   @DisplayName("리뷰 목록 조회 - after만 전달되면 예외 발생")
   void findAllByCondition_fail_whenAfterOnly() {
-    // given
     ReviewSearchCondition condition = new ReviewSearchCondition(
         null,
         null,
@@ -248,16 +231,15 @@ class ReviewRepositoryImplTest {
         10
     );
 
-    // when & then
     assertThatThrownBy(() -> reviewRepository.findAllByCondition(condition))
-        .isInstanceOf(org.springframework.dao.InvalidDataAccessApiUsageException.class)
-        .hasMessageContaining("after와 cursor는 같이 전달 되어야 합니다.");
+        .isInstanceOf(DeokhugamException.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.INVALID_CURSOR_PAGINATION);
   }
 
   @Test
   @DisplayName("리뷰 목록 조회 - cursor만 전달되면 예외 발생")
   void findAllByCondition_fail_whenCursorOnly() {
-    // given
     ReviewSearchCondition condition = new ReviewSearchCondition(
         null,
         null,
@@ -269,16 +251,15 @@ class ReviewRepositoryImplTest {
         10
     );
 
-    // when & then
     assertThatThrownBy(() -> reviewRepository.findAllByCondition(condition))
-        .isInstanceOf(org.springframework.dao.InvalidDataAccessApiUsageException.class)
-        .hasMessageContaining("after와 cursor는 같이 전달 되어야 합니다.");
+        .isInstanceOf(DeokhugamException.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.INVALID_CURSOR_PAGINATION);
   }
 
   @Test
   @DisplayName("리뷰 개수 조회 - 조건에 맞는 개수 반환 성공")
   void countByCondition_success() {
-    // given
     ReviewSearchCondition condition = new ReviewSearchCondition(
         null,
         book1.getId(),
@@ -290,10 +271,8 @@ class ReviewRepositoryImplTest {
         10
     );
 
-    // when
     long count = reviewRepository.countByCondition(condition);
 
-    // then
     assertThat(count).isEqualTo(2);
   }
 

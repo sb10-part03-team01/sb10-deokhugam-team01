@@ -26,7 +26,12 @@ public enum ErrorCode {
   // review
   REVIEW_NOT_FOUND(404, "REVIEW_NOT_FOUND", "리뷰를 찾을 수 없습니다."),
   REVIEW_UPDATE_FORBIDDEN(403, "REVIEW_UPDATE_FORBIDDEN", "리뷰를 수정할 권한이 없습니다."),
-
+  REVIEW_CONTENT_NULL(400, "REVIEW_CONTENT_NULL", "리뷰 내용은 null일 수 없습니다."),
+  REVIEW_CONTENT_BLANK(400, "REVIEW_CONTENT_BLANK", "리뷰 내용은 비어 있을 수 없습니다."),
+  REVIEW_CONTENT_TOO_LONG(400, "REVIEW_CONTENT_TOO_LONG", "리뷰는 1000자를 초과할 수 없습니다."),
+  REVIEW_RATING_OUT_OF_RANGE(400, "REVIEW_RATING_OUT_OF_RANGE", "평점은 1.0 이상 5.0 이하여야 합니다."),
+  REVIEW_ALREADY_EXISTS(409, "REVIEW_ALREADY_EXISTS", "해당 도서에 작성한 리뷰가 있습니다."),
+  REVIEW_NOT_SOFT_DELETED(400, "REVIEW_NOT_SOFT_DELETED", "논리 삭제된 리뷰만 물리 삭제할 수 있습니다."),
   // user
   EMAIL_ALREADY_EXISTS(409, "EMAIL_ALREADY_EXISTS", "이미 등록된 이메일입니다."),
   USER_NOT_FOUND(404, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
