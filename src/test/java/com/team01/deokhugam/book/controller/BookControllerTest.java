@@ -314,7 +314,7 @@ class BookControllerTest {
         .andExpect(result -> assertThat(result.getResolvedException()).isInstanceOf(DeokhugamException.class))
         .andExpect(result -> {
           DeokhugamException ex = (DeokhugamException) result.getResolvedException();
-          assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INVALID_FILE);
+          assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.UNSUPPORTED_FILE_FORMAT);
         });
   }
 }
