@@ -1,13 +1,16 @@
 package com.team01.deokhugam.user.controller;
 
 import com.team01.deokhugam.global.constant.AuthHeader;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.user.UserAccessDeniedException;
+import com.team01.deokhugam.user.dto.PowerUserDto;
 import com.team01.deokhugam.user.dto.UserDto;
 import com.team01.deokhugam.user.dto.UserLoginRequest;
 import com.team01.deokhugam.user.dto.UserRegisterRequest;
 import com.team01.deokhugam.user.dto.UserUpdateRequest;
 import com.team01.deokhugam.user.service.UserService;
 import jakarta.validation.Valid;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -92,6 +96,7 @@ public class UserController implements UserApi {
   }
 
   /// GET - /api/users/power - 파워 유저 목록 조회
+
 
   /// DELETE - /api/users/{userId}/hard - 사용자 물리 삭제
   @DeleteMapping("/{userId}/hard")

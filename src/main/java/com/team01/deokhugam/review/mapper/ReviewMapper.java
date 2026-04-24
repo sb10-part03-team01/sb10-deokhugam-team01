@@ -1,5 +1,6 @@
 package com.team01.deokhugam.review.mapper;
 
+import com.team01.deokhugam.book.storage.ThumbnailStorage;
 import com.team01.deokhugam.review.dto.ReviewDto;
 import com.team01.deokhugam.review.entity.Review;
 import java.time.OffsetDateTime;
@@ -8,13 +9,14 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", imports = {OffsetDateTime.class, ZoneOffset.class})
+@Mapper(componentModel = "spring", imports = {OffsetDateTime.class, ZoneOffset.class}, uses = {
+    ThumbnailStorage.class})
 public interface ReviewMapper {
 
   // Review 엔티티를 ReviewDto로 변환
   @Mapping(target = "bookId", source = "book.id")
   @Mapping(target = "bookTitle", source = "book.title")
-  @Mapping(target = "bookThumbnailUrl", source = "book.thumbnailUrl")
+  @Mapping(target = "bookThumbnailUrl", source = "book.thumbnailUrl", qualifiedByName = "toPresignedUrl")
   @Mapping(target = "userId", source = "user.id")
   @Mapping(target = "userNickname", source = "user.nickname")
   @Mapping(target = "likedByMe", ignore = true)

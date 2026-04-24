@@ -2,7 +2,9 @@ package com.team01.deokhugam.review.controller;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team01.deokhugam.global.enums.SortDirection;
-import com.team01.deokhugam.global.exception.review.ReviewUpdateForbidden;
+import com.team01.deokhugam.global.exception.review.ReviewUpdateForbiddenException;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -261,7 +263,7 @@ class ReviewControllerTest {
     ReviewUpdateRequest request = new ReviewUpdateRequest("수정 시도", 4.5);
 
     given(reviewService.updateReview(reviewId, requestUserId, request))
-        .willThrow(new ReviewUpdateForbidden(reviewId, requestUserId));
+        .willThrow(new ReviewUpdateForbiddenException(reviewId, requestUserId));
 
     // when & then
     mockMvc.perform(patch("/api/reviews/{reviewId}", reviewId)
@@ -269,5 +271,57 @@ class ReviewControllerTest {
             .contentType(APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("리뷰 논리 삭제 - 성공")
+  void deleteReview_success() throws Exception {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    // when & then
+    mockMvc.perform(delete("/api/reviews/{reviewId}", reviewId)
+            .header("Deokhugam-Request-User-ID", requestUserId))
+        .andExpect(status().isNoContent());
+
+    verify(reviewService).deleteReview(reviewId, requestUserId);
+  }
+
+  @Test
+  @DisplayName("리뷰 논리 삭제 - 요청자 헤더가 없으면 실패")
+  void deleteReview_fail_whenMissingHeader() throws Exception {
+    // given
+    UUID reviewId = UUID.randomUUID();
+
+    // when & then
+    mockMvc.perform(delete("/api/reviews/{reviewId}", reviewId))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("리뷰 물리 삭제 - 성공")
+  void hardDeleteReview_success() throws Exception {
+    // given
+    UUID reviewId = UUID.randomUUID();
+    UUID requestUserId = UUID.randomUUID();
+
+    // when & then
+    mockMvc.perform(delete("/api/reviews/{reviewId}/hard", reviewId)
+            .header("Deokhugam-Request-User-ID", requestUserId))
+        .andExpect(status().isNoContent());
+
+    verify(reviewService).hardDeleteReview(reviewId, requestUserId);
+  }
+
+  @Test
+  @DisplayName("리뷰 물리 삭제 - 요청자 헤더가 없으면 실패")
+  void hardDeleteReview_fail_whenMissingHeader() throws Exception {
+    // given
+    UUID reviewId = UUID.randomUUID();
+
+    // when & then
+    mockMvc.perform(delete("/api/reviews/{reviewId}/hard", reviewId))
+        .andExpect(status().isBadRequest());
   }
 }
