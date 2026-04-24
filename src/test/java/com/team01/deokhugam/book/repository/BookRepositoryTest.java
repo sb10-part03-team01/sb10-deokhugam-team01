@@ -69,18 +69,15 @@ class BookRepositoryTest {
     // 평점이 4.5로 똑같은 책 2권 세팅
     ReflectionTestUtils.setField(book1, "rating", 4.5);
     ReflectionTestUtils.setField(book1, "reviewCount", 100);
-    ReflectionTestUtils.setField(book1, "createdAt", time2);
-    ReflectionTestUtils.setField(book1, "updatedAt", time2);
+
     // ...
     ReflectionTestUtils.setField(book2, "rating", 4.5);
     ReflectionTestUtils.setField(book2, "reviewCount", 50);
-    ReflectionTestUtils.setField(book2, "createdAt", time3);
-    ReflectionTestUtils.setField(book2, "updatedAt", time3);
+
     // ...
     ReflectionTestUtils.setField(book3, "rating", 4.0);
     ReflectionTestUtils.setField(book3, "reviewCount", 200);
-    ReflectionTestUtils.setField(book3, "createdAt", time1);
-    ReflectionTestUtils.setField(book3, "updatedAt", time1);
+
 
     // 영속성 컨텍스트에 저장
     em.persist(book1);
@@ -88,6 +85,15 @@ class BookRepositoryTest {
     em.persist(book3);
 
     em.flush();
+
+    em.createQuery("UPDATE Book b SET b.createdAt = :time, b.updatedAt = :time WHERE b.id = :id")
+        .setParameter("time", time2).setParameter("id", book1.getId()).executeUpdate();
+
+    em.createQuery("UPDATE Book b SET b.createdAt = :time, b.updatedAt = :time WHERE b.id = :id")
+        .setParameter("time", time3).setParameter("id", book2.getId()).executeUpdate();
+
+    em.createQuery("UPDATE Book b SET b.createdAt = :time, b.updatedAt = :time WHERE b.id = :id")
+        .setParameter("time", time1).setParameter("id", book3.getId()).executeUpdate();
     em.clear();
   }
 
