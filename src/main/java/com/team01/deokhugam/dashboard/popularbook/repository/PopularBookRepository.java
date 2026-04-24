@@ -1,6 +1,6 @@
-package com.team01.deokhugam.dashboard.repository;
+package com.team01.deokhugam.dashboard.popularbook.repository;
 
-import com.team01.deokhugam.dashboard.entity.PopularBook;
+import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 

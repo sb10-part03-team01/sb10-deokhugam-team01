@@ -1,11 +1,11 @@
-package com.team01.deokhugam.dashboard.repository;
+package com.team01.deokhugam.dashboard.popularbook.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.config.QuerydslTestConfig;
-import com.team01.deokhugam.dashboard.entity.PopularBook;
+import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
 import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
@@ -130,13 +130,13 @@ class PopularBookRepositoryTest {
   @DisplayName("findAllByCursor 실패 - cursor만 있고 after가 없으면 INVALID_CURSOR_PAGINATION 예외가 발생한다.")
   void find_all_by_cursor_fail_when_cursor_exists_without_after() {
     assertThatThrownBy(
-        () ->
-            popularBookRepository.findAllByCursor(
-                RankingPeriod.DAILY,
-                SortDirection.DESC,
-                "2",   // ✔ 정상적인 rank 값
-                null,
-                10))
+            () ->
+                popularBookRepository.findAllByCursor(
+                    RankingPeriod.DAILY,
+                    SortDirection.DESC,
+                    "2", // ✔ 정상적인 rank 값
+                    null,
+                    10))
         .isInstanceOf(DeokhugamException.class)
         .satisfies(
             exception -> {
