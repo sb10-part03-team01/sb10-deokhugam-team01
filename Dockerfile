@@ -80,6 +80,11 @@ FROM ${IMAGE}
 # 앱 실행 디렉토리 지정
 WORKDIR /app
 
+# 포트를 빌드 인자로 선언 (기본값 8080)
+ARG SERVER_PORT=8080
+# 런타임에서도 참조 가능하도록 ENV로 전파
+ENV SERVER_PORT=${SERVER_PORT}
+
 # 애플리케이션 실행용 non-root 사용자 생성
 RUN adduser -D appuser && chown -R appuser:appuser /app
 USER appuser
@@ -87,7 +92,9 @@ USER appuser
 # 빌드 스테이지에서 생성한 JAR 파일만 복사
 COPY --from=builder /app/build/libs/*.jar ./app.jar
 
-#   wget -qO- http://localhost:8080/actuator/health
+EXPOSE ${SERVER_PORT}
+
+#   wget -qO- http://localhost:${SERVER_PORT}/actuator/health
 #     - wget: HTTP 요청을 보내는 CLI 도구 (alpine 이미지에 기본 포함)
 #     - -q: quiet 모드 (진행 상황 출력 안 함)
 #     - -O-: 응답 결과를 stdout으로 출력 (파일 저장 안 함)
@@ -96,23 +103,25 @@ COPY --from=builder /app/build/libs/*.jar ./app.jar
 #   || exit 1
 #     - wget이 실패하면(HTTP 에러 또는 연결 불가) exit code 1을 반환
 #     - exit 0 = healthy, exit 1 = unhealthy
-# TODO: Linux에서 1024 미만 포트는 root만 바인딩할 수 있다 -> 배포할 때 참고할 것
-# FIXME: 배포할 때 포트 번호에 따라서 8080 하드코딩 값 수정 필요
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+  CMD wget -qO- http://localhost:${SERVER_PORT}/actuator/health || exit 1
 
-# EXPOSE 80
 
-## JVM 옵션을 환경 변수로 설정 - JVM_OPTS: 기본값은 빈 문자열로 정의
-#  - JVM_OPTS: JVM(Java Virtual Machine) 실행 옵션을 환경 변수로 설정
-#    - 실행 시 오버라이드 할 수 있음
-#    - 예: docker run -e JVM_OPTS="-Xmx512m -Xms256m"
-#      - -Xmx512m: 최대 힙 메모리 512MB
-#      - -Xms256m: 초기 힙 메모리 256MB
-#      ->  컨테이너 환경에서 메모리 제한에 맞게 JVM 옵션 조정
-ENV JVM_OPTS=""
+# JVM Configuration (프리티어 고려)
+# -Xmx256m : 최대 힙 메모리를 256MB로 제한
+#  - JVM이 이 이상의 힙 메모리를 할당하지 않으며, 초과 시 OutOfMemoryError가 발생
+# -Xms128m : 초기 힙 메모리를 128MB로 설정
+#  - JVM 시작 시 OS로부터 128MB를 미리 확보하므로, 런타임 중 힙 확장에 따른 지연을 줄여줌
+# -XX:MaxMetaspaceSize=128m : 메타스페이스 최대 크기를 128MB로 제한
+#  - 메타스페이스는 클래스 메타데이터(클래스 정의, 메서드 정보 등)를 저장하는 네이티브 메모리 영역
+#  - 기본값은 무제한. 제한 이유 - 클래스 로딩 누수를 조기에 감지하거나 메모리 사용량을 통제하려는 목적
+# -XX:+UseSerialGC : Serial GC를 사용
+#  - 단일 스레드로 GC를 수행하는 가장 단순한 컬렉터
+#  - GC 중 모든 애플리케이션 스레드가 멈추는(STW) 단점 존재
+#  - GC 스레드 자체의 오버헤드가 거의 없어 메모리가 적고 CPU 코어가 제한된 환경(컨테이너, 임베디드 등)에 적합
+ENV JVM_OPTS="-Xmx256m -Xms128m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
 
-ENV SPRING_PROFILES_ACTIVE=dev
+ENV SPRING_PROFILES_ACTIVE=prod
 
 ## 애플리케이션 실행 명령어를 설정 - 이때 환경변수로 정의한 프로젝트 정보를 활용
 # ENTRYPOINT: 컨테이너가 시작될 때 실행할 명령어를 지정
