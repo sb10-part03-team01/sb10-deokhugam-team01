@@ -1,4 +1,4 @@
-package com.team01.deokhugam.dashboard.entity;
+package com.team01.deokhugam.dashboard.popularbook.entity;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.global.entity.BaseEntity;

@@ -3,7 +3,6 @@ package com.team01.deokhugam.book.entity;
 import com.team01.deokhugam.global.entity.BaseRemovableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AccessLevel;
@@ -16,20 +15,20 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Book extends BaseRemovableEntity {
+
   @Column(name = "title", length = 255, nullable = false)
   private String title;
 
   @Column(name = "author", length = 100, nullable = false)
   private String author;
 
-  @Column(name = "description", nullable = false)
-  @Lob
+  @Column(name = "description", nullable = false, columnDefinition = "TEXT")
   private String description;
 
   @Column(name = "publisher", length = 100, nullable = false)
   private String publisher;
 
-  @Column(name = "published_date" , nullable = false)
+  @Column(name = "published_date", nullable = false)
   private LocalDate publishedDate;
 
   @Column(name = "isbn", unique = true, updatable = false, length = 20)
@@ -45,7 +44,8 @@ public class Book extends BaseRemovableEntity {
   private double rating = 0.0;
 
   @Builder
-  public Book(String title, String author, String description, String publisher, LocalDate publishedDate, String isbn, String thumbnailUrl) {
+  public Book(String title, String author, String description, String publisher,
+      LocalDate publishedDate, String isbn, String thumbnailUrl) {
     this.title = title;
     this.author = author;
     this.description = description;
@@ -55,27 +55,27 @@ public class Book extends BaseRemovableEntity {
     // reviewCount, rating, isDeleted는 생성 시에는 필요없이 default로 들어가야해서 없음
   }
 
-  public void addThumbnail(String thumbnailUrl){
+  public void addThumbnail(String thumbnailUrl) {
     this.thumbnailUrl = thumbnailUrl;
   }
 
-  public void updateTitle(String newTitle){
+  public void updateTitle(String newTitle) {
     this.title = newTitle;
   }
 
-  public void updateAuthor(String newAuthor){
+  public void updateAuthor(String newAuthor) {
     this.author = newAuthor;
   }
 
-  public void updateDescription(String newDescription){
+  public void updateDescription(String newDescription) {
     this.description = newDescription;
   }
 
-  public void updatePublisher(String newPublisher){
+  public void updatePublisher(String newPublisher) {
     this.publisher = newPublisher;
   }
 
-  public void updatePublishedDate(LocalDate newPublishedDate){
+  public void updatePublishedDate(LocalDate newPublishedDate) {
     this.publishedDate = newPublishedDate;
   }
 

@@ -1,6 +1,6 @@
-package com.team01.deokhugam.dashboard.repository;
+package com.team01.deokhugam.dashboard.popularbook.repository;
 
-import com.team01.deokhugam.dashboard.entity.PopularBook;
+import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
 import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
