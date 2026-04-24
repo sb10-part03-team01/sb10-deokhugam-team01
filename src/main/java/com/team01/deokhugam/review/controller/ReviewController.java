@@ -36,10 +36,6 @@ public class ReviewController {
 
   private final ReviewService reviewService;
 
-  /*
-  TODO ApiResponse 불일치는 나중에 코드 작성 마지막에
-   errorCode에 커스템 객체를 만들어 대응할 예정
-   */
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "리뷰 등록 성공"),
       @ApiResponse(responseCode = "400", description = "잘못된 요청(입력값 검증 실패)"),
