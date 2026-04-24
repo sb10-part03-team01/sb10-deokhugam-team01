@@ -5,6 +5,7 @@ import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
+import com.team01.deokhugam.review.dto.ReviewLikeDto;
 import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import com.team01.deokhugam.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,10 +36,6 @@ public class ReviewController {
 
   private final ReviewService reviewService;
 
-  /*
-  TODO ApiResponse 불일치는 나중에 코드 작성 마지막에
-   errorCode에 커스템 객체를 만들어 대응할 예정
-   */
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "리뷰 등록 성공"),
       @ApiResponse(responseCode = "400", description = "잘못된 요청(입력값 검증 실패)"),
@@ -84,6 +81,7 @@ public class ReviewController {
       @RequestParam(required = false) OffsetDateTime after,
       @RequestParam(required = false) Integer limit
   ) {
+    // 리턴 타입 의논
     return ResponseEntity.ok(reviewService.searchReviews(
             requestUserId,
             userId,
@@ -145,5 +143,19 @@ public class ReviewController {
   ) {
     reviewService.hardDeleteReview(reviewId, requestUserId);
     return ResponseEntity.noContent().build();
+  }
+
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "리뷰 좋아요 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청(요청자 ID 누락)"),
+      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+  })
+  @PostMapping("/{reviewId}/like")
+  public ResponseEntity<ReviewLikeDto> likeReview(
+      @PathVariable UUID reviewId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
+  ) {
+    return ResponseEntity.ok(reviewService.toggleLike(reviewId, requestUserId));
   }
 }
