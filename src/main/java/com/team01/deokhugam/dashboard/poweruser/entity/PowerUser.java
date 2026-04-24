@@ -35,7 +35,7 @@ public class PowerUser extends BaseEntity {
   private OffsetDateTime calculatedDate;
 
  @Column(name = "rank", nullable = false)
-  private int rank;
+  private long rank;
 
   @Column(nullable = false)
   private double score;
