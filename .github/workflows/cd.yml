@@ -6,6 +6,12 @@ on:
   push:
     branches: [ main ]
 
+concurrency:
+  group: cd-${{ github.ref }} # 같은 브랜치의 중복 배포만
+  # 같은 group에 이미 실행 중인 워크플로우가 있을 때
+  # 진행 중인 작업은 끝까지 수행하고, 새 작업은 대기열에 추가
+  cancel-in-progress: false # 순차 처리
+
 # 이 워크플로우가 리포지토리 소스코드를 읽기만 할 수 있도록 제한
 permissions:
   contents: read # 읽기만 가능
