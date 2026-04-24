@@ -208,8 +208,9 @@ class ReviewServiceImplTest {
     given(reviewRepository.countByCondition(any(ReviewSearchCondition.class))).willReturn(1L);
     given(reviewMapper.toDto(review)).willReturn(reviewDto);
     given(review.getId()).willReturn(reviewId);
-    given(reviewLikeRepository.existsByReviewIdAndUserId(reviewId, requestUserId))
-        .willReturn(false);
+    given(reviewLikeRepository.findLikedReviewIdsByReviewIdInAndUserId(List.of(reviewId),
+        requestUserId))
+        .willReturn(List.of());
 
     CursorPageResponseReviewDto result = reviewServiceImpl.searchReviews(
         requestUserId,
