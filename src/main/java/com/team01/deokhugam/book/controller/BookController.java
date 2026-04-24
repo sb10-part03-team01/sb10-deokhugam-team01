@@ -138,10 +138,10 @@ public class BookController implements BookApi{
     }
     // 파일 형식 검증
     String contentType = image.getContentType();
-    if(!StringUtils.hasText(contentType) ||
-        !(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/jpg"))){
-      throw new DeokhugamException(ErrorCode.INVALID_FILE, Map.of(
-          "content-type", contentType,
+    if (!StringUtils.hasText(contentType)
+      || !(MediaType.IMAGE_JPEG_VALUE.equals(contentType) || MediaType.IMAGE_PNG_VALUE.equals(contentType))) {
+      throw new DeokhugamException(ErrorCode.UNSUPPORTED_FILE_FORMAT, Map.of(
+          "content-type", contentType == null ? "null" : contentType,
           "rule", "JPG, PNG 이미지만 업로드 가능합니다."
       ));
     }

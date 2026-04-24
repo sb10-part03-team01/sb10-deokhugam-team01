@@ -1,7 +1,6 @@
 package com.team01.deokhugam.book.dto.naver;
 import java.time.LocalDate;
 import lombok.Builder;
-import lombok.Getter;
 
 @Builder
 public record NaverBookDto (

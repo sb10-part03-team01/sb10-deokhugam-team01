@@ -265,8 +265,8 @@ public class BookService {
                 "rule", "DB에 해당 id의 책이 있어야합니다."
             )));
 
-    log.info("도서 논리 삭제 완료: bookId={}", bookId);
     book.softDelete();
+    log.info("도서 논리 삭제 완료: bookId={}", bookId);
   }
 
   @Transactional
@@ -284,11 +284,15 @@ public class BookService {
       thumbnailStorage.delete(book.getThumbnailUrl());
     }
 
-    log.warn("도서 물리 삭제 완료: bookId={}", bookId);
     bookRepository.delete(book);
+    log.warn("도서 물리 삭제 완료: bookId={}", bookId);
   }
 
   public NaverBookDto getBookInfoByIsbn(String isbn){
+    if (!StringUtils.hasText(isbn)) {
+      throw new DeokhugamException(ErrorCode.ISBN_UNIDENTIFIABLE,
+          Map.of("rule", "ISBN은 공백일 수 없습니다."));
+    }
     String safeIsbn = isbn.trim();
 
     log.debug("네이버 도서 정보 통신 시작: isbn={}", safeIsbn);
@@ -375,11 +379,13 @@ public class BookService {
       }
 
       throw new DeokhugamException(ErrorCode.ISBN_UNIDENTIFIABLE, Map.of(
-       "추출한 문자", matcher.group(),
        "rule","ISBN의 형식의 문자가 인식되어야 합니다."
       ));
+    } catch (DeokhugamException e) {
+      throw e; // 도메인 예외는 그대로 전파
     }
-    catch (Exception e){
+    catch (Exception e) {
+      log.warn("OCR API 호출 실패", e);
       throw new DeokhugamException(ErrorCode.API_SERVER_ERROR);
     }
   }
