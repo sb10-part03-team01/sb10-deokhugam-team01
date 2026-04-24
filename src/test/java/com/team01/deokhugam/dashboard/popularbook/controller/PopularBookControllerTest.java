@@ -36,7 +36,7 @@ class PopularBookControllerTest {
 
     given(
             popularBookService.findPopularBooks(
-                RankingPeriod.DAILY, SortDirection.ASC, null, null, 50))
+                RankingPeriod.DAILY, SortDirection.ASC, null, null, null))
         .willReturn(response);
 
     // when & then
@@ -49,7 +49,7 @@ class PopularBookControllerTest {
         .andExpect(jsonPath("$.hasNext").value(false));
 
     verify(popularBookService)
-        .findPopularBooks(RankingPeriod.DAILY, SortDirection.ASC, null, null, 50);
+        .findPopularBooks(RankingPeriod.DAILY, SortDirection.ASC, null, null, null);
   }
 
   @Test
