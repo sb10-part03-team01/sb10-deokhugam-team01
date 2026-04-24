@@ -19,4 +19,21 @@ public record ReviewDto(
     OffsetDateTime updatedAt
 ) {
 
+  public ReviewDto withLikedByMe(boolean likedByMe) {
+    return new ReviewDto(
+        id,
+        bookId,
+        bookTitle,
+        bookThumbnailUrl,
+        userId,
+        userNickname,
+        content,
+        rating,
+        likeCount,
+        commentCount,
+        likedByMe,
+        createdAt,
+        updatedAt
+    );
+  }
 }

@@ -25,9 +25,12 @@ import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,28 +79,10 @@ public class ReviewServiceImpl implements ReviewService {
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
         .orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
-    ReviewDto reviewDto = reviewMapper.toDto(review);
     boolean likedByMe = reviewLikeRepository.existsByReviewIdAndUserId(reviewId, requestUserId);
-
-    return new ReviewDto(
-        reviewDto.id(),
-        reviewDto.bookId(),
-        reviewDto.bookTitle(),
-        reviewDto.bookThumbnailUrl(),
-        reviewDto.userId(),
-        reviewDto.userNickname(),
-        reviewDto.content(),
-        reviewDto.rating(),
-        reviewDto.likeCount(),
-        reviewDto.commentCount(),
-        likedByMe,
-        reviewDto.createdAt(),
-        reviewDto.updatedAt()
-    );
+    return reviewMapper.toDto(review).withLikedByMe(likedByMe);
   }
 
-  // 개선 필요
-  // * JPA 기존 페이징 처리 확인 *****
   @Override
   public CursorPageResponseReviewDto searchReviews(
       UUID requestUserId,
@@ -124,28 +109,17 @@ public class ReviewServiceImpl implements ReviewService {
     List<Review> reviews = reviewRepository.findAllByCondition(condition);
     long totalElements = reviewRepository.countByCondition(condition);
 
-    List<ReviewDto> content = reviews.stream()
-        .map(review -> {
-          ReviewDto reviewDto = reviewMapper.toDto(review);
-          boolean likedByMe = reviewLikeRepository.existsByReviewIdAndUserId(review.getId(),
-              requestUserId);
+    List<UUID> reviewIds = reviews.stream()
+        .map(Review::getId)
+        .toList();
 
-          return new ReviewDto(
-              reviewDto.id(),
-              reviewDto.bookId(),
-              reviewDto.bookTitle(),
-              reviewDto.bookThumbnailUrl(),
-              reviewDto.userId(),
-              reviewDto.userNickname(),
-              reviewDto.content(),
-              reviewDto.rating(),
-              reviewDto.likeCount(),
-              reviewDto.commentCount(),
-              likedByMe,
-              reviewDto.createdAt(),
-              reviewDto.updatedAt()
-          );
-        })
+    Set<UUID> likedReviewIds = new HashSet<>(
+        reviewLikeRepository.findLikedReviewIdsByReviewIdInAndUserId(reviewIds, requestUserId)
+    );
+
+    List<ReviewDto> content = reviews.stream()
+        .map(review -> reviewMapper.toDto(review)
+            .withLikedByMe(likedReviewIds.contains(review.getId())))
         .toList();
 
     CursorPageResponse<ReviewDto> page = CursorPaginationUtils.of(
@@ -230,17 +204,12 @@ public class ReviewServiceImpl implements ReviewService {
   @Override
   @Transactional
   public ReviewLikeDto toggleLike(UUID reviewId, UUID requestUserId) {
-    // 리뷰 검증(논리 삭제 된 것들 제외 )
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
         .orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
-    //사용자 확인
     User user = userRepository.findById(requestUserId)
         .orElseThrow(() -> new UserNotFoundException(requestUserId));
 
-    // (이 메소드가 필요한 상황은 이미 토글버튼을 눌렀기 때문에 버튼을 눌렀는가?
-    // 혹은 진짜 눌렀는지 인증을 할 필요가 없다고 판단)
-    // 좋아요가 이미 있으면 취소를 한다
     return reviewLikeRepository.findByReviewIdAndUserId(reviewId, requestUserId)
         .map(reviewLike -> {
           reviewLikeRepository.delete(reviewLike);
@@ -248,11 +217,14 @@ public class ReviewServiceImpl implements ReviewService {
           return new ReviewLikeDto(reviewId, requestUserId, false);
         })
         .orElseGet(() -> {
-          // 그 전 상태가 좋아요가 없으면 좋아요 증가를 한다
-          ReviewLike reviewLike = new ReviewLike(review, user);
-          reviewLikeRepository.save(reviewLike);
-          review.increaseLikeCount();
-          return new ReviewLikeDto(reviewId, requestUserId, true);
+          try {
+            ReviewLike reviewLike = new ReviewLike(review, user);
+            reviewLikeRepository.save(reviewLike);
+            review.increaseLikeCount();
+            return new ReviewLikeDto(reviewId, requestUserId, true);
+          } catch (DataIntegrityViolationException e) {
+            return new ReviewLikeDto(reviewId, requestUserId, true);
+          }
         });
   }
 }
