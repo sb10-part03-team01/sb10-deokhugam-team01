@@ -1,5 +1,9 @@
 package com.team01.deokhugam.user.controller;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
+import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.pagination.CursorPageResponse;
+import com.team01.deokhugam.user.dto.PowerUserDto;
 import com.team01.deokhugam.user.dto.UserDto;
 import com.team01.deokhugam.user.dto.UserLoginRequest;
 import com.team01.deokhugam.user.dto.UserRegisterRequest;
@@ -14,9 +18,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "사용자 관리", description = "사용자 관련 API")
 public interface UserApi {
@@ -146,6 +154,19 @@ public interface UserApi {
   );
 
   /// GET - /api/users/power - 파워 유저 목록 조회
+  @Operation(summary = "파워 유저 목록 조회", description = "기간별 파워 유저 목록을 조회합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "파워 유저 목록 조회 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청 (랭킹 기간 오류, 정렬 방향 오류 등)"),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+  })
+  ResponseEntity<CursorPageResponse<PowerUserDto>> findPowerUser(
+      @RequestParam(defaultValue = "DAILY") DashboardPeriod period,
+      @RequestParam(defaultValue = "ASC") SortDirection direction,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) OffsetDateTime after,
+      @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit
+  );
 
   /// DELETE - /api/users/{userId}/hard - 사용자 물리 삭제
   @Operation(summary = "사용자 물리 삭제", description = "사용자를 물리적으로 삭제합니다.")

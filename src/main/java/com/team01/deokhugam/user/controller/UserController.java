@@ -13,6 +13,8 @@ import com.team01.deokhugam.user.dto.UserRegisterRequest;
 import com.team01.deokhugam.user.dto.UserUpdateRequest;
 import com.team01.deokhugam.user.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +41,7 @@ public class UserController implements UserApi {
 
   public UserController(UserService userService, PowerUserService powerUserService) {
     this.userService = userService;
-    this.powerUserService  = powerUserService;
+    this.powerUserService = powerUserService;
   }
 
   /// POST - /api/users - 회원가입
@@ -107,11 +109,13 @@ public class UserController implements UserApi {
       @RequestParam(defaultValue = "ASC") SortDirection direction,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) OffsetDateTime after,
-      @RequestParam(defaultValue = "50") int limit
-  ){
-    log.info("파워 유저 조회 요청");
-    CursorPageResponse<PowerUserDto> result = powerUserService.getRanking(period,direction,cursor,after,limit);
-    log.info("파워 유저 조회 완료");
+      @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit
+  ) {
+    log.info("파워 유저 조회 요청 - period={}, direction={}, cursor={}, after={}, limit={}",
+        period, direction, cursor, after, limit);
+    CursorPageResponse<PowerUserDto> result =
+        powerUserService.getRanking(period, direction, cursor, after, limit);
+    log.info("파워 유저 조회 완료 - size={}, hasNext={}", result.size(), result.hasNext());
     return ResponseEntity.ok(result);
   }
 
