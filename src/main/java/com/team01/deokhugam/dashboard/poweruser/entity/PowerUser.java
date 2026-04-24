@@ -50,7 +50,7 @@ public class PowerUser extends BaseEntity {
   private long commentCount;
 
   @Builder
-  public PowerUser(User user, DashboardPeriod period, OffsetDateTime calculatedDate, int rank,
+  public PowerUser(User user, DashboardPeriod period, OffsetDateTime calculatedDate, long rank,
       double score, double reviewScoreSum, long likeCount, long commentCount) {
     this.user = user;
     this.period = period;

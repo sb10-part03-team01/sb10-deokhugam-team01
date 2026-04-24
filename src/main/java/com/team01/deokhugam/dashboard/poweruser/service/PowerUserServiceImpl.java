@@ -26,25 +26,27 @@ public class PowerUserServiceImpl implements PowerUserService {
 
   @Override
   @Transactional(readOnly = true)
-  public CursorPageResponse<PowerUserDto> getRanking(DashboardPeriod period, SortDirection direction,
+  public CursorPageResponse<PowerUserDto> getRanking(DashboardPeriod period,
+      SortDirection direction,
       String cursor, OffsetDateTime after, int limit) {
 
     List<PowerUser> results;
 
     int normalizedLimit = PageLimitPolicy.normalize(limit);
     PageRequest pageable = PageRequest.of(0, normalizedLimit + 1);
-    boolean asc = direction == SortDirection.ASC;
+    SortDirection effectiveDirection = (direction == null) ? SortDirection.DESC : direction;
+    boolean asc = effectiveDirection == SortDirection.ASC;
 
     if (after == null) {
       if (cursor != null && !cursor.isBlank()) {
-        throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, Map.of("cursor", cursor));
+        throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, Map.of("cursor", cursor, "after", "null"));
       }
       results = asc
           ? powerUserRepository.findByPeriodOrderByRankAsc(period, pageable)
           : powerUserRepository.findByPeriodOrderByRankDesc(period, pageable);
     } else {
       if (cursor == null || cursor.isBlank()) {
-        throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, Map.of("after", after));
+        throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, Map.of("after", after, "cursor", String.valueOf(cursor)));
       }
       long rankCursor;
       try {
@@ -53,8 +55,8 @@ public class PowerUserServiceImpl implements PowerUserService {
         throw new DeokhugamException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("cursor", cursor));
       }
       results = asc
-          ? powerUserRepository.findByPeriodAndRankGreaterThanAndCreatedAtAfterOrderByRankAscCreatedAtAsc(period, rankCursor, after, pageable)
-          : powerUserRepository.findByPeriodAndRankLessThanAndCreatedAtBeforeOrderByRankDescCreatedAtDesc(period, rankCursor, after, pageable);
+          ? powerUserRepository.findNextPageAsc(period, rankCursor, after, pageable)
+          : powerUserRepository.findNextPageDesc(period, rankCursor, after, pageable);
     }
 
     List<PowerUserDto> dtoList = results.stream()
@@ -77,7 +79,7 @@ public class PowerUserServiceImpl implements PowerUserService {
         normalizedLimit,
         totalElements,
         dto -> String.valueOf(dto.rank()),
-        dto -> dto.createdAt()
+        PowerUserDto::createdAt
     );
   }
 }
