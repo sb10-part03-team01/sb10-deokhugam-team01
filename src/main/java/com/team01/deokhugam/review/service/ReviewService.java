@@ -27,4 +27,10 @@ public interface ReviewService {
   );
 
   ReviewDto updateReview(UUID reviewId, UUID requestUserId, ReviewUpdateRequest request);
+
+  // 논리 삭제
+  void deleteReview(UUID reviewId, UUID requestUserId);
+
+  // 물리 삭제
+  void hardDeleteReview(UUID reviewId, UUID requestUserId);
 }

@@ -4,7 +4,11 @@ import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
-import com.team01.deokhugam.global.exception.review.ReviewUpdateForbidden;
+import com.team01.deokhugam.global.exception.review.ReviewAlreadyExistsException;
+import com.team01.deokhugam.global.exception.review.ReviewNotFoundException;
+import com.team01.deokhugam.global.exception.review.ReviewNotSoftDeletedException;
+import com.team01.deokhugam.global.exception.review.ReviewUpdateForbiddenException;
+import com.team01.deokhugam.global.exception.user.UserNotFoundException;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
@@ -43,12 +47,12 @@ public class ReviewServiceImpl implements ReviewService {
 
     //사용자 확인
     User user = userRepository.findById(request.userId())
-        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        .orElseThrow(() -> new UserNotFoundException(request.userId()));
 
     // 리뷰 중복확인
     if (reviewRepository.existsByBook_IdAndUser_IdAndIsDeletedFalse(request.bookId(),
         request.userId())) {
-      throw new IllegalArgumentException("해당 도서에 작성한 리뷰가 있습니다.");
+      throw new ReviewAlreadyExistsException(request.bookId(), request.userId());
     }
 
     // 리뷰 엔티티 생성
@@ -67,7 +71,7 @@ public class ReviewServiceImpl implements ReviewService {
   public ReviewDto getReview(UUID reviewId, UUID requestUserId) {
     // 리뷰 검증
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
-        .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
     /*TODO 리뷰 좋아요 기능 아직 구현 전 이라 구현 후  likedByMe 결과값 반영
        likedByMe에 requestUserId 사용
@@ -134,16 +138,53 @@ public class ReviewServiceImpl implements ReviewService {
 
     // 리뷰  존재 검증
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
-        .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
     // 사용자가 쓴 리뷰인지 검증
     if (!review.getUser().getId().equals(requestUserId)) {
-      throw new ReviewUpdateForbidden(reviewId, requestUserId);
+      throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
     }
 
     // 리뷰 수정
     review.update(request.content(), request.rating());
 
     return reviewMapper.toDto(review);
+  }
+
+  @Override
+  @Transactional
+  public void deleteReview(UUID reviewId, UUID requestUserId) {
+    // 리뷰  존재 검증
+    Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+
+    // 사용자가 쓴 리뷰인지 검증
+    if (!review.getUser().getId().equals(requestUserId)) {
+      throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
+    }
+
+    // 리뷰 논리 삭제
+    review.softDelete();
+  }
+
+  @Override
+  @Transactional
+  public void hardDeleteReview(UUID reviewId, UUID requestUserId) {
+    // 리뷰 존재 검증
+    Review review = reviewRepository.findById(reviewId)
+        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+
+    // 사용자가 쓴 리뷰인지 검증
+    if (!review.getUser().getId().equals(requestUserId)) {
+      throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
+    }
+
+    // 논리 삭제된 리뷰인지 검증
+    if (!review.isDeleted()) {
+      throw new ReviewNotSoftDeletedException();
+    }
+
+    // 물리 삭제
+    reviewRepository.delete(review);
   }
 }
