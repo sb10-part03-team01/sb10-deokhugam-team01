@@ -28,7 +28,7 @@ public class PopularBookController implements PopularBookApi {
       @RequestParam(defaultValue = "ASC") SortDirection direction,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) OffsetDateTime after,
-      @RequestParam(defaultValue = "50") Integer limit) {
+      @RequestParam(required = false) Integer limit) {
 
     log.info(
         "[DASHBOARD] getPopularBooks period={}, direction={}, cursor={}, after={}, limit={}",

@@ -56,8 +56,4 @@ public class PopularBookService {
     return new CursorPageResponse<>(
         content, nextCursor, nextAfter, content.size(), totalElements, hasNext);
   }
-
-  // 파워 유저 조회
-
-  // 인기 리뷰 조회
 }
