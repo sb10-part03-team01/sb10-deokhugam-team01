@@ -1,3 +1,81 @@
+server:
+  port: ${SERVER_PORT:8080}
+
 spring:
+  # profile을 .env 값 참조하여 결정
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE}
   application:
     name: deokhugam
+  servlet:
+    multipart:
+      maxFileSize: 20MB # 파일 하나의 최대 크기
+      maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      # validate : 엔티티와 실제 DB 테이블이 일치하는지만 검사함. 다를 경우 예외를 발생시키고 실행을 중단
+      # update : 변경된 엔티티에 맞춰 테이블 스키마를 업데이트함. 단, 컬럼 추가는 되지만 삭제나 타입 변경은 반영되지 않음
+      # create : 기존 테이블을 삭제(DROP)하고 엔티티를 기반으로 새 테이블을 생성
+    open-in-view: false
+  config:
+    import: optional:file:.env[.properties]
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, loggers
+  endpoint:
+    health:
+      show-details: always
+
+info:
+  name: deokhugam
+  version: 1.0.0
+  java:
+    version: 17
+  spring-boot:
+    version: 3.5.13
+  config:
+    datasource:
+      url: ${spring.datasource.url}
+      driver-class-name: ${spring.datasource.driver-class-name}
+    jpa:
+      ddl-auto: ${spring.jpa.hibernate.ddl-auto}
+    storage:
+      type: ${deokhugam.storage.type}
+      path: ${deokhugam.storage.local.root-path}
+    multipart:
+      max-file-size: ${spring.servlet.multipart.maxFileSize}
+      max-request-size: ${spring.servlet.multipart.maxRequestSize}
+
+deokhugam:
+  storage:
+    type: ${STORAGE_TYPE:s3}  # local | s3 (기본값: s3)
+    local:
+      root-path: ${STORAGE_LOCAL_ROOT_PATH:.deokhugam/storage}
+    s3:
+      access-key: ${AWS_S3_ACCESS_KEY}
+      secret-key: ${AWS_S3_SECRET_KEY}
+      region: ${AWS_S3_REGION}
+      bucket: ${AWS_S3_BUCKET}
+      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:300}
+  naver:
+    client:
+      id: ${NAVER_CLIENT_ID:}
+      secret: ${NAVER_CLIENT_SECRET:}
+  ocr:
+    api:
+      key: ${OCR_API_KEY:}
+
+logging:
+  level:
+    root: info

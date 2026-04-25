@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: ${RDS_SPRING_DATASOURCE_URL}
+    username: ${RDS_SPRING_DATASOURCE_USERNAME}
+    password: ${RDS_SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+  batch:
+    jdbc:
+      initialize-schema: always
+
+logging:
+  level:
+    com.team01.deokhugam: info
+    org.hibernate.SQL: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: never
+  info:
+    env:
+      enabled: false
+
+deokhugam:
+  user:
+    cleanup:
+      # 논리 삭제 후 1일 경과 뒤 유저 정보가 완전히 삭제
+      retention-minutes: 1440
+      # 매일 3시 (1회) - 사용자 이용 적은 시간대 - cron 간격 24h - 최대 지연 48h
+      cron: "0 0 3 * * *"

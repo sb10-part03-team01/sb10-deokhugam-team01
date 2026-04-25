@@ -1,3 +1,16 @@
-/gradlew text eol=lf
+# 텍스트 파일은 Git이 자동 감지하고, 저장소/체크아웃 모두 LF로 통일
+# OS에 상관없이 일관된 줄바꿈 유지 (CRLF 오염 방지)
+* text=auto eol=lf
+
+# Windows 전용 파일 - CRLF 강제
+# cmd.exe / PowerShell은 CRLF 줄바꿈 필요
 *.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Unix 전용 파일 - LF 강제
+# Gradle Wrapper 쉘 스크립트 (확장자 없어서 명시적으로 지정)
+/gradlew text eol=lf
+
+# 바이너리 파일 - 변환 및 diff 비활성화
 *.jar binary
