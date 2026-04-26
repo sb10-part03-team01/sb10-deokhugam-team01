@@ -17,9 +17,9 @@ permissions:
   contents: read # 읽기만 가능
 
 jobs:
-  # Docker 이미지 빌드 & Public ECR 푸시
+  # Docker 이미지 빌드 & Private ECR 푸시
   build-and-push:
-    name: Build & Push to Public ECR
+    name: Build & Push to Private ECR
     runs-on: ubuntu-latest
 
     # 다음 Job(deploy)에 이미지 URI를 전달하기 위한 출력
@@ -32,21 +32,18 @@ jobs:
         uses: actions/checkout@v4 # 현재 repo의 소스코드를 Runner 작업 디렉터리로 복사
 
       # 2) AWS 자격 증명 설정
-      - name: Configure AWS credentials (Public ECR)
+      - name: Configure AWS credentials (Private ECR)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          # Public ECR API 엔드포인트가 us-east-1 리전에만 존재하므로 인증도 us-east-1로 진행
-          aws-region: us-east-1
+          aws-region: ${{ vars.AWS_REGION }}
 
-      # 3) Public ECR 로그인
-      - name: Login to Amazon Public ECR
+      # 3) Private ECR 로그인
+      - name: Login to Amazon Private ECR
         id: login-ecr
         # ECR 레지스트리에 Docker 클라이언트를 로그인
         uses: aws-actions/amazon-ecr-login@v2
-        with:
-          registry-type: public # Public ECR 로그인
 
       # 4) Docker 이미지 빌드 & 푸시
       # - 멀티 플랫폼 옵션 사용 X (Runner와 ECS 모두 x86_64이므로 불필요)
