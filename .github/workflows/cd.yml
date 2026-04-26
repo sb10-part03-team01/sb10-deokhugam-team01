@@ -51,7 +51,7 @@ jobs:
       - name: Build & push Docker image
         id: image
         env:
-          ECR_URI: ${{ secrets.ECR_REPOSITORY_URI }}
+          ECR_URI: ${{ vars.ECR_REPOSITORY_URI }}
           SHA: ${{ github.sha }} # 커밋 해시
         run: |
           docker build \
