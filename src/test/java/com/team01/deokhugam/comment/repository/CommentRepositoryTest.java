@@ -134,7 +134,7 @@ class CommentRepositoryTest {
             review.getId(),
             SortDirection.DESC,
             middle.getId().toString(),
-            middle.getCreatedAt(),
+            time(2026, 4, 20, 11, 0),
             2);
 
     em.flush();
@@ -291,21 +291,27 @@ class CommentRepositoryTest {
       OffsetDateTime updatedAt) {
     Comment comment = new Comment(review, user, content);
 
-    // insert 시 NOT NULL 제약을 통과하도록 먼저 값을 넣는다.
-    setField(comment, "createdAt", createdAt);
-    setField(comment, "updatedAt", updatedAt);
     setField(comment, "isDeleted", false);
 
     em.persist(comment);
     em.flush();
 
-    // JPA Auditing이 createdAt/updatedAt을 덮었을 수 있으므로
-    // 테스트에서 의도한 시각으로 다시 한 번 맞춘다.
-    setField(comment, "createdAt", createdAt);
-    setField(comment, "updatedAt", updatedAt);
+    em.createQuery(
+            """
+            update Comment c
+            set c.createdAt = :createdAt,
+                c.updatedAt = :updatedAt
+            where c.id = :id
+            """)
+        .setParameter("createdAt", createdAt)
+        .setParameter("updatedAt", updatedAt)
+        .setParameter("id", comment.getId())
+        .executeUpdate();
 
     em.flush();
-    return comment;
+    em.clear();
+
+    return em.find(Comment.class, comment.getId());
   }
 
   private Comment persistDeletedComment(Review review, User user, String content) {
