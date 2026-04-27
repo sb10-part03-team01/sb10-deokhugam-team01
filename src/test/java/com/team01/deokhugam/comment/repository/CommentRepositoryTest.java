@@ -118,56 +118,41 @@ class CommentRepositoryTest {
   }
 
   @Test
-  @DisplayName("findAllByCursor - createdAt이 같으면 id를 보조 커서로 사용한다")
-  void find_all_by_cursor_uses_id_as_tie_breaker() {
+  @DisplayName("findAllByCursor - 다음 페이지 조회 시 after와 cursor를 기준으로 이어서 조회한다")
+  void find_all_by_cursor_next_page_desc() {
     // given
-    User user = persistUser("tie@test.com", "tie-user");
+    User user = persistUser("cursor@test.com", "cursor-user");
     Book book = persistBook();
     Review review = persistReview(user, book, "리뷰");
 
-    OffsetDateTime sameCreatedAt = time(2026, 4, 20, 12, 0);
-
-    persistComment(review, user, "댓글A", sameCreatedAt, sameCreatedAt);
-    persistComment(review, user, "댓글B", sameCreatedAt, sameCreatedAt);
+    Comment oldest =
+        persistComment(review, user, "댓글1", time(2026, 4, 20, 9, 0), time(2026, 4, 20, 9, 0));
     Comment older =
-        persistComment(review, user, "댓글C", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
+        persistComment(review, user, "댓글2", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
+    Comment middle =
+        persistComment(review, user, "댓글3", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
+    persistComment(review, user, "댓글4", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
+
+    // 첫 페이지 결과가 [12:00, 11:00] 이라고 가정하면,
+    // 마지막 요소인 middle을 커서로 넘겼을 때 그 다음 댓글부터 조회되어야 한다.
+    CommentSearchCondition condition =
+        new CommentSearchCondition(
+            review.getId(),
+            SortDirection.DESC,
+            middle.getId().toString(),
+            middle.getCreatedAt(),
+            2);
 
     em.flush();
     em.clear();
 
-    // when 1
-    // 첫 페이지를 먼저 조회해서 DB가 실제로 어떤 id 순서를 사용하는지 확인한다.
-    CommentSearchCondition firstPageCondition =
-        new CommentSearchCondition(review.getId(), SortDirection.DESC, null, null, 1);
+    // when
+    List<Comment> result = commentRepository.findAllByCursor(condition);
 
-    List<Comment> firstPage = commentRepository.findAllByCursor(firstPageCondition);
-
-    // then 1
-    // limit = 1 이므로 리포지토리는 limit + 1 = 2개를 조회해야 한다.
-    assertThat(firstPage).hasSize(2);
-    assertThat(firstPage.get(0).getCreatedAt()).isEqualTo(sameCreatedAt);
-    assertThat(firstPage.get(1).getCreatedAt()).isEqualTo(sameCreatedAt);
-
-    Comment firstComment = firstPage.get(0);
-    Comment secondComment = firstPage.get(1);
-
-    // when 2
-    // 첫 페이지의 마지막 기준(firstComment)을 커서로 넘기면,
-    // 같은 createdAt의 다음 댓글(secondComment)과 older가 이어서 조회되어야 한다.
-    CommentSearchCondition nextPageCondition =
-        new CommentSearchCondition(
-            review.getId(),
-            SortDirection.DESC,
-            firstComment.getId().toString(),
-            firstComment.getCreatedAt(),
-            2);
-
-    List<Comment> result = commentRepository.findAllByCursor(nextPageCondition);
-
-    // then 2
+    // then
     assertThat(result).hasSize(2);
-    assertThat(result.get(0).getId()).isEqualTo(secondComment.getId());
-    assertThat(result.get(1).getId()).isEqualTo(older.getId());
+    assertThat(result.get(0).getId()).isEqualTo(older.getId());
+    assertThat(result.get(1).getId()).isEqualTo(oldest.getId());
   }
 
   @Test
