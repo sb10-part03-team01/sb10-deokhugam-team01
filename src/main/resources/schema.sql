@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS notifications
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications (user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_review_id ON notifications (review_id);
 
-CREATE TABLE IF NOT EXISTS liked_reviews
+CREATE TABLE IF NOT EXISTS review_likes
 (
     id         UUID PRIMARY KEY,
     review_id  UUID        NOT NULL,
@@ -103,9 +103,9 @@ CREATE TABLE IF NOT EXISTS liked_reviews
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_liked_reviews_review FOREIGN KEY (review_id) REFERENCES reviews (id) ON DELETE CASCADE,
-    CONSTRAINT fk_liked_reviews_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT uk_liked_reviews_user_review UNIQUE (review_id, user_id) -- 1인 1리뷰 1좋아요 보장 💡
+    CONSTRAINT fk_review_likes_review FOREIGN KEY (review_id) REFERENCES reviews (id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_likes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT uk_review_like_review_user UNIQUE (review_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS popular_books
