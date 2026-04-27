@@ -87,6 +87,6 @@ public class Book extends BaseRemovableEntity {
     double totalRating = this.rating * this.reviewCount;
     this.reviewCount += 1;
     totalRating += newRating;
-    this.rating = Math.round((totalRating / this.reviewCount) * 10) / 10.0;
+    this.rating = totalRating / this.reviewCount;
   }
 }

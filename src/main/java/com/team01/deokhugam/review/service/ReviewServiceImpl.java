@@ -73,7 +73,7 @@ public class ReviewServiceImpl implements ReviewService {
     );
     Review savedReview = reviewRepository.save(review);
 
-    bookService.updateBookReviewRating(request.bookId(),review.getRating());
+    bookService.updateBookReviewRating(book.getId(),review.getRating());
 
     return reviewMapper.toDto(savedReview);
   }

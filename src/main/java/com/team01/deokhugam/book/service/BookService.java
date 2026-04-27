@@ -416,7 +416,7 @@ public class BookService {
 
   @Transactional
   public void updateBookReviewRating(UUID bookId, double rating){
-    Book book = bookRepository.findById(bookId)
+    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
         .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
             Map.of(
                 "bookId", bookId,
