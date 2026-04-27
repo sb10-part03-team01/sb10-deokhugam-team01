@@ -413,4 +413,16 @@ public class BookService {
       return null;
     }
   }
+
+  @Transactional
+  public void updateBookReviewRating(UUID bookId, double rating){
+    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
+            Map.of(
+                "bookId", bookId,
+                "rule", "DB에 해당 id의 책이 있어야합니다."
+            )));
+
+    book.updateRating(rating);
+  }
 }

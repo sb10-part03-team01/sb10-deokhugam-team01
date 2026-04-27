@@ -82,4 +82,11 @@ public class Book extends BaseRemovableEntity {
   public void updateThumbnailUrl(String newUrl) {
     this.thumbnailUrl = newUrl;
   }
+
+  public void updateRating(double newRating){
+    double totalRating = this.rating * this.reviewCount;
+    this.reviewCount += 1;
+    totalRating += newRating;
+    this.rating = totalRating / this.reviewCount;
+  }
 }
