@@ -1,7 +1,7 @@
 package com.team01.deokhugam.review.entity;
 
 
-import com.team01.deokhugam.global.entity.BaseEntity;
+import com.team01.deokhugam.global.entity.BaseUpdatableEntity;
 import com.team01.deokhugam.user.entity.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
     }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ReviewLike extends BaseEntity {
+public class ReviewLike extends BaseUpdatableEntity {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "review_id", nullable = false)
