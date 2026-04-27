@@ -163,23 +163,35 @@ class CommentRepositoryTest {
     Book book = persistBook();
     Review review = persistReview(user, book, "리뷰");
 
-    persistComment(review, user, "댓글A", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
-    persistComment(review, user, "댓글B", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
+    OffsetDateTime sameCreatedAt = time(2026, 4, 20, 12, 0);
+
+    persistComment(review, user, "댓글A", sameCreatedAt, sameCreatedAt);
+    persistComment(review, user, "댓글B", sameCreatedAt, sameCreatedAt);
     Comment older =
         persistComment(review, user, "댓글C", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
 
     em.flush();
     em.clear();
 
-    // 먼저 첫 페이지를 조회해서 DB가 실제로 어떤 id 순서를 쓰는지 확인한다.
+    // when 1
+    // 첫 페이지를 먼저 조회해서 DB가 실제로 어떤 id 순서를 사용하는지 확인한다.
     CommentSearchCondition firstPageCondition =
         new CommentSearchCondition(review.getId(), SortDirection.DESC, null, null, 1);
 
     List<Comment> firstPage = commentRepository.findAllByCursor(firstPageCondition);
 
+    // then 1
+    // limit = 1 이므로 리포지토리는 limit + 1 = 2개를 조회해야 한다.
+    assertThat(firstPage).hasSize(2);
+    assertThat(firstPage.get(0).getCreatedAt()).isEqualTo(sameCreatedAt);
+    assertThat(firstPage.get(1).getCreatedAt()).isEqualTo(sameCreatedAt);
+
     Comment firstComment = firstPage.get(0);
     Comment secondComment = firstPage.get(1);
 
+    // when 2
+    // 첫 페이지의 마지막 기준(firstComment)을 커서로 넘기면,
+    // 같은 createdAt의 다음 댓글(secondComment)과 older가 이어서 조회되어야 한다.
     CommentSearchCondition nextPageCondition =
         new CommentSearchCondition(
             review.getId(),
@@ -188,13 +200,12 @@ class CommentRepositoryTest {
             firstComment.getCreatedAt(),
             2);
 
-    // when
     List<Comment> result = commentRepository.findAllByCursor(nextPageCondition);
 
-    // then
-    assertThat(firstPage).hasSize(2);
-    assertThat(firstPage.get(0).getCreatedAt()).isEqualTo(time(2026, 4, 20, 12, 0));
-    assertThat(firstPage.get(1).getCreatedAt()).isEqualTo(time(2026, 4, 20, 12, 0));
+    // then 2
+    assertThat(result).hasSize(2);
+    assertThat(result.get(0).getId()).isEqualTo(secondComment.getId());
+    assertThat(result.get(1).getId()).isEqualTo(older.getId());
   }
 
   @Test
