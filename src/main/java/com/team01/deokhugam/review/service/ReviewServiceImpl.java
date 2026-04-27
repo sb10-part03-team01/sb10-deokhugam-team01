@@ -14,17 +14,23 @@ import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
+import com.team01.deokhugam.review.dto.ReviewLikeDto;
 import com.team01.deokhugam.review.dto.ReviewSearchCondition;
 import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import com.team01.deokhugam.review.entity.Review;
+import com.team01.deokhugam.review.entity.ReviewLike;
 import com.team01.deokhugam.review.mapper.ReviewMapper;
+import com.team01.deokhugam.review.repository.ReviewLikeRepository;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReviewServiceImpl implements ReviewService {
 
   private final ReviewRepository reviewRepository;
+  private final ReviewLikeRepository reviewLikeRepository;
   private final BookRepository bookRepository;
   private final UserRepository userRepository;
   private final ReviewMapper reviewMapper;
@@ -50,7 +57,7 @@ public class ReviewServiceImpl implements ReviewService {
         .orElseThrow(() -> new UserNotFoundException(request.userId()));
 
     // 리뷰 중복확인
-    if (reviewRepository.existsByBook_IdAndUser_IdAndIsDeletedFalse(request.bookId(),
+    if (reviewRepository.existsByBookIdAndUserIdAndIsDeletedFalse(request.bookId(),
         request.userId())) {
       throw new ReviewAlreadyExistsException(request.bookId(), request.userId());
     }
@@ -69,14 +76,11 @@ public class ReviewServiceImpl implements ReviewService {
 
   @Override
   public ReviewDto getReview(UUID reviewId, UUID requestUserId) {
-    // 리뷰 검증
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
         .orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
-    /*TODO 리뷰 좋아요 기능 아직 구현 전 이라 구현 후  likedByMe 결과값 반영
-       likedByMe에 requestUserId 사용
-     */
-    return reviewMapper.toDto(review);
+    boolean likedByMe = reviewLikeRepository.existsByReviewIdAndUserId(reviewId, requestUserId);
+    return reviewMapper.toDto(review).withLikedByMe(likedByMe);
   }
 
   @Override
@@ -91,7 +95,6 @@ public class ReviewServiceImpl implements ReviewService {
       OffsetDateTime after,
       Integer limit
   ) {
-
     ReviewSearchCondition condition = new ReviewSearchCondition(
         userId,
         bookId,
@@ -104,10 +107,20 @@ public class ReviewServiceImpl implements ReviewService {
     );
 
     List<Review> reviews = reviewRepository.findAllByCondition(condition);
-
     long totalElements = reviewRepository.countByCondition(condition);
 
-    List<ReviewDto> content = reviewMapper.toDtoList(reviews);
+    List<UUID> reviewIds = reviews.stream()
+        .map(Review::getId)
+        .toList();
+
+    Set<UUID> likedReviewIds = new HashSet<>(
+        reviewLikeRepository.findLikedReviewIdsByReviewIdInAndUserId(reviewIds, requestUserId)
+    );
+
+    List<ReviewDto> content = reviews.stream()
+        .map(review -> reviewMapper.toDto(review)
+            .withLikedByMe(likedReviewIds.contains(review.getId())))
+        .toList();
 
     CursorPageResponse<ReviewDto> page = CursorPaginationUtils.of(
         content,
@@ -140,7 +153,7 @@ public class ReviewServiceImpl implements ReviewService {
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
         .orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
-    // 사용자가 쓴 리뷰인지 검증
+    // 사용자가 쓴 리뷰인지 검증(NPE)
     if (!review.getUser().getId().equals(requestUserId)) {
       throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
     }
@@ -186,5 +199,32 @@ public class ReviewServiceImpl implements ReviewService {
 
     // 물리 삭제
     reviewRepository.delete(review);
+  }
+
+  @Override
+  @Transactional
+  public ReviewLikeDto toggleLike(UUID reviewId, UUID requestUserId) {
+    Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+
+    User user = userRepository.findById(requestUserId)
+        .orElseThrow(() -> new UserNotFoundException(requestUserId));
+
+    return reviewLikeRepository.findByReviewIdAndUserId(reviewId, requestUserId)
+        .map(reviewLike -> {
+          reviewLikeRepository.delete(reviewLike);
+          review.decreaseLikeCount();
+          return new ReviewLikeDto(reviewId, requestUserId, false);
+        })
+        .orElseGet(() -> {
+          try {
+            ReviewLike reviewLike = new ReviewLike(review, user);
+            reviewLikeRepository.save(reviewLike);
+            review.increaseLikeCount();
+            return new ReviewLikeDto(reviewId, requestUserId, true);
+          } catch (DataIntegrityViolationException e) {
+            return new ReviewLikeDto(reviewId, requestUserId, true);
+          }
+        });
   }
 }

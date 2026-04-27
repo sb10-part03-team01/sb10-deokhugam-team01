@@ -20,6 +20,7 @@ public interface ReviewMapper {
   @Mapping(target = "userId", source = "user.id")
   @Mapping(target = "userNickname", source = "user.nickname")
   @Mapping(target = "likedByMe", ignore = true)
+  @Mapping(target = "withLikedByMe", ignore = true)
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "updatedAt", source = "updatedAt")
   ReviewDto toDto(Review review);

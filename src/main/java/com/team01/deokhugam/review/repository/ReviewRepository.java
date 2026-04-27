@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReviewRepository extends JpaRepository<Review, UUID>, ReviewRepositoryCustom {
 
-  boolean existsByBook_IdAndUser_IdAndIsDeletedFalse(UUID bookId, UUID userId);
+  boolean existsByBookIdAndUserIdAndIsDeletedFalse(UUID bookId, UUID userId);
 
   Optional<Review> findByIdAndIsDeletedFalse(UUID reviewId);
 }

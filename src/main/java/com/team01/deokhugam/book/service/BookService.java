@@ -12,8 +12,8 @@ import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.book.storage.ThumbnailStorage;
 import com.team01.deokhugam.global.enums.SortDirection;
-import com.team01.deokhugam.global.exception.book.BookNotFoundException;
-import com.team01.deokhugam.global.exception.book.DuplicatedIsbnException;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.global.pagination.PageLimitPolicy;
@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -76,10 +77,13 @@ public class BookService {
   public BookDto createBook(BookCreateRequest request, MultipartFile thumbnail) {
     // isbn이 빈 문자열(공백)로 들어올 시 방어 로직
     String safeIsbn = StringUtils.hasText(request.getIsbn()) ? request.getIsbn().trim() : null;
-
+    log.debug("도서 등록 처리 시작: title={}, isbn={}", request.getTitle(), request.getIsbn());
     // isbn 중복 예외 처리
     if (safeIsbn != null && bookRepository.existsByIsbn(safeIsbn)) {
-      throw new DuplicatedIsbnException(safeIsbn);
+      throw new DeokhugamException(ErrorCode.DUPLICATED_ISBN,
+          Map.of("ISBN", safeIsbn,
+              "rule", "동일한 isbn이 존재할 수 없습니다."
+          ));
     }
     // 도서 객체 생성
     Book book = Book.builder().
@@ -97,13 +101,14 @@ public class BookService {
         s3Url = thumbnailStorage.upload(thumbnail);
         book.addThumbnail(s3Url);
       } catch (IOException e){
-        throw new RuntimeException("파일 업로드중 문제가 발생했습니다",e);
+        throw new DeokhugamException(ErrorCode.THUMBNAIL_UPLOAD_FAIL);
       }
 
       TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
         // 트랜직션이 커밋되는 롤백되는 상관없이 완료가 되면
         @Override
         public void afterCompletion(int status) {
+          log.debug("트랜잭션 롤백 감지: 업로드된 썸네일 롤백 처리 진행");
           // 만약 롤백으로 완료되면
           if (status == STATUS_ROLLED_BACK)
           {
@@ -119,20 +124,29 @@ public class BookService {
     // 이를 TOCTOU (Time-Of-Check-Time-Of-Use) 문제라고 함
     try {
       Book savedBook = bookRepository.saveAndFlush(book); // 즉시 INSERT 실행
+      log.debug("도서 등록 처리 완료: bookId={}", savedBook.getId());
       return bookMapper.toDto(savedBook);
     } catch (DataIntegrityViolationException ex) {
-      throw new DuplicatedIsbnException(safeIsbn);
+      throw new DeokhugamException(ErrorCode.DUPLICATED_ISBN,
+          Map.of("ISBN", safeIsbn,
+              "rule", "동일한 isbn이 존재할 수 없습니다."
+          ));
     }
 
   }
 
   @Transactional(readOnly = true)
   public CursorPageResponse<BookDto> findAllBooks(String keyword, String orderBy, SortDirection direction, String cursor, OffsetDateTime after, Integer limit){
+    log.debug("도서 목록 조회 시작: keyword={}, orderBy={}", keyword, orderBy);
     Set<String> allowedOrderBy = Set.of("title", "rating", "reviewCount", "publishedDate");
 
     // 추후에 커스텀 예외로 바꿀 예정
     if(!allowedOrderBy.contains(orderBy)){
-      throw new IllegalArgumentException("올바른 정렬기준이 아닙니다");
+      throw new DeokhugamException(ErrorCode.INVALID_BOOK_SORT_FIELD,
+          Map.of(
+              "orderBy",orderBy,
+              "rule","정렬기준은 제목, 평점, 리뷰 수, 출판일자이어야 합니다."
+          ));
     }
 
     int normalizedLimit = PageLimitPolicy.normalize(limit);
@@ -153,7 +167,7 @@ public class BookService {
           case "publishedDate" -> dto.getPublishedDate().toString();
           default -> dto.getTitle();
         };
-
+    log.debug("도서 목록 조회 완료: 조회된 건수={}", bookDtos.size());
     return CursorPaginationUtils.of(
         bookDtos,
         normalizedLimit,
@@ -165,16 +179,26 @@ public class BookService {
 
   @Transactional(readOnly = true)
   public BookDto findBook(UUID bookId){
+    log.debug("도서 단건 조회: bookId={}", bookId);
     Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
-        .orElseThrow(() -> new BookNotFoundException(bookId));
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
+            Map.of(
+                "bookId", bookId,
+                "rule", "DB에 해당 id의 책이 있어야합니다."
+            )));
 
     return bookMapper.toDto(book);
   }
 
   @Transactional
   public BookDto updateBook(BookUpdateRequest request, UUID bookId, MultipartFile thumbnailImage) {
+    log.debug("도서 정보 수정 시작: bookId={}", bookId);
     Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
-        .orElseThrow(() -> new BookNotFoundException(bookId));
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
+            Map.of(
+                "bookId", bookId,
+                "rule", "DB에 해당 id의 책이 있어야합니다."
+            )));
 
     if(request.getTitle() != null){
       book.updateTitle(request.getTitle());
@@ -199,7 +223,7 @@ public class BookService {
         newS3Url = thumbnailStorage.upload(thumbnailImage);
         book.updateThumbnailUrl(newS3Url);
       } catch (IOException e){
-        throw new RuntimeException("파일 업로드중 오류가 발생했습니다",e);
+        throw new DeokhugamException(ErrorCode.THUMBNAIL_UPLOAD_FAIL);
       }
       // 트랜잭션 롤백시 s3의 데이터 유실 문제 해결
       // 만약 s3의 원래 이미지를 삭제하고 새로운 이미지를 넣고 난 뒤에 트랜잭션이 롤백되면 db는 제대로 롤백되지만
@@ -227,21 +251,33 @@ public class BookService {
       });
     }
 
+    log.debug("도서 정보 수정 완료: bookId={}", bookId);
     return bookMapper.toDto(book);
   }
 
   @Transactional
   public void deleteBook(UUID bookId){
+    log.debug("도서 논리 삭제 시작: bookId={}", bookId);
     Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
-        .orElseThrow(() -> new BookNotFoundException(bookId));
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
+            Map.of(
+                "bookId", bookId,
+                "rule", "DB에 해당 id의 책이 있어야합니다."
+            )));
 
     book.softDelete();
+    log.info("도서 논리 삭제 완료: bookId={}", bookId);
   }
 
   @Transactional
   public void permanentDeleteBook(UUID bookId){
+    log.warn("도서 물리 삭제 시작: bookId={}", bookId);
     Book book = bookRepository.findByIdAndIsDeletedTrue(bookId)
-        .orElseThrow(() -> new BookNotFoundException(bookId));
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
+            Map.of(
+                "bookId", bookId,
+                "rule", "DB에 해당 id가 있고 논리 삭제된 상태여야 합니다"
+            )));
 
     // 완전 db에서도 삭제되면 저장소의 썸네일도 삭제
     if (book.getThumbnailUrl() != null) {
@@ -249,11 +285,17 @@ public class BookService {
     }
 
     bookRepository.delete(book);
+    log.warn("도서 물리 삭제 완료: bookId={}", bookId);
   }
 
   public NaverBookDto getBookInfoByIsbn(String isbn){
+    if (!StringUtils.hasText(isbn)) {
+      throw new DeokhugamException(ErrorCode.ISBN_UNIDENTIFIABLE,
+          Map.of("rule", "ISBN은 공백일 수 없습니다."));
+    }
     String safeIsbn = isbn.trim();
 
+    log.debug("네이버 도서 정보 통신 시작: isbn={}", safeIsbn);
     NaverBookResponse response = naverRestClient.get()
         .uri(uriBuilder -> uriBuilder
             .path("/book_adv.json")
@@ -263,7 +305,8 @@ public class BookService {
         .body(NaverBookResponse.class);
 
     if (response == null || response.items() == null || response.items().isEmpty()) {
-      throw new IllegalArgumentException("해당 isbn으로 검색된 도서가 없습니다.");
+      throw new DeokhugamException(ErrorCode.NAVER_BOOK_NOT_FOUND,
+          Map.of("ISBN", safeIsbn));
     }
 
     NaverBookItem naverBookItem = response.items().get(0);
@@ -276,6 +319,7 @@ public class BookService {
 
     byte[] imageBytes = downloadImageFromUrl(naverBookItem.thumbnailImage());
 
+    log.debug("네이버 도서 정보 통신 완료: title={}", naverBookItem.title());
     return NaverBookDto.builder()
         .title(naverBookItem.title())
         .author(naverBookItem.author())
@@ -288,8 +332,9 @@ public class BookService {
   }
 
   public String getIsbnByOcr(MultipartFile image){
+    log.debug("OCR 처리 시작: filename={}", image.getOriginalFilename());
     if (!StringUtils.hasText(ocrApiKey)) {
-      throw new IllegalStateException("OCR SPACE API 인증 정보(자격 증명)를 설정해야 합니다");
+      throw new DeokhugamException(ErrorCode.API_CREDENTIAL_FAIL);
     }
     try {
       MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
@@ -310,9 +355,9 @@ public class BookService {
           response == null ? null : response.parsedResults();
       // ocr 응답 데이터의 npe, 응답 데이터는 있지만 안의 요소가 npe, 안의 요소인 리스트는 있지만 리스트의 요소가 npe,
       // 리스트의 요소는 있지만 그 요소가 공백일때의 방어로직
-      if (response == null || response.isErroredOnProcessing() || parsedResults == null
-          || parsedResults.isEmpty() || !StringUtils.hasText(parsedResults.get(0).parsedText())) {
-        throw new IllegalArgumentException("이미지에서 텍스트를 추출할 수 없습니다.");
+      if (parsedResults == null || parsedResults.isEmpty()
+          || !StringUtils.hasText(parsedResults.get(0).parsedText())) {
+        throw new DeokhugamException(ErrorCode.ISBN_UNIDENTIFIABLE);
       }
 
       // parseResults에는 페이지의 개수만큼 parseText가 담김
@@ -328,15 +373,20 @@ public class BookService {
         // 만약 길이가 13 이상이면 길이 13에 맞게 반환
         String isbn = rawIsbn.length() >= 13 ? rawIsbn.substring(0, 13) : null;
         if (isbn != null) {
+          log.debug("OCR 처리 완료: 추출된 isbn={}", isbn);
           return isbn;
         }
       }
 
-      throw new IllegalArgumentException("이미지에서 ISBN 형식을 찾을 수 없습니다.");
+      throw new DeokhugamException(ErrorCode.ISBN_UNIDENTIFIABLE, Map.of(
+       "rule","ISBN의 형식의 문자가 인식되어야 합니다."
+      ));
+    } catch (DeokhugamException e) {
+      throw e; // 도메인 예외는 그대로 전파
     }
-    catch (Exception e){
-      log.error("OCR 처리 중 오류 발생: {}", e.getMessage());
-      throw new RuntimeException("OCR 이미지 처리 중 서버 오류가 발생했습니다.");
+    catch (Exception e) {
+      log.warn("OCR API 호출 실패", e);
+      throw new DeokhugamException(ErrorCode.API_SERVER_ERROR);
     }
   }
 
