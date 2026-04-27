@@ -55,10 +55,9 @@ public class DashboardBatchService {
     }
   }
 
-  // 인기도서 계산 메서드
+  // 인기 도서 계산 메서드
   public void calculatePopularBookRanking(LocalDate baseDate) {
-    // 배치가 0시에 실행, 직전 날짜를 집계 기준일로
-    LocalDate calculatedDate = baseDate.minusDays(1);
+    LocalDate calculatedDate = baseDate;
 
     for (DashboardPeriod period : DashboardPeriod.values()) {
       OffsetDateTime start = period.getStartDateTime(baseDate).atOffset(ZoneOffset.UTC);

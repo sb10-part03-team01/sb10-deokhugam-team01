@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @Import(QuerydslTestConfig.class)
 @DataJpaTest
@@ -82,8 +81,8 @@ class PopularBookBatchQueryRepositoryTest {
     User user = new User(email, nickname, "1234");
 
     OffsetDateTime now = OffsetDateTime.now();
-    ReflectionTestUtils.setField(user, "createdAt", now);
-    ReflectionTestUtils.setField(user, "updatedAt", now);
+    setField(user, "createdAt", now);
+    setField(user, "updatedAt", now);
 
     em.persist(user);
     return user;
@@ -105,11 +104,16 @@ class PopularBookBatchQueryRepositoryTest {
       Book book, User user, String content, double rating, OffsetDateTime createdAt) {
     Review review = new Review(book, user, content, rating);
 
-    setField(review, "createdAt", createdAt);
-    setField(review, "updatedAt", createdAt);
     setField(review, "isDeleted", false);
 
     em.persist(review);
+    em.flush();
+
+    // JPA Auditing이 createdAt/updatedAt을 현재 시각으로 덮을 수 있어서
+    // persist 이후 원하는 테스트 시각으로 다시 세팅
+    setField(review, "createdAt", createdAt);
+    setField(review, "updatedAt", createdAt);
+
     return review;
   }
 

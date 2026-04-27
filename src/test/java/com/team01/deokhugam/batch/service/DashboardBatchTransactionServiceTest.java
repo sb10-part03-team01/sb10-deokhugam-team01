@@ -77,8 +77,7 @@ class DashboardBatchTransactionServiceTest {
     PopularBook second = saved.get(1);
 
     assertThat(first.getBook().getId()).isEqualTo(bookId1);
-    assertThat(first.getPeriodType())
-        .isEqualTo(com.team01.deokhugam.batch.common.DashboardPeriod.DAILY);
+    assertThat(first.getPeriodType()).isEqualTo(DashboardPeriod.DAILY);
     assertThat(first.getCalculatedDate()).isEqualTo(calculatedDate);
     assertThat(first.getRank()).isEqualTo(1);
     assertThat(first.getScore()).isEqualTo(4.88);

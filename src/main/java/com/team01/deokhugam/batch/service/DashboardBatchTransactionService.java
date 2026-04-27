@@ -19,11 +19,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DashboardBatchTransactionService {
 
   private final PowerUserRepository powerUserRepository;
@@ -46,10 +48,10 @@ public class DashboardBatchTransactionService {
       throw new UserNotFoundException(missing);
     }
 
-    //  기존 삭제
+    // 기존 랭킹 삭제
     powerUserRepository.deleteByPeriod(period);
 
-    //  저장
+    // 새 랭킹 저장
     List<PowerUser> rankings = new ArrayList<>();
     for (int i = 0; i < rank.size(); i++) {
       UUID userId = rank.get(i).getKey();
@@ -76,45 +78,42 @@ public class DashboardBatchTransactionService {
   public void deleteAndSavePopularBooks(
       DashboardPeriod dashboardPeriod, List<PopularBookScoreRow> rows, LocalDate calculatedDate) {
 
-    DashboardPeriod rankingPeriod = toRankingPeriod(dashboardPeriod);
-
     List<UUID> bookIds = rows.stream().map(PopularBookScoreRow::bookId).toList();
 
     Map<UUID, Book> bookMap =
         bookRepository.findAllById(bookIds).stream().collect(Collectors.toMap(Book::getId, b -> b));
 
     // 같은 기간 + 같은 calculatedDate로 재실행될 수 있으므로 해당 스냅샷만 지운다.
-    popularBookRepository.deleteByPeriodTypeAndCalculatedDate(rankingPeriod, calculatedDate);
+    popularBookRepository.deleteByPeriodTypeAndCalculatedDate(dashboardPeriod, calculatedDate);
 
     List<PopularBook> rankings = new ArrayList<>();
-    for (int i = 0; i < rows.size(); i++) {
-      PopularBookScoreRow row = rows.get(i);
+    int rank = 1;
+
+    for (PopularBookScoreRow row : rows) {
       Book book = bookMap.get(row.bookId());
 
+      // 집계 대상 책이 실제 DB에서 누락된 경우는 스킵하되 로그로 남긴다.
       if (book == null) {
+        log.warn(
+            "[DASHBOARD_BATCH] 인기 도서 저장 대상 book 누락. dashboardPeriod={}, bookId={}",
+            dashboardPeriod,
+            row.bookId());
         continue;
       }
 
       rankings.add(
           new PopularBook(
               book,
-              rankingPeriod,
+              dashboardPeriod,
               calculatedDate,
-              i + 1,
+              rank,
               row.score(),
               row.averageRating(),
               (int) row.reviewCount()));
+
+      rank++;
     }
 
     popularBookRepository.saveAll(rankings);
-  }
-
-  private DashboardPeriod toRankingPeriod(DashboardPeriod dashboardPeriod) {
-    return switch (dashboardPeriod) {
-      case DAILY -> DashboardPeriod.DAILY;
-      case WEEKLY -> DashboardPeriod.WEEKLY;
-      case MONTHLY -> DashboardPeriod.MONTHLY;
-      case ALL_TIME -> DashboardPeriod.ALL_TIME;
-    };
   }
 }
