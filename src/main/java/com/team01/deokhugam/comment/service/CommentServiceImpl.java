@@ -15,6 +15,8 @@ import com.team01.deokhugam.global.exception.user.UserNotFoundException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
+import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
+import com.team01.deokhugam.notification.service.NotificationService;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
@@ -35,6 +37,7 @@ public class CommentServiceImpl implements CommentService {
   private final CommentRepository commentRepository;
   private final ReviewRepository reviewRepository;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
 
   @Override
   public CommentDto createComment(UUID userId, CommentCreateRequest request) {
@@ -57,6 +60,12 @@ public class CommentServiceImpl implements CommentService {
     Comment savedComment = commentRepository.save(comment);
 
     review.increaseCommentCount();
+
+    // 내가 작성한 리뷰에 다른 사용자가 댓글을 달았을 때만 알림 생성
+    if (!review.getUser().getId().equals(userId)) {
+      notificationService.create(
+          new NotificationCreateRequest(review, user, "내가 작성한 리뷰에 댓글이 달렸습니다."));
+    }
 
     return CommentDto.from(savedComment);
   }
