@@ -1,29 +1,31 @@
 package com.team01.deokhugam.batch.service;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
-import com.team01.deokhugam.dashboard.poweruser.entity.PowerUser;
 import com.team01.deokhugam.dashboard.poweruser.repository.PowerUserRepository;
 import com.team01.deokhugam.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DashboardBatchService {
+
   private final PowerUserRepository powerUserRepository;
   private final UserRepository userRepository;
+  private final DashboardBatchTransactionService dashboardBatchTransactionService;
 
-  @Transactional
   public void calculatePowerUserRanking(LocalDate baseDate) {
+
+    OffsetDateTime calculatedAt = OffsetDateTime.now(ZoneOffset.UTC);
 
     for (DashboardPeriod period : DashboardPeriod.values()) {
       // 1. 기간 시작/종료 시간
@@ -43,24 +45,12 @@ public class DashboardBatchService {
       if (rank.isEmpty()) {
         continue;
       }
-      // 5. 기존 삭제
-      powerUserRepository.deleteByPeriod(period);
-      // 6. 저장
-      List<PowerUser> rankings = new ArrayList<>();
-      for (int i = 0; i < rank.size(); i++) {
-        UUID userId = rank.get(i).getKey();
-        rankings.add(PowerUser.builder()
-            .user(userRepository.findById(userId).orElseThrow())
-            .period(period)
-            .calculatedDate(OffsetDateTime.now(ZoneOffset.UTC))
-            .rank(i + 1)
-            .score(rank.get(i).getValue())
-            .reviewScoreSum(0.0) // TODO
-            .likeCount(0L) // TODO
-            .commentCount(0L) // TODO
-            .build());
+      // 5. 삭제 및 저장
+      try {
+        dashboardBatchTransactionService.deleteAndSave(period, rank, calculatedAt);
+      } catch (Exception e) {
+        log.error("랭킹 계산 실패: {}", period, e);
       }
-      powerUserRepository.saveAll(rankings);
     }
 
   }
