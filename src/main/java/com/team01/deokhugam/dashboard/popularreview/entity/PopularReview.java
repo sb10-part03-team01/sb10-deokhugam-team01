@@ -99,14 +99,12 @@ public class PopularReview extends BaseEntity {
   ) {
     if (review == null) {
       throw new DeokhugamException(
-          ErrorCode.POPULAR_REVIEW_REVIEW_REQUIRED,
-          Map.of()
+          ErrorCode.POPULAR_REVIEW_REVIEW_REQUIRED
       );
     }
     if (period == null) {
       throw new DeokhugamException(
-          ErrorCode.POPULAR_REVIEW_PERIOD_REQUIRED,
-          Map.of()
+          ErrorCode.POPULAR_REVIEW_PERIOD_REQUIRED
       );
     }
     if (rank < 1) {
