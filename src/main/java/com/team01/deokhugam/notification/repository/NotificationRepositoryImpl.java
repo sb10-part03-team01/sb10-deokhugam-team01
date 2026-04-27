@@ -1,5 +1,7 @@
 package com.team01.deokhugam.notification.repository;
 
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.deokhugam.notification.entity.Notification;
 import java.time.OffsetDateTime;
@@ -17,57 +19,48 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom 
 
   private final JPAQueryFactory jpaQueryFactory;
 
-  @Override
-  public List<Notification> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable) {
+  private List<Notification> find(UUID userId, OffsetDateTime after, UUID cursor,
+      Pageable pageable, boolean asc) {
+    BooleanExpression cursorPredicate = null;
+    if (after != null && cursor != null) {
+      cursorPredicate = asc
+          ? notification.createdAt.gt(after)
+          .or(notification.createdAt.eq(after).and(notification.id.gt(cursor)))
+          : notification.createdAt.lt(after)
+              .or(notification.createdAt.eq(after).and(notification.id.lt(cursor)));
+    }
+    OrderSpecifier<?> createdAtOrder = asc ? notification.createdAt.asc() : notification.createdAt.desc();
+    OrderSpecifier<?> idOrder = asc ? notification.id.asc() : notification.id.desc();
+
     return jpaQueryFactory
         .selectFrom(notification)
         .join(notification.user).fetchJoin()
         .join(notification.review).fetchJoin()
-        .where(notification.user.id.eq(userId))
-        .orderBy(notification.createdAt.desc(), notification.id.desc())
-        .limit(pageable.getPageSize()).
-        fetch();
+        .where(notification.user.id.eq(userId), cursorPredicate)
+        .orderBy(createdAtOrder, idOrder)
+        .limit(pageable.getPageSize())
+        .fetch();
   }
 
   @Override
-  public List<Notification> findByUserIdOrderByCreatedAtAsc(UUID userId, Pageable pageable) {
-    return jpaQueryFactory
-        .selectFrom(notification)
-        .join(notification.user).fetchJoin()
-        .join(notification.review).fetchJoin()
-        .where(notification.user.id.eq(userId))
-        .orderBy(notification.createdAt.asc(), notification.id.asc())
-        .limit(pageable.getPageSize()).
-        fetch();
+  public List<Notification> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable) {
+    return find(userId, null, null, pageable, false);
   }
 
   @Override
   public List<Notification> findByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(UUID userId,
       OffsetDateTime after, UUID cursor, Pageable pageable) {
-    return jpaQueryFactory
-        .selectFrom(notification)
-        .join(notification.user).fetchJoin()
-        .join(notification.review).fetchJoin()
-        .where(notification.user.id.eq(userId)
-            .and(notification.createdAt.lt(after)
-                .or(notification.createdAt.eq(after).and(notification.id.lt(cursor)))))
-        .orderBy(notification.createdAt.desc(), notification.id.desc())
-        .limit(pageable.getPageSize())
-        .fetch();
+    return find(userId, after, cursor, pageable, false);
+  }
+
+  @Override
+  public List<Notification> findByUserIdOrderByCreatedAtAsc(UUID userId, Pageable pageable) {
+    return find(userId, null, null, pageable, true);
   }
 
   @Override
   public List<Notification> findByUserIdAndCreatedAtAfterOrderByCreatedAtAsc(UUID userId,
       OffsetDateTime after, UUID cursor, Pageable pageable) {
-    return jpaQueryFactory
-        .selectFrom(notification)
-        .join(notification.user).fetchJoin()
-        .join(notification.review).fetchJoin()
-        .where(notification.user.id.eq(userId)
-            .and(notification.createdAt.gt(after)
-                .or(notification.createdAt.eq(after).and(notification.id.gt(cursor)))))
-        .orderBy(notification.createdAt.asc(), notification.id.asc())
-        .limit(pageable.getPageSize())
-        .fetch();
+    return find(userId, after, cursor, pageable, true);
   }
 }
