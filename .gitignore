@@ -129,6 +129,9 @@ $RECYCLE.BIN/
 # Log file
 *.log
 
+# local storage
+.deokhugam/storage/
+
 # BlueJ files
 *.ctxt
 
