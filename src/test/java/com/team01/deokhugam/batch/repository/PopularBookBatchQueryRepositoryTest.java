@@ -104,16 +104,20 @@ class PopularBookBatchQueryRepositoryTest {
       Book book, User user, String content, double rating, OffsetDateTime createdAt) {
     Review review = new Review(book, user, content, rating);
 
+    // insert 시 NOT NULL 제약을 통과하도록 먼저 값을 넣는다.
+    setField(review, "createdAt", createdAt);
+    setField(review, "updatedAt", createdAt);
     setField(review, "isDeleted", false);
 
     em.persist(review);
     em.flush();
 
-    // JPA Auditing이 createdAt/updatedAt을 현재 시각으로 덮을 수 있어서
-    // persist 이후 원하는 테스트 시각으로 다시 세팅
+    // JPA Auditing이 createdAt/updatedAt을 덮었을 수 있으므로
+    // 테스트에서 의도한 시각으로 다시 한 번 맞춘다.
     setField(review, "createdAt", createdAt);
     setField(review, "updatedAt", createdAt);
 
+    em.flush();
     return review;
   }
 
