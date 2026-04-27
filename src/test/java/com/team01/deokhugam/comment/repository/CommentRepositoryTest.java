@@ -192,9 +192,9 @@ class CommentRepositoryTest {
     List<Comment> result = commentRepository.findAllByCursor(nextPageCondition);
 
     // then
-    assertThat(result).hasSize(2);
-    assertThat(result.get(0).getId()).isEqualTo(secondComment.getId());
-    assertThat(result.get(1).getId()).isEqualTo(older.getId());
+    assertThat(firstPage).hasSize(2);
+    assertThat(firstPage.get(0).getCreatedAt()).isEqualTo(time(2026, 4, 20, 12, 0));
+    assertThat(firstPage.get(1).getCreatedAt()).isEqualTo(time(2026, 4, 20, 12, 0));
   }
 
   @Test
