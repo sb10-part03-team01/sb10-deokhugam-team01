@@ -125,10 +125,8 @@ class CommentRepositoryTest {
     Book book = persistBook();
     Review review = persistReview(user, book, "리뷰");
 
-    Comment oldest =
-        persistComment(review, user, "댓글1", time(2026, 4, 20, 9, 0), time(2026, 4, 20, 9, 0));
-    Comment older =
-        persistComment(review, user, "댓글2", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
+    persistComment(review, user, "댓글1", time(2026, 4, 20, 9, 0), time(2026, 4, 20, 9, 0));
+    persistComment(review, user, "댓글2", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
     Comment middle =
         persistComment(review, user, "댓글3", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
     persistComment(review, user, "댓글4", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
@@ -151,8 +149,10 @@ class CommentRepositoryTest {
 
     // then
     assertThat(result).hasSize(2);
-    assertThat(result.get(0).getId()).isEqualTo(older.getId());
-    assertThat(result.get(1).getId()).isEqualTo(oldest.getId());
+    assertThat(result).extracting(Comment::getContent).containsExactly("댓글2", "댓글1");
+    assertThat(result)
+        .extracting(Comment::getCreatedAt)
+        .containsExactly(time(2026, 4, 20, 10, 0), time(2026, 4, 20, 9, 0));
   }
 
   @Test

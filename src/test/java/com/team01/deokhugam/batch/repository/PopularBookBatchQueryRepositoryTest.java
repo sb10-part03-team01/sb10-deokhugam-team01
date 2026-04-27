@@ -1,6 +1,7 @@
 package com.team01.deokhugam.batch.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 import com.team01.deokhugam.batch.dto.PopularBookScoreRow;
@@ -42,14 +43,14 @@ class PopularBookBatchQueryRepositoryTest {
     OffsetDateTime start = time(2026, 4, 20, 0, 0);
     OffsetDateTime end = time(2026, 4, 21, 0, 0);
 
-    // book1: 리뷰 2개, 평균 평점 4.5 -> 점수 = 2*0.4 + 4.5*0.6 = 3.5
+    // book1: 리뷰 2개, 평균 평점 4.5 -> 점수 = 2 * 0.4 + 4.5 * 0.6 = 3.5
     persistReview(book1, user, "리뷰1", 5.0, time(2026, 4, 20, 10, 0));
     persistReview(book1, user, "리뷰2", 4.0, time(2026, 4, 20, 11, 0));
 
-    // book2: 리뷰 1개, 평균 평점 3.0 -> 점수 = 1*0.4 + 3.0*0.6 = 2.2
+    // book2: 리뷰 1개, 평균 평점 3.0 -> 점수 = 1 * 0.4 + 3.0 * 0.6 = 2.2
     persistReview(book2, user, "리뷰3", 3.0, time(2026, 4, 20, 12, 0));
 
-    // 기간 밖 데이터는 제외되어야 함
+    // 기간 밖 데이터는 집계에서 제외되어야 한다.
     persistReview(book2, user, "리뷰4", 5.0, time(2026, 4, 21, 1, 0));
 
     em.flush();
@@ -65,15 +66,16 @@ class PopularBookBatchQueryRepositoryTest {
     PopularBookScoreRow first = result.get(0);
     PopularBookScoreRow second = result.get(1);
 
+    // 점수가 더 높은 book1이 먼저 조회되어야 한다.
     assertThat(first.bookId()).isEqualTo(book1.getId());
     assertThat(first.reviewCount()).isEqualTo(2L);
-    assertThat(first.averageRating()).isEqualTo(4.5);
-    assertThat(first.score()).isEqualTo(3.5);
+    assertThat(first.averageRating()).isCloseTo(4.5, within(0.0001));
+    assertThat(first.score()).isCloseTo(3.5, within(0.0001));
 
     assertThat(second.bookId()).isEqualTo(book2.getId());
     assertThat(second.reviewCount()).isEqualTo(1L);
-    assertThat(second.averageRating()).isEqualTo(3.0);
-    assertThat(second.score()).isEqualTo(2.2);
+    assertThat(second.averageRating()).isCloseTo(3.0, within(0.0001));
+    assertThat(second.score()).isCloseTo(2.2, within(0.0001));
   }
 
   private User persistUser(String email, String nickname) {
