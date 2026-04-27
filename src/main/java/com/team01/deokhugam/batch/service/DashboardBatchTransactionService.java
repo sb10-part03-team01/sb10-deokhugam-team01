@@ -34,8 +34,17 @@ public class DashboardBatchTransactionService {
     Map<UUID, User> mapUser = userRepository.findAllById(userIds)
         .stream().collect(Collectors.toMap(User::getId, u -> u));
 
+    if (mapUser.size() != userIds.size()) {
+      UUID missing = userIds.stream()
+          .filter(id -> !mapUser.containsKey(id))
+          .findFirst()
+          .orElseThrow();
+      throw new UserNotFoundException(missing);
+    }
+
     //  기존 삭제
     powerUserRepository.deleteByPeriod(period);
+
     //  저장
     List<PowerUser> rankings = new ArrayList<>();
     for (int i = 0; i < rank.size(); i++) {

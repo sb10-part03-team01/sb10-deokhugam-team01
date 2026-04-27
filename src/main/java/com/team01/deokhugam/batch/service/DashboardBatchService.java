@@ -19,8 +19,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DashboardBatchService {
 
-  private final PowerUserRepository powerUserRepository;
-  private final UserRepository userRepository;
   private final DashboardBatchTransactionService dashboardBatchTransactionService;
 
   public void calculatePowerUserRanking(LocalDate baseDate) {
