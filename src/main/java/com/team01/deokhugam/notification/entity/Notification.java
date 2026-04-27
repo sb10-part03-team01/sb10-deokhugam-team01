@@ -43,7 +43,7 @@ public class Notification extends BaseUpdatableEntity {
   private boolean isRead = false;
 
   @Column(name = "confirmed_at")
-  private OffsetDateTime confirmedAt; // 스키마 파일에 없는 필드 추가
+  private OffsetDateTime confirmedAt;
 
   public Notification(Review review, User user, String content) {
     this.review = Objects.requireNonNull(review, "리뷰ID는 null 일 수 없습니다");
