@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
         ),
         @UniqueConstraint(
             name = "uk_popular_reviews_period_rank",
-            columnNames = {"period", "rank"}
+            columnNames = {"period", "ranking"}
         )
     }
 )
@@ -45,7 +45,7 @@ public class PopularReview extends BaseEntity {
   @Column(name = "period", nullable = false, length = 20)
   private DashboardPeriod period;
 
-  @Column(name = "rank", nullable = false)
+  @Column(name = "ranking", nullable = false)
   private int rank;
 
   @Column(name = "score", nullable = false)
