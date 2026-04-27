@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
@@ -19,6 +20,8 @@ import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.exception.comment.CommentNotFoundException;
 import com.team01.deokhugam.global.pagination.CursorPageRequest;
+import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
+import com.team01.deokhugam.notification.service.NotificationService;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
@@ -41,6 +44,7 @@ public class CommentServiceTest {
   @Mock private CommentRepository commentRepository;
   @Mock private ReviewRepository reviewRepository;
   @Mock private UserRepository userRepository;
+  @Mock private NotificationService notificationService;
 
   @InjectMocks private CommentServiceImpl commentService;
 
@@ -334,5 +338,34 @@ public class CommentServiceTest {
     assertThat(result.nextCursor()).isNotNull();
     assertThat(result.nextAfter()).isNotNull();
     assertThat(result.totalElements()).isEqualTo(3L);
+  }
+
+  @Test
+  @DisplayName("댓글 생성 시 알림 생성에 실패해도 댓글 생성은 성공한다")
+  void create_comment_success_even_if_notification_fails() {
+    // given
+    CommentCreateRequest request = new CommentCreateRequest(reviewId, "댓글 내용");
+    int beforeCount = review.getCommentCount();
+
+    // 리뷰 작성자와 댓글 작성자를 다르게 만들어 알림 생성 조건을 만족시킨다.
+    setField(review, "user", otherUser);
+
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
+    given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
+    given(commentRepository.save(any(Comment.class)))
+        .willAnswer(invocation -> invocation.getArgument(0));
+
+    doThrow(new RuntimeException("알림 생성 실패"))
+        .when(notificationService)
+        .create(any(NotificationCreateRequest.class));
+
+    // when
+    CommentDto result = commentService.createComment(userId, request);
+
+    // then
+    assertThat(result.content()).isEqualTo("댓글 내용");
+    assertThat(review.getCommentCount()).isEqualTo(beforeCount + 1);
+    verify(commentRepository).save(any(Comment.class));
+    verify(notificationService).create(any(NotificationCreateRequest.class));
   }
 }
