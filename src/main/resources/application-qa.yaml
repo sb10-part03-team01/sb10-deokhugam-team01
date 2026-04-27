@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/seed-qa.sql
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.team01.deokhugam: debug
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+deokhugam:
+  user:
+    cleanup:
+      # QA 환경에서는 테스트 용이성을 위해 3분으로 설정
+      retention-minutes: 3
+      # 1분마다 cleanupSoftDeletedUsers 실행 (빠른 테스트용)
+      cron: "0 * * * * *"

@@ -3,6 +3,10 @@ spring:
     url: ${RDS_SPRING_DATASOURCE_URL}
     username: ${RDS_SPRING_DATASOURCE_USERNAME}
     password: ${RDS_SPRING_DATASOURCE_PASSWORD}
+  sql:
+    init:
+      # prod 안전 가드: schema.sql / data.sql / db/seed-qa.sql 어떤 것도 절대 실행하지 않음
+      mode: never
   jpa:
     hibernate:
       ddl-auto: validate
