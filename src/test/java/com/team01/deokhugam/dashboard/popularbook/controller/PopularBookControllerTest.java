@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
 import com.team01.deokhugam.dashboard.popularbook.service.PopularBookService;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.OffsetDateTime;

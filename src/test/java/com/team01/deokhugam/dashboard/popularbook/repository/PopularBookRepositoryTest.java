@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.config.QuerydslTestConfig;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;

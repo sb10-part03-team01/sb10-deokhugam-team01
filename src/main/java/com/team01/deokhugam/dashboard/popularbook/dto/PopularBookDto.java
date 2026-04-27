@@ -1,7 +1,7 @@
 package com.team01.deokhugam.dashboard.popularbook.dto;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -17,7 +17,7 @@ public class PopularBookDto {
   private String title;
   private String author;
   private String thumbnailUrl;
-  private RankingPeriod period;
+  private DashboardPeriod period;
   private long rank;
   private double score;
   private long reviewCount;

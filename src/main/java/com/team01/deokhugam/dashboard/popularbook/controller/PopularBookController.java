@@ -1,8 +1,8 @@
 package com.team01.deokhugam.dashboard.popularbook.controller;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
 import com.team01.deokhugam.dashboard.popularbook.service.PopularBookService;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.OffsetDateTime;
@@ -24,7 +24,7 @@ public class PopularBookController implements PopularBookApi {
 
   @GetMapping("/books/popular")
   public ResponseEntity<CursorPageResponse<PopularBookDto>> getPopularBooks(
-      @RequestParam(defaultValue = "DAILY") RankingPeriod period,
+      @RequestParam(defaultValue = "DAILY") DashboardPeriod period,
       @RequestParam(defaultValue = "ASC") SortDirection direction,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) OffsetDateTime after,

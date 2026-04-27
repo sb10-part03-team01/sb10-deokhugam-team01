@@ -1,7 +1,7 @@
 package com.team01.deokhugam.dashboard.popularbook.repository;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
@@ -23,7 +23,7 @@ public class PopularBookRepositoryImpl implements PopularBookRepositoryCustom {
   // 특정 기간의 인기도서 목록 조회
   @Override
   public List<PopularBook> findAllByCursor(
-      RankingPeriod period,
+      DashboardPeriod period,
       SortDirection direction,
       String cursor,
       OffsetDateTime after,
@@ -95,7 +95,7 @@ public class PopularBookRepositoryImpl implements PopularBookRepositoryCustom {
 
   // 특정 기간(period) 인기 도서 중, 가장 최신 calculated_date 기준 데이터 개수 세는 메서드
   @Override
-  public long countByPeriod(RankingPeriod period) {
+  public long countByPeriod(DashboardPeriod period) {
     return em.createQuery(
             """
             select count(pb)

@@ -7,7 +7,6 @@ import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
 import com.team01.deokhugam.dashboard.popularbook.repository.PopularBookRepository;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.LocalDate;
