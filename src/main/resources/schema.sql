@@ -113,8 +113,7 @@ CREATE TABLE IF NOT EXISTS popular_books
     id              UUID PRIMARY KEY,
     book_id         UUID             NOT NULL,
     period_type     VARCHAR(20)      NOT NULL CHECK (period_type IN
-                                                     ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY',
-                                                      'ALL_TIME')),
+                                                     ('DAILY', 'WEEKLY', 'MONTHLY', 'ALL_TIME')),
     calculated_date DATE             NOT NULL, -- 랭킹 산정 기준일 (시간은 필요 없으므로 DATE)
     rank            INTEGER          NOT NULL CHECK (rank > 0),
     score           DOUBLE PRECISION NOT NULL CHECK (score >= 0),
@@ -133,20 +132,19 @@ CREATE INDEX IF NOT EXISTS idx_popular_books_book_id ON popular_books (book_id);
 CREATE TABLE IF NOT EXISTS popular_reviews
 (
     id              UUID PRIMARY KEY,
-    review_id       UUID           NOT NULL,
-    period_type     VARCHAR(20)    NOT NULL CHECK (period_type IN
-                                                   ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY',
-                                                    'ALL_TIME')),
-    calculated_date DATE           NOT NULL,
-    ranking         INTEGER        NOT NULL CHECK (ranking > 0),
-    score           NUMERIC(10, 2) NOT NULL CHECK (score >= 0),
-    liked_count     INTEGER        NOT NULL DEFAULT 0 CHECK (liked_count >= 0),
-    comment_count   INTEGER        NOT NULL DEFAULT 0 CHECK (comment_count >= 0),
+    review_id       UUID             NOT NULL,
+    period_type     VARCHAR(20)      NOT NULL CHECK (period_type IN
+                                                   ('DAILY', 'WEEKLY', 'MONTHLY', 'ALL_TIME')),
+    calculated_date DATE             NOT NULL,
+    ranking         INTEGER          NOT NULL CHECK (ranking > 0),
+    score           DOUBLE PRECISION NOT NULL CHECK (score >= 0),
+    liked_count     INTEGER          NOT NULL DEFAULT 0 CHECK (liked_count >= 0),
+    comment_count   INTEGER          NOT NULL DEFAULT 0 CHECK (comment_count >= 0),
 
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_popular_reviews_review FOREIGN KEY (review_id) REFERENCES reviews (id) ON DELETE CASCADE,
-    CONSTRAINT uk_popular_reviews_period_rank UNIQUE (period_type, calculated_date, rank),
+    CONSTRAINT uk_popular_reviews_period_rank UNIQUE (period_type, calculated_date, ranking),
     CONSTRAINT uk_popular_reviews_period_review UNIQUE (period_type, calculated_date, review_id)
 );
 
