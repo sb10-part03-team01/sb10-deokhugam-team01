@@ -291,11 +291,15 @@ class CommentRepositoryTest {
       OffsetDateTime updatedAt) {
     Comment comment = new Comment(review, user, content);
 
+    // insert 시 NOT NULL 제약 통과용
+    setField(comment, "createdAt", createdAt);
+    setField(comment, "updatedAt", updatedAt);
     setField(comment, "isDeleted", false);
 
     em.persist(comment);
     em.flush();
 
+    // Auditing이 덮었을 가능성 대비해서 DB 값을 직접 고정
     em.createQuery(
             """
             update Comment c

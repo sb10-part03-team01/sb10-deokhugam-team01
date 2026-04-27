@@ -104,11 +104,15 @@ class PopularBookBatchQueryRepositoryTest {
       Book book, User user, String content, double rating, OffsetDateTime createdAt) {
     Review review = new Review(book, user, content, rating);
 
+    // insert 시 NOT NULL 제약 통과용
+    setField(review, "createdAt", createdAt);
+    setField(review, "updatedAt", createdAt);
     setField(review, "isDeleted", false);
 
     em.persist(review);
     em.flush();
 
+    // Auditing이 덮었을 가능성 대비해서 DB 값을 직접 고정
     em.createQuery(
             """
             update Review r
