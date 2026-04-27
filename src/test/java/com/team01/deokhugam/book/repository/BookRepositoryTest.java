@@ -69,15 +69,20 @@ class BookRepositoryTest {
     // 평점이 4.5로 똑같은 책 2권 세팅
     ReflectionTestUtils.setField(book1, "rating", 4.5);
     ReflectionTestUtils.setField(book1, "reviewCount", 100);
+    ReflectionTestUtils.setField(book1, "createdAt", time2);
+    ReflectionTestUtils.setField(book1, "updatedAt", time2);
 
     // ...
     ReflectionTestUtils.setField(book2, "rating", 4.5);
     ReflectionTestUtils.setField(book2, "reviewCount", 50);
+    ReflectionTestUtils.setField(book2, "createdAt", time3);
+    ReflectionTestUtils.setField(book2, "updatedAt", time3);
 
     // ...
     ReflectionTestUtils.setField(book3, "rating", 4.0);
     ReflectionTestUtils.setField(book3, "reviewCount", 200);
-
+    ReflectionTestUtils.setField(book3, "createdAt", time1);
+    ReflectionTestUtils.setField(book3, "updatedAt", time1);
 
     // 영속성 컨텍스트에 저장
     em.persist(book1);
