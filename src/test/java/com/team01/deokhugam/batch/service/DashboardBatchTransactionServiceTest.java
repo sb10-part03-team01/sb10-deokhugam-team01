@@ -64,8 +64,7 @@ class DashboardBatchTransactionServiceTest {
 
     // then
     verify(popularBookRepository)
-        .deleteByPeriodTypeAndCalculatedDate(
-            com.team01.deokhugam.global.enums.RankingPeriod.DAILY, calculatedDate);
+        .deleteByPeriodTypeAndCalculatedDate(DashboardPeriod.DAILY, calculatedDate);
 
     ArgumentCaptor<List<PopularBook>> captor = ArgumentCaptor.forClass(List.class);
     verify(popularBookRepository).saveAll(captor.capture());
@@ -79,7 +78,7 @@ class DashboardBatchTransactionServiceTest {
 
     assertThat(first.getBook().getId()).isEqualTo(bookId1);
     assertThat(first.getPeriodType())
-        .isEqualTo(com.team01.deokhugam.global.enums.RankingPeriod.DAILY);
+        .isEqualTo(com.team01.deokhugam.batch.common.DashboardPeriod.DAILY);
     assertThat(first.getCalculatedDate()).isEqualTo(calculatedDate);
     assertThat(first.getRank()).isEqualTo(1);
     assertThat(first.getScore()).isEqualTo(4.88);
