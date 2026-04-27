@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.book.service.BookService;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
@@ -54,6 +55,9 @@ class ReviewServiceImplTest {
 
   @Mock
   private BookRepository bookRepository;
+
+  @Mock
+  private BookService bookService;
 
   @Mock
   private UserRepository userRepository;

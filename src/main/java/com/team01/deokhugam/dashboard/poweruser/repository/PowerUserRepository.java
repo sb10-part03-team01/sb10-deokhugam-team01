@@ -8,12 +8,15 @@ import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface PowerUserRepository extends JpaRepository<PowerUser, UUID> {
 
-  void deleteByPeriod(DashboardPeriod period);
+  @Modifying(clearAutomatically = true, flushAutomatically = true)
+  @Query("DELETE FROM PowerUser p WHERE p.period = :period")
+  void deleteByPeriod(@Param("period") DashboardPeriod period);
 
   @EntityGraph(attributePaths = "user")
   List<PowerUser> findByPeriodOrderByRankAsc(DashboardPeriod period, Pageable pageable);

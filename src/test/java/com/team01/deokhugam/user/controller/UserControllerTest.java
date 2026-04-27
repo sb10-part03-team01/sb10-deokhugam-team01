@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.team01.deokhugam.dashboard.poweruser.service.PowerUserService;
 import com.team01.deokhugam.global.constant.AuthHeader;
 import com.team01.deokhugam.user.dto.UserDto;
 import com.team01.deokhugam.user.dto.UserUpdateRequest;
@@ -40,6 +41,9 @@ class UserControllerTest {
 
   @MockitoBean
   private UserService userService;
+
+  @MockitoBean
+  private PowerUserService powerUserService;
 
   @Nested
   @DisplayName("PATCH /api/users/{userId} - 사용자 정보 수정")

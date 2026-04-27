@@ -2,6 +2,7 @@ package com.team01.deokhugam.review.service;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
+import com.team01.deokhugam.book.service.BookService;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.book.BookNotFoundException;
 import com.team01.deokhugam.global.exception.review.ReviewAlreadyExistsException;
@@ -44,6 +45,7 @@ public class ReviewServiceImpl implements ReviewService {
   private final BookRepository bookRepository;
   private final UserRepository userRepository;
   private final ReviewMapper reviewMapper;
+  private final BookService bookService;
 
   @Override
   @Transactional
@@ -70,6 +72,8 @@ public class ReviewServiceImpl implements ReviewService {
         request.rating()
     );
     Review savedReview = reviewRepository.save(review);
+
+    bookService.updateBookReviewRating(book.getId(),review.getRating());
 
     return reviewMapper.toDto(savedReview);
   }
