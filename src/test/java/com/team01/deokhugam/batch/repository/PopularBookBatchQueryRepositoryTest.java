@@ -93,6 +93,7 @@ class PopularBookBatchQueryRepositoryTest {
     OffsetDateTime now = OffsetDateTime.now();
     setField(book, "createdAt", now);
     setField(book, "updatedAt", now);
+    setField(book, "isDeleted", false);
 
     em.persist(book);
     return book;
