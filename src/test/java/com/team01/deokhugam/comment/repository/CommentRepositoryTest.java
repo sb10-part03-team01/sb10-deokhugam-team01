@@ -163,41 +163,37 @@ class CommentRepositoryTest {
     Book book = persistBook();
     Review review = persistReview(user, book, "리뷰");
 
-    Comment sameTimeComment1 =
-        persistComment(review, user, "댓글A", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
-    Comment sameTimeComment2 =
-        persistComment(review, user, "댓글B", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
+    persistComment(review, user, "댓글A", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
+    persistComment(review, user, "댓글B", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
     Comment older =
         persistComment(review, user, "댓글C", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
 
     em.flush();
+    em.clear();
 
-    Comment highIdComment =
-        sameTimeComment1.getId().compareTo(sameTimeComment2.getId()) > 0
-            ? sameTimeComment1
-            : sameTimeComment2;
+    // 먼저 첫 페이지를 조회해서 DB가 실제로 어떤 id 순서를 쓰는지 확인한다.
+    CommentSearchCondition firstPageCondition =
+        new CommentSearchCondition(review.getId(), SortDirection.DESC, null, null, 1);
 
-    Comment lowIdComment =
-        sameTimeComment1.getId().compareTo(sameTimeComment2.getId()) > 0
-            ? sameTimeComment2
-            : sameTimeComment1;
+    List<Comment> firstPage = commentRepository.findAllByCursor(firstPageCondition);
 
-    CommentSearchCondition condition =
+    Comment firstComment = firstPage.get(0);
+    Comment secondComment = firstPage.get(1);
+
+    CommentSearchCondition nextPageCondition =
         new CommentSearchCondition(
             review.getId(),
             SortDirection.DESC,
-            highIdComment.getId().toString(),
-            highIdComment.getCreatedAt(),
+            firstComment.getId().toString(),
+            firstComment.getCreatedAt(),
             2);
 
-    em.clear();
-
     // when
-    List<Comment> result = commentRepository.findAllByCursor(condition);
+    List<Comment> result = commentRepository.findAllByCursor(nextPageCondition);
 
     // then
     assertThat(result).hasSize(2);
-    assertThat(result.get(0).getId()).isEqualTo(lowIdComment.getId());
+    assertThat(result.get(0).getId()).isEqualTo(secondComment.getId());
     assertThat(result.get(1).getId()).isEqualTo(older.getId());
   }
 
