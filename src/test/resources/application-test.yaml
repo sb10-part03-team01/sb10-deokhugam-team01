@@ -17,9 +17,7 @@ spring:
 
 deokhugam:
   storage:
-    type: local
-    local:
-      root-path: .deokhugam/storage-test
+    type: ${STORAGE_TYPE:s3}
   user:
     cleanup:
       # 테스트 환경에서는 테스트 용이성을 위해 3분으로 설정
