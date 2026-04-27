@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS popular_reviews
                                                    ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY',
                                                     'ALL_TIME')),
     calculated_date DATE           NOT NULL,
-    rank            INTEGER        NOT NULL CHECK (rank > 0),
+    ranking         INTEGER        NOT NULL CHECK (ranking > 0),
     score           NUMERIC(10, 2) NOT NULL CHECK (score >= 0),
     liked_count     INTEGER        NOT NULL DEFAULT 0 CHECK (liked_count >= 0),
     comment_count   INTEGER        NOT NULL DEFAULT 0 CHECK (comment_count >= 0),
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS popular_reviews
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_popular_reviews_review FOREIGN KEY (review_id) REFERENCES reviews (id) ON DELETE CASCADE,
-    CONSTRAINT uk_popular_reviews_period_rank UNIQUE (period_type, calculated_date, rank),
+    CONSTRAINT uk_popular_reviews_period_rank UNIQUE (period_type, calculated_date, ranking),
     CONSTRAINT uk_popular_reviews_period_review UNIQUE (period_type, calculated_date, review_id)
 );
 

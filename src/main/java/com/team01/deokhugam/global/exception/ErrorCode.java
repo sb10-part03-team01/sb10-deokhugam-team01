@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum ErrorCode {
   // book
   INVALID_BOOK_SORT_FIELD(400, "INVALID_BOOK_SORT_FIELD", "알맞은 정렬 기준이 아닙니다."),
-  ISBN_UNIDENTIFIABLE(400,"ISBN_UNIDENTIFIABLE","ISBN을 식별 할 수 없습니다."),
-  INVALID_FILE(400, "INVALID_FILE","유효하지 않은 파일입니다"),
+  ISBN_UNIDENTIFIABLE(400, "ISBN_UNIDENTIFIABLE", "ISBN을 식별 할 수 없습니다."),
+  INVALID_FILE(400, "INVALID_FILE", "유효하지 않은 파일입니다"),
   EMPTY_FILE_UPLOADED(400, "EMPTY_FILE_UPLOADED", "비어있는 파일입니다."),
   BOOK_NOT_FOUND(404, "BOOK_NOT_FOUND", "해당하는 도서를 찾을 수 없습니다"),
   NAVER_BOOK_NOT_FOUND(404, "NAVER_BOOK_NOT_FOUND", "해당 ISBN의 도서를 찾을 수 없습니다"),
@@ -20,7 +20,7 @@ public enum ErrorCode {
   UNSUPPORTED_FILE_FORMAT(415, "UNSUPPORTED_FILE_FORMAT", "지원하지 않는 파일 형식입니다."),
   THUMBNAIL_UPLOAD_FAIL(500, "THUMBNAIL_UPLOAD_FAIL", "썸네일 업로드에 실패했습니다"),
   API_CREDENTIAL_FAIL(500, "API_CREDENTIAL_FAIL", "해당 API 자격 증명에 실패했습니다"),
-  API_SERVER_ERROR(502 ,"API_SERVER_ERROR", "API 서버 오류가 발생했습니다"),
+  API_SERVER_ERROR(502, "API_SERVER_ERROR", "API 서버 오류가 발생했습니다"),
 
   // comment
   COMMENT_NOT_FOUND(404, "COMMENT_NOT_FOUND", "댓글을 찾을 수 없습니다."),
@@ -51,6 +51,8 @@ public enum ErrorCode {
       "좋아요 수는 0 이상이어야 합니다."),
   POPULAR_REVIEW_INVALID_COMMENT_COUNT(400, "POPULAR_REVIEW_INVALID_COMMENT_COUNT",
       "댓글 수는 0 이상이어야 합니다."),
+  POPULAR_REVIEW_CALCULATED_DATE_REQUIRED(400, "POPULAR_REVIEW_CALCULATED_DATE_REQUIRED",
+      "인기 리뷰 집계일은 필수입니다."),
 
   // user
   EMAIL_ALREADY_EXISTS(409, "EMAIL_ALREADY_EXISTS", "이미 등록된 이메일입니다."),
