@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS books
     updated_at     TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS uk_books_active_isbn ON books (isbn) WHERE isbn IS NOT NULL AND is_deleted = FALSE;
+
 CREATE TABLE IF NOT EXISTS reviews
 (
     id            UUID PRIMARY KEY,
