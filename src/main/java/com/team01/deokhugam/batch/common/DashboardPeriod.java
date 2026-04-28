@@ -5,9 +5,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 public enum DashboardPeriod {
-  DAILY, WEEKLY, MONTHLY, ALL_TIME;
+  DAILY,
+  WEEKLY,
+  MONTHLY,
+  ALL_TIME;
 
-  private static final ZoneId SERVICE_ZONE = ZoneId.of("Asia/Seoul");
+  // 배치 집계 기준 시간대 UTC 통일
+  private static final ZoneId SERVICE_ZONE = ZoneId.of("UTC");
 
   public LocalDateTime getStartDateTime(LocalDate baseDate) {
     return switch (this) {
@@ -22,6 +26,7 @@ public enum DashboardPeriod {
     return baseDate.atStartOfDay();
   }
 
+  // 기준일도 UTC 기준 오늘 날짜
   public static LocalDate today() {
     return LocalDate.now(SERVICE_ZONE);
   }

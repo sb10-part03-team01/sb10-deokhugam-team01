@@ -41,8 +41,8 @@ public class ExternalApiConfig {
 
     // 타임 아웃 설정 - 대기 시간 지나면 바로 연결 끊어버림
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-    factory.setConnectTimeout((int) Duration.ofSeconds(3).toMillis()); // 3초 (연결대기 시간)
-    factory.setReadTimeout((int) Duration.ofSeconds(5).toMillis()); // 5초 (데이터 읽기 대기 시간)
+    factory.setConnectTimeout((int) Duration.ofSeconds(10).toMillis()); // 3초 (연결대기 시간)
+    factory.setReadTimeout((int) Duration.ofSeconds(30).toMillis()); // 5초 (데이터 읽기 대기 시간)
 
     return builder
         .requestFactory(factory) // 타임아웃 설정
