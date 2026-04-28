@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS books
     description    TEXT             NOT NULL,
     publisher      VARCHAR(100)     NOT NULL,
     published_date DATE             NOT NULL,
-    isbn           VARCHAR(20) UNIQUE,
+    isbn           VARCHAR(20),
     thumbnail_url  VARCHAR(255),
     review_count   INTEGER          NOT NULL DEFAULT 0 CHECK (review_count >= 0),
     rating         DOUBLE PRECISION NOT NULL DEFAULT 0.0 CHECK (rating >= 0.0 AND rating <= 5.0),
@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS books
     created_at     TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_books_active_isbn ON books (isbn) WHERE isbn IS NOT NULL AND is_deleted = FALSE;
 
 CREATE TABLE IF NOT EXISTS reviews
 (
