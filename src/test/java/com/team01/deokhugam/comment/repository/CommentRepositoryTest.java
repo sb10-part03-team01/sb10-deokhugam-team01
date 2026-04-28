@@ -2,10 +2,12 @@ package com.team01.deokhugam.comment.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.comment.dto.CommentSearchCondition;
+import com.team01.deokhugam.comment.dto.UserCommentCountRow;
 import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.config.QuerydslTestConfig;
 import com.team01.deokhugam.global.enums.SortDirection;
@@ -26,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.util.ReflectionTestUtils;
 
 // PostgreSQL용 schema.sql을 H2에 그대로 실행하지 않도록 막고,
 // QueryDSL 테스트용 JPAQueryFactory 빈을 함께 주입한다.
@@ -109,7 +110,6 @@ class CommentRepositoryTest {
     List<Comment> result = commentRepository.findAllByCursor(condition);
 
     // then
-    // limit = 2 + 1개를 가져와 서비스 계층에서 hasNext를 계산
     assertThat(result).hasSize(3);
     assertThat(result.get(0).getId()).isEqualTo(latest.getId());
     assertThat(result.get(1).getId()).isEqualTo(middle.getId());
@@ -125,22 +125,18 @@ class CommentRepositoryTest {
     Book book = persistBook();
     Review review = persistReview(user, book, "리뷰");
 
-    Comment oldest =
-        persistComment(review, user, "댓글1", time(2026, 4, 20, 9, 0), time(2026, 4, 20, 9, 0));
-    Comment older =
-        persistComment(review, user, "댓글2", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
+    persistComment(review, user, "댓글1", time(2026, 4, 20, 9, 0), time(2026, 4, 20, 9, 0));
+    persistComment(review, user, "댓글2", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
     Comment middle =
         persistComment(review, user, "댓글3", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
     persistComment(review, user, "댓글4", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
 
-    // 첫 페이지 결과가 [12:00, 11:00] 이라고 가정하면,
-    // 마지막 요소인 middle을 커서로 넘겼을 때 그 다음 댓글부터 조회되어야 한다.
     CommentSearchCondition condition =
         new CommentSearchCondition(
             review.getId(),
             SortDirection.DESC,
             middle.getId().toString(),
-            middle.getCreatedAt(),
+            time(2026, 4, 20, 11, 0),
             2);
 
     em.flush();
@@ -151,8 +147,10 @@ class CommentRepositoryTest {
 
     // then
     assertThat(result).hasSize(2);
-    assertThat(result.get(0).getId()).isEqualTo(older.getId());
-    assertThat(result.get(1).getId()).isEqualTo(oldest.getId());
+    assertThat(result).extracting(Comment::getContent).containsExactly("댓글2", "댓글1");
+    assertThat(result)
+        .extracting(Comment::getCreatedAt)
+        .containsExactly(time(2026, 4, 20, 10, 0), time(2026, 4, 20, 9, 0));
   }
 
   @Test
@@ -240,12 +238,48 @@ class CommentRepositoryTest {
     assertThat(count).isEqualTo(2);
   }
 
+  @Test
+  @DisplayName("유저별 댓글 수를 기간 기준으로 집계한다")
+  void find_comment_counts_by_user_between_success() {
+    // given
+    User user1 = persistUser("user1@test.com", "user1");
+    User user2 = persistUser("user2@test.com", "user2");
+    Book book = persistBook();
+    Review review = persistReview(user1, book, "리뷰");
+
+    OffsetDateTime start = time(2026, 4, 20, 0, 0);
+    OffsetDateTime end = time(2026, 4, 22, 0, 0);
+
+    // user1: 기간 안 댓글 2개
+    persistComment(review, user1, "댓글1", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
+    persistComment(review, user1, "댓글2", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
+
+    // user2: 기간 안 댓글 1개
+    persistComment(review, user2, "댓글3", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
+
+    // 기간 밖 댓글은 제외
+    persistComment(review, user2, "댓글4", time(2026, 4, 23, 1, 0), time(2026, 4, 21, 1, 0));
+
+    em.flush();
+    em.clear();
+
+    // when
+    List<UserCommentCountRow> result = commentRepository.findCommentCountsByUserBetween(start, end);
+
+    // then
+    assertThat(result).hasSize(2);
+
+    assertThat(result)
+        .extracting(UserCommentCountRow::userId, UserCommentCountRow::commentCount)
+        .containsExactlyInAnyOrder(tuple(user1.getId(), 2L), tuple(user2.getId(), 1L));
+  }
+
   private User persistUser(String email, String nickname) {
     User user = new User(email, nickname, "1234");
     OffsetDateTime now = OffsetDateTime.now();
 
-    ReflectionTestUtils.setField(user, "createdAt", now);
-    ReflectionTestUtils.setField(user, "updatedAt", now);
+    setField(user, "createdAt", now);
+    setField(user, "updatedAt", now);
 
     em.persist(user);
     return user;
@@ -295,30 +329,31 @@ class CommentRepositoryTest {
       OffsetDateTime updatedAt) {
     Comment comment = new Comment(review, user, content);
 
+    // insert 시 NOT NULL 제약 통과용
     setField(comment, "createdAt", createdAt);
     setField(comment, "updatedAt", updatedAt);
     setField(comment, "isDeleted", false);
 
     em.persist(comment);
-    return comment;
-  }
+    em.flush();
 
-  private Comment persistComment(
-      Review review,
-      User user,
-      String content,
-      UUID id,
-      OffsetDateTime createdAt,
-      OffsetDateTime updatedAt) {
-    Comment comment = new Comment(review, user, content);
+    // Auditing이 덮었을 가능성 대비해서 DB 값을 직접 고정
+    em.createQuery(
+            """
+            update Comment c
+            set c.createdAt = :createdAt,
+                c.updatedAt = :updatedAt
+            where c.id = :id
+            """)
+        .setParameter("createdAt", createdAt)
+        .setParameter("updatedAt", updatedAt)
+        .setParameter("id", comment.getId())
+        .executeUpdate();
 
-    setField(comment, "id", id);
-    setField(comment, "createdAt", createdAt);
-    setField(comment, "updatedAt", updatedAt);
-    setField(comment, "isDeleted", false);
+    em.flush();
+    em.clear();
 
-    em.persist(comment);
-    return comment;
+    return em.find(Comment.class, comment.getId());
   }
 
   private Comment persistDeletedComment(Review review, User user, String content) {
