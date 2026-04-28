@@ -39,19 +39,15 @@ public class LocalThumbnailStorage implements ThumbnailStorage {
     }
 
     String key = UUID.randomUUID().toString() + extension;
-    Path targetLocation = Paths.get(uploadDir).resolve(key);
-
-    Files.copy(image.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+    Files.copy(image.getInputStream(), resolvePath(key), StandardCopyOption.REPLACE_EXISTING);
 
     return key;
   }
 
   @Override
   public void delete(String key) {
-    if (key == null || key.isBlank()) return;
     try {
-      Path targetLocation = Paths.get(uploadDir).resolve(key);
-      Files.deleteIfExists(targetLocation);
+      Files.deleteIfExists(resolvePath(key));
     } catch (IOException e) {
       log.error("로컬 파일 삭제 실패: {}", key, e);
     }
@@ -61,6 +57,12 @@ public class LocalThumbnailStorage implements ThumbnailStorage {
   public String generatePresignUrl(String key) {
     if (key == null || key.isBlank()) return null;
 
-    return "/images/thumbnails/" + key;
+    return "/qa-images/" + key;
+  }
+
+  private Path resolvePath(String key){
+    if (key == null || key.isBlank()) return null;
+
+    return Paths.get(uploadDir).resolve(key);
   }
 }
