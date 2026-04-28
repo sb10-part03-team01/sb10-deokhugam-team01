@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users
     deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+    );
 
 CREATE TABLE IF NOT EXISTS books
 (
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS books
     deleted_at     TIMESTAMPTZ,
     created_at     TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+    );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_books_active_isbn ON books (isbn) WHERE isbn IS NOT NULL AND is_deleted = FALSE;
 
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS reviews
     CONSTRAINT fk_reviews_books FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
     CONSTRAINT fk_reviews_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT uk_reviews_book_user UNIQUE (book_id, user_id)
-);
+    );
 
 CREATE INDEX IF NOT EXISTS idx_reviews_book_id ON reviews (book_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews (user_id);
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS comments
 
     CONSTRAINT fk_comments_reviews FOREIGN KEY (review_id) REFERENCES reviews (id) ON DELETE CASCADE,
     CONSTRAINT fk_comments_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
+    );
 
 CREATE INDEX IF NOT EXISTS idx_comment_review_created_at_id ON comments (review_id, created_at, id);
 
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS notifications
 
     CONSTRAINT fk_notifications_reviews FOREIGN KEY (review_id) REFERENCES reviews (id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
+    );
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications (user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_review_id ON notifications (review_id);
@@ -108,14 +108,14 @@ CREATE TABLE IF NOT EXISTS review_likes
     CONSTRAINT fk_review_likes_review FOREIGN KEY (review_id) REFERENCES reviews (id) ON DELETE CASCADE,
     CONSTRAINT fk_review_likes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT uk_review_like_review_user UNIQUE (review_id, user_id)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS popular_books
 (
     id              UUID PRIMARY KEY,
     book_id         UUID             NOT NULL,
     period_type     VARCHAR(20)      NOT NULL CHECK (period_type IN
-                                                     ('DAILY', 'WEEKLY', 'MONTHLY', 'ALL_TIME')),
+('DAILY', 'WEEKLY', 'MONTHLY', 'ALL_TIME')),
     calculated_date DATE             NOT NULL, -- 랭킹 산정 기준일 (시간은 필요 없으므로 DATE)
     rank            INTEGER          NOT NULL CHECK (rank > 0),
     score           DOUBLE PRECISION NOT NULL CHECK (score >= 0),
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS popular_books
     CONSTRAINT fk_popular_books_book FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
     CONSTRAINT uk_popular_books_period_rank UNIQUE (period_type, calculated_date, rank),
     CONSTRAINT uk_popular_books_period_book UNIQUE (period_type, calculated_date, book_id)
-);
+    );
 
 CREATE INDEX IF NOT EXISTS idx_popular_books_book_id ON popular_books (book_id);
 
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS popular_reviews
     id              UUID PRIMARY KEY,
     review_id       UUID             NOT NULL,
     period_type     VARCHAR(20)      NOT NULL CHECK (period_type IN
-                                                   ('DAILY', 'WEEKLY', 'MONTHLY', 'ALL_TIME')),
+('DAILY', 'WEEKLY', 'MONTHLY', 'ALL_TIME')),
     calculated_date DATE             NOT NULL,
     ranking         INTEGER          NOT NULL CHECK (ranking > 0),
     score           DOUBLE PRECISION NOT NULL CHECK (score >= 0),
@@ -148,14 +148,14 @@ CREATE TABLE IF NOT EXISTS popular_reviews
     CONSTRAINT fk_popular_reviews_review FOREIGN KEY (review_id) REFERENCES reviews (id) ON DELETE CASCADE,
     CONSTRAINT uk_popular_reviews_period_rank UNIQUE (period_type, calculated_date, ranking),
     CONSTRAINT uk_popular_reviews_period_review UNIQUE (period_type, calculated_date, review_id)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS power_users
 (
     id               UUID PRIMARY KEY,
     user_id          UUID             NOT NULL,
     period_type      VARCHAR(20)      NOT NULL CHECK (period_type IN
-                                                      ('DAILY', 'WEEKLY', 'MONTHLY', 'ALL_TIME')),
+('DAILY', 'WEEKLY', 'MONTHLY', 'ALL_TIME')),
     calculated_date  TIMESTAMPTZ      NOT NULL,
     rank             BIGINT           NOT NULL CHECK (rank > 0),
     score            DOUBLE PRECISION NOT NULL CHECK (score >= 0),
@@ -168,4 +168,4 @@ CREATE TABLE IF NOT EXISTS power_users
     CONSTRAINT fk_power_users_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT uk_power_users_period_rank UNIQUE (period_type, calculated_date, rank),
     CONSTRAINT uk_power_users_period_user UNIQUE (period_type, calculated_date, user_id)
-);
+    );

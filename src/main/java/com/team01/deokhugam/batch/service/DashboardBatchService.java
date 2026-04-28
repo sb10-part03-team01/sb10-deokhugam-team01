@@ -4,6 +4,7 @@ import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.batch.dto.PopularBookScoreRow;
 import com.team01.deokhugam.batch.repository.PopularBookBatchQueryRepository;
 import com.team01.deokhugam.comment.repository.CommentRepository;
+import com.team01.deokhugam.dashboard.popularreview.service.PopularReviewService;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -23,6 +24,7 @@ public class DashboardBatchService {
   private final DashboardBatchTransactionService dashboardBatchTransactionService;
   private final PopularBookBatchQueryRepository popularBookBatchQueryRepository;
   private final CommentRepository commentRepository;
+  private final PopularReviewService popularReviewService;
 
   public void calculatePowerUserRanking(LocalDate baseDate) {
 
@@ -81,6 +83,22 @@ public class DashboardBatchService {
         dashboardBatchTransactionService.deleteAndSavePopularBooks(period, rows, calculatedDate);
       } catch (Exception e) {
         log.error("[DASHBOARD_BATCH] 인기 도서 저장 실패. period={}", period, e);
+      }
+    }
+  }
+
+  // 인기 리뷰 계산 메서드
+  public void calculatePopularReviewRanking(LocalDate baseDate) {
+    LocalDate calculatedDate = baseDate;
+
+    for (DashboardPeriod period : DashboardPeriod.values()) {
+      OffsetDateTime start = period.getStartDateTime(baseDate).atOffset(ZoneOffset.UTC);
+      OffsetDateTime end = period.getEndDateTime(baseDate).atOffset(ZoneOffset.UTC);
+
+      try {
+        popularReviewService.calculatePopularReviews(period, calculatedDate, start, end);
+      } catch (Exception e) {
+        log.error("[DASHBOARD_BATCH] 인기 리뷰 저장 실패. period={}", period, e);
       }
     }
   }

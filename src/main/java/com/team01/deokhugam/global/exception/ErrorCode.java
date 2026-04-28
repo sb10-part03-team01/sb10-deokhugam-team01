@@ -52,8 +52,7 @@ public enum ErrorCode {
   POPULAR_REVIEW_INVALID_COMMENT_COUNT(400, "POPULAR_REVIEW_INVALID_COMMENT_COUNT",
       "댓글 수는 0 이상이어야 합니다."),
   POPULAR_REVIEW_CALCULATED_DATE_REQUIRED(400, "POPULAR_REVIEW_CALCULATED_DATE_REQUIRED",
-      "인기 리뷰 집계일은 필수입니다."
-  ),
+      "인기 리뷰 집계일은 필수입니다."),
 
   // user
   EMAIL_ALREADY_EXISTS(409, "EMAIL_ALREADY_EXISTS", "이미 등록된 이메일입니다."),
