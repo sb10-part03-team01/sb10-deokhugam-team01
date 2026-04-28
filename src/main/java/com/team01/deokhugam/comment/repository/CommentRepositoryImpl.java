@@ -4,9 +4,11 @@ import static com.team01.deokhugam.comment.entity.QComment.comment;
 
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.deokhugam.comment.dto.CommentSearchCondition;
+import com.team01.deokhugam.comment.dto.UserCommentCountRow;
 import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
@@ -75,6 +77,24 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
             .fetchOne();
 
     return count != null ? count : 0L;
+  }
+
+  @Override
+  public List<UserCommentCountRow> findCommentCountsByUserBetween(
+      OffsetDateTime start, OffsetDateTime end) {
+    return queryFactory
+        .select(
+            Projections.constructor(UserCommentCountRow.class, comment.user.id, comment.count()))
+        .from(comment)
+        .where(
+            // 논리 삭제되지 않은 댓글만 집계
+            comment.isDeleted.isFalse(),
+            // start 이상 날짜
+            comment.createdAt.goe(start),
+            // end 미만
+            comment.createdAt.lt(end))
+        .groupBy(comment.user.id)
+        .fetch();
   }
 
   // 커서 페이지네이션 조건 생성 (after / parsedCursor / direction)
