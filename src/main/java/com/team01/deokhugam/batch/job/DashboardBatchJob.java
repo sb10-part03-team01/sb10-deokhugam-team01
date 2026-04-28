@@ -3,6 +3,7 @@ package com.team01.deokhugam.batch.job;
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.batch.service.DashboardBatchService;
 import com.team01.deokhugam.notification.service.NotificationService;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,9 +21,12 @@ public class DashboardBatchJob {
   public void run() {
     log.info("[DASHBOARD_BATCH] 시작");
 
+    // 한 번의 배치 실행 시 동일한 기준일 사용
+    LocalDate baseDate = DashboardPeriod.today();
+
     // 인기 도서 랭킹 계산
     try {
-      dashboardBatchService.calculatePopularBookRanking(DashboardPeriod.today());
+      dashboardBatchService.calculatePopularBookRanking(baseDate);
     } catch (Exception e) {
       log.error("[DASHBOARD_BATCH] 인기 도서 랭킹 계산 실패", e);
     }
@@ -36,7 +40,7 @@ public class DashboardBatchJob {
 
     // 파워 유저 랭킹 계산
     try {
-      dashboardBatchService.calculatePowerUserRanking(DashboardPeriod.today());
+      dashboardBatchService.calculatePowerUserRanking(baseDate);
     } catch (Exception e) {
       log.error("[DASHBOARD_BATCH] 파워 유저 랭킹 계산 실패", e);
     }
