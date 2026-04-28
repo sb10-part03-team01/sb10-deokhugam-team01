@@ -2,10 +2,12 @@ package com.team01.deokhugam.comment.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.comment.dto.CommentSearchCondition;
+import com.team01.deokhugam.comment.dto.UserCommentCountRow;
 import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.config.QuerydslTestConfig;
 import com.team01.deokhugam.global.enums.SortDirection;
@@ -234,6 +236,42 @@ class CommentRepositoryTest {
 
     // then
     assertThat(count).isEqualTo(2);
+  }
+
+  @Test
+  @DisplayName("유저별 댓글 수를 기간 기준으로 집계한다")
+  void find_comment_counts_by_user_between_success() {
+    // given
+    User user1 = persistUser("user1@test.com", "user1");
+    User user2 = persistUser("user2@test.com", "user2");
+    Book book = persistBook();
+    Review review = persistReview(user1, book, "리뷰");
+
+    OffsetDateTime start = time(2026, 4, 20, 0, 0);
+    OffsetDateTime end = time(2026, 4, 22, 0, 0);
+
+    // user1: 기간 안 댓글 2개
+    persistComment(review, user1, "댓글1", time(2026, 4, 20, 10, 0), time(2026, 4, 20, 10, 0));
+    persistComment(review, user1, "댓글2", time(2026, 4, 20, 11, 0), time(2026, 4, 20, 11, 0));
+
+    // user2: 기간 안 댓글 1개
+    persistComment(review, user2, "댓글3", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
+
+    // 기간 밖 댓글은 제외
+    persistComment(review, user2, "댓글4", time(2026, 4, 23, 1, 0), time(2026, 4, 23, 1, 0));
+
+    em.flush();
+    em.clear();
+
+    // when
+    List<UserCommentCountRow> result = commentRepository.findCommentCountsByUserBetween(start, end);
+
+    // then
+    assertThat(result).hasSize(2);
+
+    assertThat(result)
+        .extracting(UserCommentCountRow::userId, UserCommentCountRow::commentCount)
+        .containsExactlyInAnyOrder(tuple(user1.getId(), 2L), tuple(user2.getId(), 1L));
   }
 
   private User persistUser(String email, String nickname) {

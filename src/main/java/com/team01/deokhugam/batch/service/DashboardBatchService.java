@@ -3,6 +3,7 @@ package com.team01.deokhugam.batch.service;
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.batch.dto.PopularBookScoreRow;
 import com.team01.deokhugam.batch.repository.PopularBookBatchQueryRepository;
+import com.team01.deokhugam.comment.repository.CommentRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -21,6 +22,7 @@ public class DashboardBatchService {
 
   private final DashboardBatchTransactionService dashboardBatchTransactionService;
   private final PopularBookBatchQueryRepository popularBookBatchQueryRepository;
+  private final CommentRepository commentRepository;
 
   public void calculatePowerUserRanking(LocalDate baseDate) {
 
@@ -34,6 +36,7 @@ public class DashboardBatchService {
       // TODO: 유저별 리뷰 인기점수 합 조회 (start, end 사용)
       // TODO: 유저별 좋아요 수 조회 (start, end 사용)
       // TODO: 유저별 댓글 수 조회 (start, end 사용)
+      var commentCount = commentRepository.findCommentCountsByUserBetween(start, end);
       // 3. 점수 계산
       Map<UUID, Double> activityScoreMap = new HashMap<>();
       // activityScoreMap.put(userId, (reviewScoreSum * 0.5) + (likeCount * 0.2) + (commentCount *
