@@ -75,6 +75,7 @@ class ReviewServiceImplTest {
   private UUID userId;
   private UUID reviewId;
   private UUID requestUserId;
+  private UUID requestBookId;
   private UUID authorId;
 
   @BeforeEach
@@ -83,6 +84,7 @@ class ReviewServiceImplTest {
     userId = UUID.randomUUID();
     reviewId = UUID.randomUUID();
     requestUserId = UUID.randomUUID();
+    requestBookId = UUID.randomUUID();
     authorId = UUID.randomUUID();
   }
 
@@ -282,11 +284,12 @@ class ReviewServiceImplTest {
   @DisplayName("리뷰 수정 - 성공")
   void updateReview_success() {
     User user = mock(User.class);
+    Book book = mock(Book.class);
     Review review = mock(Review.class);
     ReviewUpdateRequest request = new ReviewUpdateRequest("수정된 리뷰", 4.5);
     ReviewDto reviewDto = new ReviewDto(
         reviewId,
-        UUID.randomUUID(),
+        requestBookId,
         "테스트 책",
         "thumb.jpg",
         requestUserId,
@@ -303,6 +306,8 @@ class ReviewServiceImplTest {
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
     given(review.getUser()).willReturn(user);
     given(user.getId()).willReturn(requestUserId);
+    given(review.getBook()).willReturn(book);
+    given(book.getId()).willReturn(requestBookId);
     given(reviewMapper.toDto(review)).willReturn(reviewDto);
 
     ReviewDto result = reviewServiceImpl.updateReview(reviewId, requestUserId, request);
@@ -335,10 +340,13 @@ class ReviewServiceImplTest {
   @DisplayName("리뷰 논리 삭제 - 성공")
   void deleteReview_success() {
     User author = mock(User.class);
+    Book book = mock(Book.class);
     Review review = mock(Review.class);
 
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
     given(review.getUser()).willReturn(author);
+    given(review.getBook()).willReturn(book);
+    given(book.getId()).willReturn(requestBookId);
     given(author.getId()).willReturn(requestUserId);
 
     reviewServiceImpl.deleteReview(reviewId, requestUserId);
