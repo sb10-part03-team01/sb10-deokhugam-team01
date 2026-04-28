@@ -1,8 +1,8 @@
 package com.team01.deokhugam.dashboard.popularbook.entity;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.global.entity.BaseEntity;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -40,7 +40,7 @@ public class PopularBook extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "period_type", length = 20, nullable = false)
-  private RankingPeriod periodType;
+  private DashboardPeriod periodType;
 
   @Column(name = "calculated_date", nullable = false)
   private LocalDate calculatedDate;
@@ -59,7 +59,7 @@ public class PopularBook extends BaseEntity {
 
   public PopularBook(
       Book book,
-      RankingPeriod periodType,
+      DashboardPeriod periodType,
       LocalDate calculatedDate,
       int rank,
       double score,

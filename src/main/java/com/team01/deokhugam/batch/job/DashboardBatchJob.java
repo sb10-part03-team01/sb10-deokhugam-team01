@@ -19,6 +19,15 @@ public class DashboardBatchJob {
   @Scheduled(cron = "0 0 0 * * *", zone = "UTC")
   public void run() {
     log.info("[DASHBOARD_BATCH] 시작");
+
+    // 인기 도서 랭킹 계산
+    try {
+      dashboardBatchService.calculatePopularBookRanking(DashboardPeriod.today());
+    } catch (Exception e) {
+      log.error("[DASHBOARD_BATCH] 인기 도서 랭킹 계산 실패", e);
+    }
+
+    // 파워 유저 랭킹 계산
     try {
       dashboardBatchService.calculatePowerUserRanking(DashboardPeriod.today());
     } catch (Exception e) {
@@ -31,5 +40,4 @@ public class DashboardBatchJob {
     }
     log.info("[DASHBOARD_BATCH] 종료");
   }
-
 }

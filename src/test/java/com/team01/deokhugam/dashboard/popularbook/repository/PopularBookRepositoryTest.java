@@ -3,10 +3,10 @@ package com.team01.deokhugam.dashboard.popularbook.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.config.QuerydslTestConfig;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
@@ -58,9 +58,9 @@ class PopularBookRepositoryTest {
     Book book2 = persistBook("책2", "저자B", "22");
     Book book3 = persistBook("책3", "저자C", "33");
 
-    persistPopularBook(book1, RankingPeriod.DAILY, latestDate, 1, 0, 0, 0, time1);
-    persistPopularBook(book2, RankingPeriod.DAILY, latestDate, 2, 0, 0, 0, time2);
-    persistPopularBook(book3, RankingPeriod.DAILY, latestDate, 3, 0, 0, 0, time3);
+    persistPopularBook(book1, DashboardPeriod.DAILY, latestDate, 1, 0, 0, 0, time1);
+    persistPopularBook(book2, DashboardPeriod.DAILY, latestDate, 2, 0, 0, 0, time2);
+    persistPopularBook(book3, DashboardPeriod.DAILY, latestDate, 3, 0, 0, 0, time3);
 
     em.flush();
     em.clear();
@@ -68,7 +68,7 @@ class PopularBookRepositoryTest {
     // when
     List<PopularBook> result =
         popularBookRepository.findAllByCursor(
-            RankingPeriod.DAILY, SortDirection.DESC, null, null, 2);
+            DashboardPeriod.DAILY, SortDirection.DESC, null, null, 2);
 
     // then
     // rank DESC → 3, 2, 1
@@ -84,9 +84,9 @@ class PopularBookRepositoryTest {
     Book book2 = persistBook("책2", "저자B", "2");
     Book book3 = persistBook("책3", "저자C", "3");
 
-    persistPopularBook(book1, RankingPeriod.DAILY, latestDate, 1, 0, 0, 0, time1);
-    persistPopularBook(book2, RankingPeriod.DAILY, latestDate, 2, 0, 0, 0, time2);
-    persistPopularBook(book3, RankingPeriod.DAILY, latestDate, 3, 0, 0, 0, time3);
+    persistPopularBook(book1, DashboardPeriod.DAILY, latestDate, 1, 0, 0, 0, time1);
+    persistPopularBook(book2, DashboardPeriod.DAILY, latestDate, 2, 0, 0, 0, time2);
+    persistPopularBook(book3, DashboardPeriod.DAILY, latestDate, 3, 0, 0, 0, time3);
 
     em.flush();
     em.clear();
@@ -95,7 +95,7 @@ class PopularBookRepositoryTest {
     // cursor = "2" → 다음은 3만 나와야 함
     List<PopularBook> result =
         popularBookRepository.findAllByCursor(
-            RankingPeriod.DAILY, SortDirection.ASC, "2", time1, 2);
+            DashboardPeriod.DAILY, SortDirection.ASC, "2", time1, 2);
 
     // then
     assertThat(result).extracting(PopularBook::getRank).containsExactly(3);
@@ -109,8 +109,8 @@ class PopularBookRepositoryTest {
     Book dailyBook = persistBook("일간 인기책", "저자A", "11");
     Book weeklyBook = persistBook("주간 인기책", "저자B", "22");
 
-    persistPopularBook(dailyBook, RankingPeriod.DAILY, latestDate, 1, 9.5, 4.8, 90, time2);
-    persistPopularBook(weeklyBook, RankingPeriod.WEEKLY, latestDate, 1, 8.5, 4.3, 50, time3);
+    persistPopularBook(dailyBook, DashboardPeriod.DAILY, latestDate, 1, 9.5, 4.8, 90, time2);
+    persistPopularBook(weeklyBook, DashboardPeriod.WEEKLY, latestDate, 1, 8.5, 4.3, 50, time3);
 
     em.flush();
     em.clear();
@@ -118,11 +118,11 @@ class PopularBookRepositoryTest {
     // when DAILY 기준 만 조회
     List<PopularBook> result =
         popularBookRepository.findAllByCursor(
-            RankingPeriod.DAILY, SortDirection.DESC, null, null, 10);
+            DashboardPeriod.DAILY, SortDirection.DESC, null, null, 10);
 
     // then
     assertThat(result).hasSize(1);
-    assertThat(result.get(0).getPeriodType()).isEqualTo(RankingPeriod.DAILY);
+    assertThat(result.get(0).getPeriodType()).isEqualTo(DashboardPeriod.DAILY);
     assertThat(result.get(0).getBook().getTitle()).isEqualTo("일간 인기책");
   }
 
@@ -132,7 +132,7 @@ class PopularBookRepositoryTest {
     assertThatThrownBy(
             () ->
                 popularBookRepository.findAllByCursor(
-                    RankingPeriod.DAILY,
+                    DashboardPeriod.DAILY,
                     SortDirection.DESC,
                     "2", // ✔ 정상적인 rank 값
                     null,
@@ -151,7 +151,7 @@ class PopularBookRepositoryTest {
     assertThatThrownBy(
             () ->
                 popularBookRepository.findAllByCursor(
-                    RankingPeriod.DAILY, SortDirection.DESC, "abc", time1, 10))
+                    DashboardPeriod.DAILY, SortDirection.DESC, "abc", time1, 10))
         .isInstanceOf(DeokhugamException.class)
         .satisfies(
             exception -> {
@@ -170,16 +170,16 @@ class PopularBookRepositoryTest {
     Book latestBook2 = persistBook("최신 책2", "저자C", "3");
     Book weeklyBook = persistBook("주간 책", "저자D", "4");
 
-    persistPopularBook(oldBook, RankingPeriod.DAILY, oldDate, 1, 9.9, 4.9, 100, time1);
-    persistPopularBook(latestBook1, RankingPeriod.DAILY, latestDate, 1, 9.5, 4.8, 90, time2);
-    persistPopularBook(latestBook2, RankingPeriod.DAILY, latestDate, 2, 9.0, 4.7, 80, time3);
-    persistPopularBook(weeklyBook, RankingPeriod.WEEKLY, latestDate, 1, 8.0, 4.2, 40, time3);
+    persistPopularBook(oldBook, DashboardPeriod.DAILY, oldDate, 1, 9.9, 4.9, 100, time1);
+    persistPopularBook(latestBook1, DashboardPeriod.DAILY, latestDate, 1, 9.5, 4.8, 90, time2);
+    persistPopularBook(latestBook2, DashboardPeriod.DAILY, latestDate, 2, 9.0, 4.7, 80, time3);
+    persistPopularBook(weeklyBook, DashboardPeriod.WEEKLY, latestDate, 1, 8.0, 4.2, 40, time3);
 
     em.flush();
     em.clear();
 
     // when
-    long count = popularBookRepository.countByPeriod(RankingPeriod.DAILY);
+    long count = popularBookRepository.countByPeriod(DashboardPeriod.DAILY);
 
     // then
     assertThat(count).isEqualTo(2L);
@@ -206,7 +206,7 @@ class PopularBookRepositoryTest {
 
   private PopularBook persistPopularBook(
       Book book,
-      RankingPeriod periodType,
+      DashboardPeriod periodType,
       LocalDate calculatedDate,
       int rank,
       double score,

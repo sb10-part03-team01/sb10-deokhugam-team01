@@ -3,6 +3,8 @@ package com.team01.deokhugam.batch.service;
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.comment.dto.UserCommentCountRow;
 import com.team01.deokhugam.comment.repository.CommentRepository;
+import com.team01.deokhugam.batch.dto.PopularBookScoreRow;
+import com.team01.deokhugam.batch.repository.PopularBookBatchQueryRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 public class DashboardBatchService {
 
   private final DashboardBatchTransactionService dashboardBatchTransactionService;
+  private final PopularBookBatchQueryRepository popularBookBatchQueryRepository;
   private final CommentRepository commentRepository;
 
   public void calculatePowerUserRanking(LocalDate baseDate) {
@@ -32,19 +35,17 @@ public class DashboardBatchService {
       OffsetDateTime end = period.getEndDateTime(baseDate).atOffset(ZoneOffset.UTC);
       // 2. 유저별 데이터 조회
       // TODO: 유저별 리뷰 인기점수 합 조회 (start, end 사용)
-
       // TODO: 유저별 좋아요 수 조회 (start, end 사용)
-
       // TODO: 유저별 댓글 수 조회 (start, end 사용)
-      List<UserCommentCountRow> commentCounts = commentRepository.findCommentCountsByUserBetween(start, end);
-
       // 3. 점수 계산
       Map<UUID, Double> activityScoreMap = new HashMap<>();
-      // activityScoreMap.put(userId, (reviewScoreSum * 0.5) + (likeCount * 0.2) + (commentCount * 0.3));
+      // activityScoreMap.put(userId, (reviewScoreSum * 0.5) + (likeCount * 0.2) + (commentCount *
+      // 0.3));
       // 4. rank 부여
-      List<Map.Entry<UUID, Double>> rank = activityScoreMap.entrySet().stream()
-          .sorted(Map.Entry.<UUID, Double>comparingByValue().reversed())
-          .toList();
+      List<Map.Entry<UUID, Double>> rank =
+          activityScoreMap.entrySet().stream()
+              .sorted(Map.Entry.<UUID, Double>comparingByValue().reversed())
+              .toList();
       if (rank.isEmpty()) {
         continue;
       }
@@ -55,6 +56,19 @@ public class DashboardBatchService {
         log.error("랭킹 계산 실패: {}", period, e);
       }
     }
+  }
+
+  // 인기 도서 계산 메서드
+  public void calculatePopularBookRanking(LocalDate baseDate) {
+    LocalDate calculatedDate = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate();
+
+    for (DashboardPeriod period : DashboardPeriod.values()) {
+      OffsetDateTime start = period.getStartDateTime(baseDate).atOffset(ZoneOffset.UTC);
+      OffsetDateTime end = period.getEndDateTime(baseDate).atOffset(ZoneOffset.UTC);
+
+      // 기간 내 리뷰를 책별로 집계해서 점수를 계산한다.
+      List<PopularBookScoreRow> rows =
+          popularBookBatchQueryRepository.findPopularBooksBetween(start, end);
 
   }
 }
