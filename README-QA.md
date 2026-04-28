@@ -1,3 +1,5 @@
+# QA용 시드 데이터 안내
+
 ## QA 시드 데이터
 
 명세의 모든 필수 기능(목록 조회, 검색, 정렬, 페이지네이션, 인기/파워 랭킹, 알림)을
@@ -32,7 +34,7 @@ createdb deokhugam_db
 
 프로젝트 루트의 `.env`에 connection 정보를 작성한다 (이미 있다면 그대로).
 
-```
+```markdown
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/deokhugam_db
 SPRING_DATASOURCE_USERNAME=<your_pg_user>
 SPRING_DATASOURCE_PASSWORD=<your_pg_password>
@@ -94,7 +96,9 @@ SERVER_PORT=8080
 데이터베이스 자체를 비우고 싶다면:
 
 ```bash
-dropdb deokhugam_db && createdb deokhugam_db./gradlew bootRun --args='--spring.profiles.active=qa'
+dropdb deokhugam_db && createdb deokhugam_db
+
+./gradlew bootRun --args='--spring.profiles.active=qa'
 ```
 
 ### 프로토타입 로그인 계정

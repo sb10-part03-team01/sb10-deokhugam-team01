@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- 덕후감 QA 시드 데이터
 -- 위치      : src/main/resources/db/seed-qa.sql  (qa 프로파일에서만 로드)
--- 기준일    : 2026-04-27 (오늘)
+-- 기준일    : 시드 실행일의 CURRENT_DATE (D-0)
 -- 시간 분산  : DAILY(오늘) / WEEKLY(2~6일) / MONTHLY(8~25일) / ALL_TIME(60일+)
 -- 분량      : User 8 / Book 13(12 + ISBN 중복 검증용 1) / Review 24 /
 --            Comment 36 / ReviewLike 36 / Notification 10
