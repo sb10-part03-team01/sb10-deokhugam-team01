@@ -6,9 +6,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
 import com.team01.deokhugam.dashboard.popularbook.service.PopularBookService;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.OffsetDateTime;
@@ -36,7 +36,7 @@ class PopularBookControllerTest {
 
     given(
             popularBookService.findPopularBooks(
-                RankingPeriod.DAILY, SortDirection.ASC, null, null, null))
+                DashboardPeriod.DAILY, SortDirection.ASC, null, null, null))
         .willReturn(response);
 
     // when & then
@@ -49,7 +49,7 @@ class PopularBookControllerTest {
         .andExpect(jsonPath("$.hasNext").value(false));
 
     verify(popularBookService)
-        .findPopularBooks(RankingPeriod.DAILY, SortDirection.ASC, null, null, null);
+        .findPopularBooks(DashboardPeriod.DAILY, SortDirection.ASC, null, null, null);
   }
 
   @Test
@@ -63,7 +63,7 @@ class PopularBookControllerTest {
 
     given(
             popularBookService.findPopularBooks(
-                RankingPeriod.WEEKLY, SortDirection.DESC, "2", after, 10))
+                DashboardPeriod.WEEKLY, SortDirection.DESC, "2", after, 10))
         .willReturn(response);
 
     // when & then
@@ -81,6 +81,6 @@ class PopularBookControllerTest {
         .andExpect(jsonPath("$.hasNext").value(true));
 
     verify(popularBookService)
-        .findPopularBooks(RankingPeriod.WEEKLY, SortDirection.DESC, "2", after, 10);
+        .findPopularBooks(DashboardPeriod.WEEKLY, SortDirection.DESC, "2", after, 10);
   }
 }

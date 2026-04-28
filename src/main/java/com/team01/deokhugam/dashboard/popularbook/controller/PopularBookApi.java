@@ -1,7 +1,7 @@
 package com.team01.deokhugam.dashboard.popularbook.controller;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,7 +37,7 @@ public interface PopularBookApi {
             content = @Content(mediaType = "application/json"))
       })
   ResponseEntity<CursorPageResponse<PopularBookDto>> getPopularBooks(
-      @Parameter(description = "랭킹 기간", example = "DAILY") RankingPeriod period,
+      @Parameter(description = "랭킹 기간", example = "DAILY") DashboardPeriod period,
       @Parameter(description = "정렬 방향", example = "DESC") SortDirection direction,
       @Parameter(description = "커서 페이지네이션 커서") String cursor,
       @Parameter(description = "보조 커서(createdAt)") OffsetDateTime after,

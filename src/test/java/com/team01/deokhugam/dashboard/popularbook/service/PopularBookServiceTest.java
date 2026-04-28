@@ -3,11 +3,11 @@ package com.team01.deokhugam.dashboard.popularbook.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
+import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
 import com.team01.deokhugam.dashboard.popularbook.repository.PopularBookRepository;
-import com.team01.deokhugam.global.enums.RankingPeriod;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import java.time.LocalDate;
@@ -44,14 +44,15 @@ class PopularBookServiceTest {
     // limit 2면 3개 반환
     given(
             popularBookRepository.findAllByCursor(
-                RankingPeriod.DAILY, SortDirection.ASC, null, null, 2))
+                DashboardPeriod.DAILY, SortDirection.ASC, null, null, 2))
         .willReturn(List.of(pb1, pb2, pb3));
 
-    given(popularBookRepository.countByPeriod(RankingPeriod.DAILY)).willReturn(3L);
+    given(popularBookRepository.countByPeriod(DashboardPeriod.DAILY)).willReturn(3L);
 
     // when
     CursorPageResponse<PopularBookDto> result =
-        popularBookService.findPopularBooks(RankingPeriod.DAILY, SortDirection.ASC, null, null, 2);
+        popularBookService.findPopularBooks(
+            DashboardPeriod.DAILY, SortDirection.ASC, null, null, 2);
 
     // then
     assertThat(result.content()).hasSize(2);
@@ -73,14 +74,15 @@ class PopularBookServiceTest {
 
     given(
             popularBookRepository.findAllByCursor(
-                RankingPeriod.DAILY, SortDirection.ASC, null, null, 2))
+                DashboardPeriod.DAILY, SortDirection.ASC, null, null, 2))
         .willReturn(List.of(pb1, pb2));
 
-    given(popularBookRepository.countByPeriod(RankingPeriod.DAILY)).willReturn(2L);
+    given(popularBookRepository.countByPeriod(DashboardPeriod.DAILY)).willReturn(2L);
 
     // when
     CursorPageResponse<PopularBookDto> result =
-        popularBookService.findPopularBooks(RankingPeriod.DAILY, SortDirection.ASC, null, null, 2);
+        popularBookService.findPopularBooks(
+            DashboardPeriod.DAILY, SortDirection.ASC, null, null, 2);
 
     // then
     assertThat(result.content()).hasSize(2);
@@ -104,7 +106,7 @@ class PopularBookServiceTest {
     ReflectionTestUtils.setField(book, "id", UUID.randomUUID());
 
     PopularBook pb =
-        new PopularBook(book, RankingPeriod.DAILY, LocalDate.of(2026, 4, 21), rank, 0.0, 0.0, 0);
+        new PopularBook(book, DashboardPeriod.DAILY, LocalDate.of(2026, 4, 21), rank, 0.0, 0.0, 0);
 
     ReflectionTestUtils.setField(pb, "id", UUID.randomUUID());
     ReflectionTestUtils.setField(pb, "createdAt", createdAt);
