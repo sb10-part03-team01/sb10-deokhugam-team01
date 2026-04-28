@@ -34,28 +34,36 @@ public interface PopularReviewRepository extends JpaRepository<PopularReview, UU
 
   @Query("""
       select new com.team01.deokhugam.dashboard.popularreview.dto.PopularReviewScoreRow(
-          r.id,
-          coalesce(count(distinct rl.id), 0),
-          coalesce(count(distinct c.id), 0)
+          rl.review.id,
+          count(rl.id),
+          0L
       )
-      from Review r
-      left join ReviewLike rl
-          on rl.review = r
-         and rl.createdAt >= :start
-         and rl.createdAt < :end
-      left join Comment c
-          on c.review = r
-         and c.createdAt >= :start
-         and c.createdAt < :end
-         and c.isDeleted = false
-      where r.isDeleted = false
-      group by r.id
-      having count(distinct rl.id) > 0
-          or count(distinct c.id) > 0
+      from ReviewLike rl
+      where rl.createdAt >= :start
+        and rl.createdAt < :end
+        and rl.review.isDeleted = false
+      group by rl.review.id
       """)
-  List<PopularReviewScoreRow> findPopularReviewScoreRows(
+  List<PopularReviewScoreRow> findPopularReviewLikeScoreRows(
       @Param("start") OffsetDateTime start,
       @Param("end") OffsetDateTime end
   );
 
+  @Query("""
+      select new com.team01.deokhugam.dashboard.popularreview.dto.PopularReviewScoreRow(
+          c.review.id,
+          0L,
+          count(c.id)
+      )
+      from Comment c
+      where c.createdAt >= :start
+        and c.createdAt < :end
+        and c.isDeleted = false
+        and c.review.isDeleted = false
+      group by c.review.id
+      """)
+  List<PopularReviewScoreRow> findPopularReviewCommentScoreRows(
+      @Param("start") OffsetDateTime start,
+      @Param("end") OffsetDateTime end
+  );
 }

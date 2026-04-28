@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,48 +34,77 @@ public class PopularReviewServiceImpl implements PopularReviewService {
       OffsetDateTime start,
       OffsetDateTime end
   ) {
-    // 기간 내 집계 대상 리뷰 조회
-    List<PopularReviewScoreRow> rows =
-        popularReviewRepository.findPopularReviewScoreRows(start, end);
-    // 점수 계산, 점수 오름차순 후 역정렬 -> 높은 순서대로 정리 가능
-    List<PopularReviewScoreRow> rankedRows = rows.stream()
+    // 기간 내 좋아요가 발생한 리뷰별 집계 결과를 조회
+    List<PopularReviewScoreRow> likeRows =
+        popularReviewRepository.findPopularReviewLikeScoreRows(start, end);
+
+    // 기간 내 댓글이 작성된 리뷰별 집계 결과를 조회
+    List<PopularReviewScoreRow> commentRows =
+        popularReviewRepository.findPopularReviewCommentScoreRows(start, end);
+
+    // 좋아요 집계와 댓글 집계를 reviewId 기준으로 합치기 위한 Map
+    Map<UUID, PopularReviewScoreRow> scoreRowMap = new HashMap<>();
+
+    for (PopularReviewScoreRow row : likeRows) {
+      scoreRowMap.put(row.reviewId(), row);
+    }
+
+    for (PopularReviewScoreRow row : commentRows) {
+      scoreRowMap.merge(
+          row.reviewId(),
+          row,
+          (likeRow, commentRow) -> new PopularReviewScoreRow(
+              likeRow.reviewId(),
+              likeRow.likeCount(),
+              commentRow.commentCount()
+          )
+      );
+    }
+
+    // 점수가 있는 리뷰만 인기 점수 내림차순으로 정렬
+    // 동점이면 댓글 수, 좋아요 수, reviewId 순서로 정렬해 rank가 흔들리지 않게 고정
+    List<PopularReviewScoreRow> rankedRows = scoreRowMap.values().stream()
         .filter(row -> row.score() > 0)
-        .sorted(Comparator.comparingDouble(PopularReviewScoreRow::score).reversed())
+        .sorted(
+            Comparator.comparingDouble(PopularReviewScoreRow::score).reversed()
+                .thenComparing(PopularReviewScoreRow::commentCount, Comparator.reverseOrder())
+                .thenComparing(PopularReviewScoreRow::likeCount, Comparator.reverseOrder())
+                .thenComparing(PopularReviewScoreRow::reviewId)
+        )
         .toList();
-    // 정렬된 결과에서 id 추출
+
+    // PopularReview 생성에 필요한 Review 엔티티를 한 번에 조회
     List<UUID> reviewIds = rankedRows.stream()
         .map(PopularReviewScoreRow::reviewId)
         .toList();
-    // 추출한 id로 엔티티 조회 후 id를 기준으로 Map변환
+
     Map<UUID, Review> reviewMap = reviewRepository.findAllById(reviewIds).stream()
         .collect(Collectors.toMap(Review::getId, review -> review));
-    // 기존 인기 리뷰 삭제
+
+    // 같은 기간/집계일의 기존 인기 리뷰 결과를 삭제
     popularReviewRepository.deleteByPeriodAndCalculatedDate(period, calculatedDate);
 
     List<PopularReview> popularReviews = new ArrayList<>();
 
-    for (int i = 0; i < rankedRows.size(); i++) {
-      PopularReviewScoreRow row = rankedRows.get(i);
+    for (PopularReviewScoreRow row : rankedRows) {
       Review review = reviewMap.get(row.reviewId());
 
       if (review == null) {
         continue;
       }
 
-      // 집계 결과대로 랭크 부여
+      // 저장되는 순서 기준으로 rank 부여
       popularReviews.add(new PopularReview(
           review,
           period,
           calculatedDate,
-          i + 1, // 랭크 1부터 ~
+          popularReviews.size() + 1,
           row.score(),
           Math.toIntExact(row.likeCount()),
           Math.toIntExact(row.commentCount())
       ));
     }
+
     popularReviewRepository.saveAll(popularReviews);
   }
-
 }
-
-
