@@ -258,7 +258,7 @@ class CommentRepositoryTest {
     persistComment(review, user2, "댓글3", time(2026, 4, 20, 12, 0), time(2026, 4, 20, 12, 0));
 
     // 기간 밖 댓글은 제외
-    persistComment(review, user2, "댓글4", time(2026, 4, 23, 1, 0), time(2026, 4, 21, 1, 0));
+    persistComment(review, user2, "댓글4", time(2026, 4, 23, 1, 0), time(2026, 4, 23, 1, 0));
 
     em.flush();
     em.clear();
