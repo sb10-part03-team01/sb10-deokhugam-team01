@@ -33,7 +33,7 @@ public class DashboardBatchJob {
 
     // 인기 리뷰 계산
     try {
-      dashboardBatchService.calculatePopularReviewRanking(DashboardPeriod.today());
+      dashboardBatchService.calculatePopularReviewRanking(baseDate);
     } catch (Exception e) {
       log.error("[DASHBOARD_BATCH] 인기 리뷰 랭킹 계산 실패", e);
     }

@@ -89,7 +89,7 @@ public class DashboardBatchService {
 
   // 인기 리뷰 계산 메서드
   public void calculatePopularReviewRanking(LocalDate baseDate) {
-    LocalDate calculatedDate = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate();
+    LocalDate calculatedDate = baseDate;
 
     for (DashboardPeriod period : DashboardPeriod.values()) {
       OffsetDateTime start = period.getStartDateTime(baseDate).atOffset(ZoneOffset.UTC);
