@@ -330,9 +330,8 @@ public class BookService {
       MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
       formData.add("apikey", ocrApiKey);
       formData.add("file", image.getResource());
-      formData.add("language", "auto");
       formData.add("isOverlayRequired", "false");
-      formData.add("OCREngine", "2"); // 숫자 및 특수문자 인식에 더 강한 엔진 사용
+      // 숫자 및 특수문자 인식에 더 강한 엔진 사용
 
       OcrSpaceResponse response = ocrRestClient.post()
           .uri("/parse/image")
