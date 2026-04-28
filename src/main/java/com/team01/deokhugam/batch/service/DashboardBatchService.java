@@ -1,10 +1,9 @@
 package com.team01.deokhugam.batch.service;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
-import com.team01.deokhugam.comment.dto.UserCommentCountRow;
-import com.team01.deokhugam.comment.repository.CommentRepository;
 import com.team01.deokhugam.batch.dto.PopularBookScoreRow;
 import com.team01.deokhugam.batch.repository.PopularBookBatchQueryRepository;
+import com.team01.deokhugam.comment.repository.CommentRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -37,6 +36,7 @@ public class DashboardBatchService {
       // TODO: 유저별 리뷰 인기점수 합 조회 (start, end 사용)
       // TODO: 유저별 좋아요 수 조회 (start, end 사용)
       // TODO: 유저별 댓글 수 조회 (start, end 사용)
+      var commentCount = commentRepository.findCommentCountsByUserBetween(start, end);
       // 3. 점수 계산
       Map<UUID, Double> activityScoreMap = new HashMap<>();
       // activityScoreMap.put(userId, (reviewScoreSum * 0.5) + (likeCount * 0.2) + (commentCount *
@@ -70,5 +70,16 @@ public class DashboardBatchService {
       List<PopularBookScoreRow> rows =
           popularBookBatchQueryRepository.findPopularBooksBetween(start, end);
 
+      if (rows.isEmpty()) {
+        log.info("[DASHBOARD_BATCH] 인기 도서 데이터 없음. period={}", period);
+        continue;
+      }
+
+      try {
+        dashboardBatchTransactionService.deleteAndSavePopularBooks(period, rows, calculatedDate);
+      } catch (Exception e) {
+        log.error("[DASHBOARD_BATCH] 인기 도서 저장 실패. period={}", period, e);
+      }
+    }
   }
 }
