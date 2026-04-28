@@ -34,12 +34,14 @@ public class DashboardBatchService {
       OffsetDateTime end = period.getEndDateTime(baseDate).atOffset(ZoneOffset.UTC);
       // 2. 유저별 데이터 조회
       // TODO: 유저별 리뷰 인기점수 합 조회 (start, end 사용)
+
       // TODO: 유저별 좋아요 수 조회 (start, end 사용)
+
       // TODO: 유저별 댓글 수 조회 (start, end 사용)
-      var commentCount = commentRepository.findCommentCountsByUserBetween(start, end);
+      var commentCounts = commentRepository.findCommentCountsByUserBetween(start, end);
       // 3. 점수 계산
       Map<UUID, Double> activityScoreMap = new HashMap<>();
-      // activityScoreMap.put(userId, (reviewScoreSum * 0.5) + (likeCount * 0.2) + (commentCount *
+      // activityScoreMap.put(userId, (reviewScoreSum * 0.5) + (likeCount * 0.2) + (commentCounts *
       // 0.3));
       // 4. rank 부여
       List<Map.Entry<UUID, Double>> rank =
@@ -60,7 +62,7 @@ public class DashboardBatchService {
 
   // 인기 도서 계산 메서드
   public void calculatePopularBookRanking(LocalDate baseDate) {
-    LocalDate calculatedDate = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate();
+    LocalDate calculatedDate = baseDate;
 
     for (DashboardPeriod period : DashboardPeriod.values()) {
       OffsetDateTime start = period.getStartDateTime(baseDate).atOffset(ZoneOffset.UTC);
