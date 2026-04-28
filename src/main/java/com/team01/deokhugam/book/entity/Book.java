@@ -83,9 +83,31 @@ public class Book extends BaseRemovableEntity {
     this.thumbnailUrl = newUrl;
   }
 
-  public void updateRating(double newRating){
+  public void plusRating(double newRating){
     double totalRating = this.rating * this.reviewCount;
     this.reviewCount += 1;
+    totalRating += newRating;
+    this.rating = totalRating / this.reviewCount;
+  }
+
+  public void minusRating(double oldRating){
+    double totalRating = this.rating * this.reviewCount;
+    this.reviewCount -= 1;
+    totalRating -= oldRating;
+
+
+    if (this.reviewCount <= 0) {
+      this.reviewCount = 0;
+      this.rating = 0.0;
+    } else {
+      // 부동소수점 연산 오차로 인한 미세한 음수(-0.000001 등)만 0.0으로 방어
+      this.rating = Math.max(0.0, totalRating / this.reviewCount);
+    }
+  }
+
+  public void modifyRating(double oldRating, double newRating){
+    double totalRating = this.rating * this.reviewCount;
+    totalRating -= oldRating;
     totalRating += newRating;
     this.rating = totalRating / this.reviewCount;
   }

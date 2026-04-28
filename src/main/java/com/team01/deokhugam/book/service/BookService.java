@@ -79,7 +79,7 @@ public class BookService {
     String safeIsbn = StringUtils.hasText(request.getIsbn()) ? request.getIsbn().trim() : null;
     log.debug("도서 등록 처리 시작: title={}, isbn={}", request.getTitle(), request.getIsbn());
     // isbn 중복 예외 처리
-    if (safeIsbn != null && bookRepository.existsByIsbn(safeIsbn)) {
+    if (safeIsbn != null && bookRepository.existsByIsbnAndIsDeletedFalse(safeIsbn)) {
       throw new DeokhugamException(ErrorCode.DUPLICATED_ISBN,
           Map.of("ISBN", safeIsbn,
               "rule", "동일한 isbn이 존재할 수 없습니다."
@@ -180,12 +180,7 @@ public class BookService {
   @Transactional(readOnly = true)
   public BookDto findBook(UUID bookId){
     log.debug("도서 단건 조회: bookId={}", bookId);
-    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
-        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
-            Map.of(
-                "bookId", bookId,
-                "rule", "DB에 해당 id의 책이 있어야합니다."
-            )));
+    Book book = findBookOrThrow(bookId);
 
     return bookMapper.toDto(book);
   }
@@ -193,12 +188,7 @@ public class BookService {
   @Transactional
   public BookDto updateBook(BookUpdateRequest request, UUID bookId, MultipartFile thumbnailImage) {
     log.debug("도서 정보 수정 시작: bookId={}", bookId);
-    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
-        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
-            Map.of(
-                "bookId", bookId,
-                "rule", "DB에 해당 id의 책이 있어야합니다."
-            )));
+    Book book = findBookOrThrow(bookId);
 
     if(request.getTitle() != null){
       book.updateTitle(request.getTitle());
@@ -415,14 +405,32 @@ public class BookService {
   }
 
   @Transactional
-  public void updateBookReviewRating(UUID bookId, double rating){
-    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
+  public void plusBookReviewRating(UUID bookId, double rating){
+    Book book = findBookOrThrow(bookId);
+
+    book.plusRating(rating);
+  }
+
+  @Transactional
+  public void minusBookReviewRating(UUID bookId, double rating){
+    Book book = findBookOrThrow(bookId);
+
+    book.minusRating(rating);
+  }
+
+  @Transactional
+  public void modifyBookReviewRating(UUID bookId, double oldRating, double newRating){
+    Book book = findBookOrThrow(bookId);
+
+    book.modifyRating(oldRating, newRating);
+  }
+
+  private Book findBookOrThrow(UUID bookId){
+    return bookRepository.findByIdAndIsDeletedFalse(bookId)
         .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
             Map.of(
                 "bookId", bookId,
                 "rule", "DB에 해당 id의 책이 있어야합니다."
             )));
-
-    book.updateRating(rating);
   }
 }

@@ -73,7 +73,7 @@ public class ReviewServiceImpl implements ReviewService {
     );
     Review savedReview = reviewRepository.save(review);
 
-    bookService.updateBookReviewRating(book.getId(),review.getRating());
+    bookService.plusBookReviewRating(book.getId(),review.getRating());
 
     return reviewMapper.toDto(savedReview);
   }
@@ -157,13 +157,18 @@ public class ReviewServiceImpl implements ReviewService {
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
         .orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
+    double oldRating = review.getRating();
+    double newRating = request.rating();
     // 사용자가 쓴 리뷰인지 검증(NPE)
     if (!review.getUser().getId().equals(requestUserId)) {
       throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
     }
 
     // 리뷰 수정
-    review.update(request.content(), request.rating());
+    review.update(request.content(), newRating);
+
+    // 평균 평점 수정
+    bookService.modifyBookReviewRating(review.getBook().getId(), oldRating, newRating);
 
     return reviewMapper.toDto(review);
   }
@@ -179,6 +184,9 @@ public class ReviewServiceImpl implements ReviewService {
     if (!review.getUser().getId().equals(requestUserId)) {
       throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
     }
+
+    // 평균 평점 수정
+    bookService.minusBookReviewRating(review.getBook().getId(), review.getRating());
 
     // 리뷰 논리 삭제
     review.softDelete();
