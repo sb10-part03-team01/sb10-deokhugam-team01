@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
-@ConditionalOnProperty(name = "deokhugam.storage.type", havingValue = "local", matchIfMissing = true)
+@ConditionalOnProperty(name = "deokhugam.storage.type", havingValue = "local")
 @Component
 public class LocalThumbnailStorage implements ThumbnailStorage {
 

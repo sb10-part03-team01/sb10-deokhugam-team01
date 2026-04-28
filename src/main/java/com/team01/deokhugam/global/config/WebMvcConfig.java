@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@ConditionalOnProperty(name = "deokhugam.storage.type", havingValue = "local", matchIfMissing = true)
+@ConditionalOnProperty(name = "deokhugam.storage.type", havingValue = "local")
 public class WebMvcConfig implements WebMvcConfigurer {
 
   @Value("${deokhugam.storage.local.root-path}")
