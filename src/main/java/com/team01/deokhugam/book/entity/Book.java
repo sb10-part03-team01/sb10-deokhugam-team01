@@ -31,7 +31,7 @@ public class Book extends BaseRemovableEntity {
   @Column(name = "published_date", nullable = false)
   private LocalDate publishedDate;
 
-  @Column(name = "isbn", unique = true, updatable = false, length = 20)
+  @Column(name = "isbn", updatable = false, length = 20)
   private String isbn;
 
   @Column(name = "thumbnail_url", length = 255)
