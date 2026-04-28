@@ -79,7 +79,7 @@ public class BookService {
     String safeIsbn = StringUtils.hasText(request.getIsbn()) ? request.getIsbn().trim() : null;
     log.debug("도서 등록 처리 시작: title={}, isbn={}", request.getTitle(), request.getIsbn());
     // isbn 중복 예외 처리
-    if (safeIsbn != null && bookRepository.existsByIsbn(safeIsbn)) {
+    if (safeIsbn != null && bookRepository.existsByIsbnAndIsDeletedFalse(safeIsbn)) {
       throw new DeokhugamException(ErrorCode.DUPLICATED_ISBN,
           Map.of("ISBN", safeIsbn,
               "rule", "동일한 isbn이 존재할 수 없습니다."
@@ -415,7 +415,7 @@ public class BookService {
   }
 
   @Transactional
-  public void updateBookReviewRating(UUID bookId, double rating){
+  public void plusBookReviewRating(UUID bookId, double rating){
     Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
         .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
             Map.of(
@@ -423,6 +423,30 @@ public class BookService {
                 "rule", "DB에 해당 id의 책이 있어야합니다."
             )));
 
-    book.updateRating(rating);
+    book.plusRating(rating);
+  }
+
+  @Transactional
+  public void minusBookReviewRating(UUID bookId, double rating){
+    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
+            Map.of(
+                "bookId", bookId,
+                "rule", "DB에 해당 id의 책이 있어야합니다."
+            )));
+
+    book.minusRating(rating);
+  }
+
+  @Transactional
+  public void modifyBookReviewRating(UUID bookId, double oldRating, double newRating){
+    Book book = bookRepository.findByIdAndIsDeletedFalse(bookId)
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.BOOK_NOT_FOUND,
+            Map.of(
+                "bookId", bookId,
+                "rule", "DB에 해당 id의 책이 있어야합니다."
+            )));
+
+    book.modifyRating(oldRating, newRating);
   }
 }

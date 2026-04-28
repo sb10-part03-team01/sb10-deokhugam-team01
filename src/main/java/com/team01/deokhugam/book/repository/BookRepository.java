@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BookRepository extends JpaRepository<Book, UUID>, BookRepositoryQueryDsl {
-  boolean existsByIsbn(String isbn);
+  boolean existsByIsbnAndIsDeletedFalse(String isbn);
 
   Optional<Book> findByIdAndIsDeletedFalse(UUID id);
 
