@@ -123,7 +123,7 @@ class BookServiceTest {
   void createBook_without_thumbnail_Success() {
     // given
     Book savedBook = book;
-    given(bookRepository.existsByIsbn(anyString())).willReturn(false); // ISBN 중복 아님
+    given(bookRepository.existsByIsbnAndIsDeletedFalse(anyString())).willReturn(false); // ISBN 중복 아님
     given(bookRepository.saveAndFlush(any(Book.class))).willReturn(savedBook); // 저장하면 book 반환
     given(bookMapper.toDto(savedBook)).willReturn(bookDto); // 매퍼 호출 시 bookDto 반환
 
@@ -140,7 +140,7 @@ class BookServiceTest {
     assertThat(result.getIsbn()).isEqualTo("1234567890");
 
     // 메서드들이 한번씩 호출되었는지 검사
-    verify(bookRepository).existsByIsbn("1234567890");
+    verify(bookRepository).existsByIsbnAndIsDeletedFalse("1234567890");
     verify(bookRepository).saveAndFlush(any(Book.class));
     verify(bookMapper).toDto(savedBook);
   }
@@ -152,7 +152,7 @@ class BookServiceTest {
     MultipartFile mockFile = new MockMultipartFile("thumbnail", "test.jpg", "image/jpeg", "test data".getBytes());
     String expectedS3Url = "https://s3.aws.com/test.jpg";
 
-    given(bookRepository.existsByIsbn(anyString())).willReturn(false);
+    given(bookRepository.existsByIsbnAndIsDeletedFalse(anyString())).willReturn(false);
     given(s3ThumbnailStorage.upload(mockFile)).willReturn(expectedS3Url);
     given(bookRepository.saveAndFlush(any(Book.class))).willReturn(book);
     given(bookMapper.toDto(book)).willReturn(bookDto);
@@ -180,7 +180,7 @@ class BookServiceTest {
     MultipartFile mockFile = new MockMultipartFile("thumbnail", "test.jpg", "image/jpeg", "test data".getBytes());
     String expectedS3Url = "https://s3.aws.com/test.jpg";
 
-    given(bookRepository.existsByIsbn(anyString())).willReturn(false);
+    given(bookRepository.existsByIsbnAndIsDeletedFalse(anyString())).willReturn(false);
     given(s3ThumbnailStorage.upload(mockFile)).willReturn(expectedS3Url);
 
     // S3 업로드는 성공했지만, DB 저장 시점에 강제로 예외 터뜨리기
@@ -219,7 +219,7 @@ class BookServiceTest {
   @DisplayName("도서 등록 실패 - 이미 존재하는 ISBN일 때")
   void createBook_Fail_DuplicateIsbn() {
     // given
-    given(bookRepository.existsByIsbn(anyString())).willReturn(true);
+    given(bookRepository.existsByIsbnAndIsDeletedFalse(anyString())).willReturn(true);
 
     // when & then
     assertThatThrownBy(() -> bookService.createBook(request, null))
@@ -234,7 +234,7 @@ class BookServiceTest {
   @DisplayName("도서 등록 실패 - 동시성 문제(TOCTOU)로 DB 제약조건 위반 시 커스텀 예외 반환")
   void createBook_Fail_DataIntegrityViolation() {
     // given
-    given(bookRepository.existsByIsbn(anyString())).willReturn(false);
+    given(bookRepository.existsByIsbnAndIsDeletedFalse(anyString())).willReturn(false);
     // saveAndFlush 시점에 DB에서 강제로 중복 예외 발생
     given(bookRepository.saveAndFlush(any(Book.class)))
         .willThrow(new org.springframework.dao.DataIntegrityViolationException("Unique constraint violation"));
