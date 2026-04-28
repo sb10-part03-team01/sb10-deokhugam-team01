@@ -5,9 +5,11 @@ import static com.team01.deokhugam.dashboard.popularbook.entity.QPopularBook.pop
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
+import com.team01.deokhugam.dashboard.popularbook.entity.QPopularBook;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
@@ -25,7 +27,7 @@ public class PopularBookRepositoryImpl implements PopularBookRepositoryCustom {
 
   private final JPAQueryFactory queryFactory;
 
-  // 특정 기간의 인기 도서 목록 조회
+  // 특정 기간의 인기 도서 목록을 최신 스냅샷 기준으로 커서 페이지네이션 조회한다.
   @Override
   public List<PopularBook> findAllByCursor(
       DashboardPeriod period,
@@ -34,10 +36,11 @@ public class PopularBookRepositoryImpl implements PopularBookRepositoryCustom {
       OffsetDateTime after,
       int limit) {
 
-    // 인기 도서 커서는 rank
+    // 인기 도서 커서는 rank를 의미한다.
     Integer parsedCursor = parseCursor(cursor);
 
-    // after cursor 같은 상태 검증
+    // 현재 인기 도서 페이지네이션은 rank만 커서로 사용하므로,
+    // cursor와 after는 함께 오거나 함께 비어 있어야 한다.
     if ((after == null) != (parsedCursor == null)) {
       Map<String, Object> details = new HashMap<>();
       if (cursor != null) {
@@ -49,65 +52,61 @@ public class PopularBookRepositoryImpl implements PopularBookRepositoryCustom {
       throw new DeokhugamException(ErrorCode.INVALID_CURSOR_PAGINATION, details);
     }
 
+    QPopularBook pbSub = new QPopularBook("pbSub");
+
     return queryFactory
         .selectFrom(popularBook)
-        // 응답에서 book 정보를 바로 사용하므로 fetch join
+        // 응답에서 book 정보를 바로 사용하므로 fetch join 한다.
         .join(popularBook.book)
         .fetchJoin()
         .where(
             popularBook.periodType.eq(period),
-            // 해당 기간의 최신 calculatedDate 스냅샷만 조회
-            popularBook.calculatedDate.eq(latestCalculatedDate(period)),
-            // ASC/DESC 조건 붙이기
+            // 해당 기간의 최신 calculatedDate 스냅샷만 조회한다.
+            popularBook.calculatedDate.eq(
+                JPAExpressions.select(pbSub.calculatedDate.max())
+                    .from(pbSub)
+                    .where(pbSub.periodType.eq(period))),
             rankCursorCondition(parsedCursor, direction))
-        // rank 기준으로 정렬
+        // rank 기준으로 정렬한다.
         .orderBy(rankOrder(direction))
         .limit(limit + 1L)
         .fetch();
   }
 
-  // 특정 기간의 최신 인기 도서 스냅샷 개수를 반환
+  // 특정 기간의 최신 인기 도서 스냅샷 개수를 반환한다.
   @Override
   public long countByPeriod(DashboardPeriod period) {
+    QPopularBook pbSub = new QPopularBook("pbSub");
+
     Long count =
         queryFactory
             .select(popularBook.count())
             .from(popularBook)
             .where(
                 popularBook.periodType.eq(period),
-                popularBook.calculatedDate.eq(latestCalculatedDate(period)))
+                popularBook.calculatedDate.eq(
+                    JPAExpressions.select(pbSub.calculatedDate.max())
+                        .from(pbSub)
+                        .where(pbSub.periodType.eq(period))))
             .fetchOne();
 
     return count != null ? count : 0L;
   }
 
-  // 최신 calculatedDate를 구하는 서브쿼리 조건식
-  private java.time.LocalDate latestCalculatedDate(DashboardPeriod period) {
-    return queryFactory
-        .select(popularBook.calculatedDate.max())
-        .from(popularBook)
-        .where(popularBook.periodType.eq(period))
-        .fetchOne();
-  }
-
-  // rank 커서 조건을 생성
+  // rank 커서 조건을 생성한다.
   private BooleanExpression rankCursorCondition(Integer cursor, SortDirection direction) {
     if (cursor == null) {
       return null;
     }
 
     return direction == SortDirection.ASC
-        // ASC 정렬일떄
         ? popularBook.rank.gt(cursor)
-        // DESC 정렬일때
         : popularBook.rank.lt(cursor);
   }
 
-  // rank 정렬 방향을 생성
+  // rank 정렬 방향을 생성한다.
   private OrderSpecifier<Integer> rankOrder(SortDirection direction) {
-    // 요청 방향에 따라 enum으로 변환
     Order order = direction == SortDirection.ASC ? Order.ASC : Order.DESC;
-    // 지정 방향으로 정렬
     return new OrderSpecifier<>(order, popularBook.rank);
   }
 
