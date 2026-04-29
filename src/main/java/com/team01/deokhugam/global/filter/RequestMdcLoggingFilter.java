@@ -41,7 +41,8 @@ public class RequestMdcLoggingFilter extends OncePerRequestFilter {
       filterChain.doFilter(request, response);
     } finally {
       // 스레드 재사용 시 이전 요청 값 비우기
-      MDC.clear();
+      MDC.remove(MDC_REQUEST_ID);
+      MDC.remove(MDC_CLIENT_IP);
     }
   }
 
