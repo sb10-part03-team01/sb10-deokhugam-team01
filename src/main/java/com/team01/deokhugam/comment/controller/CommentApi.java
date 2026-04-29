@@ -31,7 +31,7 @@ public interface CommentApi {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   ResponseEntity<CursorPageResponse<CommentDto>> getComments(
-      @Parameter(description = "댓글 조회 조건") CommentSearchRequest request);
+      @Parameter(description = "댓글 조회 조건") @Valid CommentSearchRequest request);
 
   @Operation(summary = "댓글 등록", description = "새로운 댓글을 등록합니다.")
   @ApiResponses({

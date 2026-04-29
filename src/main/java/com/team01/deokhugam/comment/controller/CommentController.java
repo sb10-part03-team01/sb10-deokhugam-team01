@@ -36,7 +36,7 @@ public class CommentController implements CommentApi {
   @Override
   @GetMapping
   public ResponseEntity<CursorPageResponse<CommentDto>> getComments(
-      @ModelAttribute CommentSearchRequest request) {
+      @Valid @ModelAttribute CommentSearchRequest request) {
 
     log.info(
         "[COMMENT] getComments reviewId={}, direction={}, cursor={}, after={}, limit={}",
@@ -48,6 +48,7 @@ public class CommentController implements CommentApi {
 
     CursorPageRequest pageRequest =
         new CursorPageRequest(request.getCursor(), request.getAfter(), request.getLimit());
+
     CursorPageResponse<CommentDto> response =
         commentService.getComments(request.getReviewId(), pageRequest, request.getDirection());
 
