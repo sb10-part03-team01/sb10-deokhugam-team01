@@ -1,9 +1,8 @@
 package com.team01.deokhugam.comment.dto;
 
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.pagination.PageLimitPolicy;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -27,8 +26,6 @@ public class CommentSearchRequest {
   @Schema(description = "보조 커서(createdAt)")
   private OffsetDateTime after;
 
-  @Min(1)
-  @Max(100)
   @Schema(description = "페이지 크기", example = "50")
-  private Integer limit = 50;
+  private Integer limit = PageLimitPolicy.DEFAULT_LIMIT;
 }
