@@ -234,7 +234,7 @@ public class NotificationServiceTest {
       notificationService.cleanupReadNotifications();
       //then
       then(notificationRepository).should()
-          .deleteAllByIsReadTrueAndUpdatedAtBefore(any(OffsetDateTime.class));
+          .deleteAllByIsReadTrueAndConfirmedAtBefore(any(OffsetDateTime.class));
     }
   }
 
