@@ -28,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -232,9 +233,16 @@ public class NotificationServiceTest {
       //given
       //when
       notificationService.cleanupReadNotifications();
+      ArgumentCaptor<OffsetDateTime> cutoffCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
       //then
       then(notificationRepository).should()
-          .deleteAllByIsReadTrueAndConfirmedAtBefore(any(OffsetDateTime.class));
+          .deleteAllByIsReadTrueAndConfirmedAtBefore(cutoffCaptor.capture());
+      assertThat(cutoffCaptor.getValue())
+          .isBetween(
+              OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(1).minusMinutes(1),
+              OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(1).plusMinutes(1)
+
+          );
     }
   }
 
@@ -376,7 +384,8 @@ public class NotificationServiceTest {
       OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
       mockCursorPageRequest = new CursorPageRequest(null, fixedTime, 50);
       //when,then
-      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest, SortDirection.DESC))
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest,
+          SortDirection.DESC))
           .isInstanceOf(NotificationException.class);
 
     }
@@ -388,7 +397,8 @@ public class NotificationServiceTest {
       OffsetDateTime fixedTime = OffsetDateTime.of(2026, 4, 1, 0, 0, 0, 0, ZoneOffset.UTC);
       mockCursorPageRequest = new CursorPageRequest("invalid-uuid", fixedTime, 50);
       //when,then
-      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest, SortDirection.DESC))
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest,
+          SortDirection.DESC))
           .isInstanceOf(NotificationException.class);
     }
 
@@ -398,7 +408,8 @@ public class NotificationServiceTest {
       //given
       mockCursorPageRequest = new CursorPageRequest(UUID.randomUUID().toString(), null, 50);
       //when,then
-      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest, SortDirection.DESC))
+      assertThatThrownBy(() -> notificationService.findAll(mockUser.getId(), mockCursorPageRequest,
+          SortDirection.DESC))
           .isInstanceOf(NotificationException.class);
     }
   }
