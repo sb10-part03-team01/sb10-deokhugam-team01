@@ -88,7 +88,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("실패(400) - 잘못된 입력(일력값 검증 실패) - 올바르지 않은 이메일")
+    @DisplayName("실패(400) - 잘못된 입력(입력값 검증 실패) - 올바르지 않은 이메일")
     void should_ReturnBadRequest_When_InvalidEmail() throws Exception {
       // given - @Email 위반
       UserRegisterRequest request = new UserRegisterRequest(
@@ -105,7 +105,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("실패(400) - 잘못된 입력(일력값 검증 실패) - 닉네임 길이 위반")
+    @DisplayName("실패(400) - 잘못된 입력(일렵값 검증 실패) - 닉네임 길이 위반")
     void should_ReturnBadRequest_When_InvalidNickname() throws Exception {
       // given - @Size(min = 2, max = 20) 위반
       UserRegisterRequest request = new UserRegisterRequest(
@@ -122,7 +122,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("실패(400) - 잘못된 입력(일력값 검증 실패) - 비밀번호 패턴 위반")
+    @DisplayName("실패(400) - 잘못된 입력(일렵값 검증 실패) - 비밀번호 패턴 위반")
     void should_ReturnBadRequest_When_InvalidPassword() throws Exception {
       // given - @Pattern 위반: 특수문자/숫자 누락
       UserRegisterRequest request = new UserRegisterRequest(
@@ -185,6 +185,21 @@ class UserControllerTest {
     void should_ReturnBadRequest_When_BlankEmail() throws Exception {
       // given - @NotBlank 위반
       UserLoginRequest request = new UserLoginRequest("", PASSWORD);
+
+      // when & then
+      mockMvc.perform(post("/api/users/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isBadRequest());
+
+      verify(userService, never()).login(any(UserLoginRequest.class));
+    }
+
+    @Test
+    @DisplayName("실패(400) - 잘못된 요청 (입력값 검증 실패) - 비밀번호가 비어 있음")
+    void should_ReturnBadRequest_When_BlankPassword() throws Exception {
+      // given - `@NotBlank` 위반
+      UserLoginRequest request = new UserLoginRequest(EMAIL, "");
 
       // when & then
       mockMvc.perform(post("/api/users/login")
@@ -264,6 +279,20 @@ class UserControllerTest {
           .andExpect(status().isNoContent());
 
       verify(userService).deleteUser(userId);
+    }
+
+    @Test
+    @DisplayName("실패(400) - 요청자 헤더 누락")
+    void should_ReturnBadRequest_When_HeaderMissing() throws Exception {
+      // given
+      UUID userId = UUID.randomUUID();
+
+      // when & then
+      mockMvc.perform(delete("/api/users/{userId}", userId))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value(ErrorCode.MISSING_REQUEST_USER_ID.getCode()));
+
+      verify(userService, never()).deleteUser(any(UUID.class));
     }
 
     @Test
@@ -401,6 +430,20 @@ class UserControllerTest {
           .andExpect(status().isNoContent());
 
       verify(userService).permanentDeleteUser(userId);
+    }
+
+    @Test
+    @DisplayName("실패(400) - 요청자 헤더 누락")
+    void should_ReturnBadRequest_When_HeaderMissing() throws Exception {
+      // given
+      UUID userId = UUID.randomUUID();
+
+      // when & then
+      mockMvc.perform(delete("/api/users/{userId}/hard", userId))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value(ErrorCode.MISSING_REQUEST_USER_ID.getCode()));
+
+      verify(userService, never()).permanentDeleteUser(any(UUID.class));
     }
 
     @Test
