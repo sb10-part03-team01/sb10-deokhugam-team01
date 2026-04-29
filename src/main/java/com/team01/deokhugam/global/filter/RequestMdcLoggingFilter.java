@@ -1,16 +1,16 @@
 package com.team01.deokhugam.global.filter;
 
-import static org.springframework.util.StringUtils.hasText;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.UUID;
-import org.jboss.logging.MDC;
+import org.slf4j.MDC;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Component
 public class RequestMdcLoggingFilter extends OncePerRequestFilter {
   // MDC 내부 로그용 key
   public static final String MDC_REQUEST_ID = "requestId";
