@@ -52,19 +52,22 @@ public class DashboardBatchService {
       Map<UUID, Double> reviewScoreSumMap = reviewScoreSums.stream()
           .collect(Collectors.toMap(
               UserReviewScoreSumRow::userId,
-              UserReviewScoreSumRow::scoreSum
+              UserReviewScoreSumRow::scoreSum,
+              Double::sum
           ));
 
       Map<UUID, Long> likeCountMap = likeCounts.stream()
           .collect(Collectors.toMap(
               UserActivityCountRow::userId,
-              UserActivityCountRow::count
+              UserActivityCountRow::count,
+              Long::sum
           ));
 
       Map<UUID, Long> commentCountMap = commentCounts.stream()
           .collect(Collectors.toMap(
               UserCommentCountRow::userId,
-              UserCommentCountRow::commentCount
+              UserCommentCountRow::commentCount,
+              Long::sum
           ));
 
       Set<UUID> userIds = new HashSet<>();
