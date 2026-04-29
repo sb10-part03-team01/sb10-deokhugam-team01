@@ -1,5 +1,7 @@
 package com.team01.deokhugam.book.storage;
 
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
@@ -56,7 +58,7 @@ public class S3ThumbnailStorage implements ThumbnailStorage{
   public String upload(MultipartFile image) throws IOException {
     String contentType = image.getContentType();
     if (!StringUtils.hasText(contentType) || !contentType.startsWith("image/")) {
-        throw new IllegalArgumentException("이미지 파일만 업로드할 수 있습니다.");
+        throw new DeokhugamException(ErrorCode.INVALID_FILE);
       }
 
     String imageOriginalName = image.getOriginalFilename();
