@@ -53,8 +53,21 @@ public class PopularReviewRepositoryImpl implements PopularReviewRepositoryCusto
   }
 
   private BooleanExpression cursorCondition(PopularReviewSearchCondition condition) {
-    if (condition.cursor() == null || condition.cursor().isBlank()) {
+    boolean hasCursor = condition.cursor() != null && !condition.cursor().isBlank();
+    boolean hasAfter = condition.after() != null;
+
+    if (!hasCursor && !hasAfter) {
       return null;
+    }
+
+    if (hasCursor != hasAfter) {
+      throw new DeokhugamException(
+          ErrorCode.INVALID_CURSOR_FORMAT,
+          Map.of(
+              "cursor", condition.cursor(),
+              "after", String.valueOf(condition.after())
+          )
+      );
     }
 
     int cursorRank;
@@ -65,12 +78,6 @@ public class PopularReviewRepositoryImpl implements PopularReviewRepositoryCusto
           ErrorCode.INVALID_CURSOR_FORMAT,
           Map.of("cursor", condition.cursor())
       );
-    }
-
-    if (condition.after() == null) {
-      return condition.direction() == SortDirection.DESC
-          ? popularReview.rank.lt(cursorRank)
-          : popularReview.rank.gt(cursorRank);
     }
 
     if (condition.direction() == SortDirection.DESC) {

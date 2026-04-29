@@ -126,7 +126,6 @@ public class PopularReviewServiceImpl implements PopularReviewService {
   ) {
     DashboardPeriod resolvedPeriod = period != null ? period : DashboardPeriod.DAILY;
     SortDirection resolvedDirection = direction != null ? direction : SortDirection.ASC;
-    int resolvedLimit = limit != null ? Math.min(Math.max(limit, 1), 100) : 50;
 
     LocalDate calculatedDate = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate();
 
@@ -135,9 +134,11 @@ public class PopularReviewServiceImpl implements PopularReviewService {
         resolvedDirection,
         cursor,
         after,
-        resolvedLimit,
+        limit,
         calculatedDate
     );
+
+    int resolvedLimit = condition.limit();
 
     List<PopularReview> popularReviews = popularReviewRepository.findAllByCondition(condition);
     long totalElements = popularReviewRepository.countByCondition(condition);
