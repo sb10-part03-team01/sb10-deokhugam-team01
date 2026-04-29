@@ -1,13 +1,19 @@
 package com.team01.deokhugam.dashboard.popularreview.service;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
+import com.team01.deokhugam.dashboard.popularreview.dto.CursorPageResponsePopularReviewDto;
+import com.team01.deokhugam.dashboard.popularreview.dto.PopularReviewDto;
 import com.team01.deokhugam.dashboard.popularreview.dto.PopularReviewScoreRow;
+import com.team01.deokhugam.dashboard.popularreview.dto.PopularReviewSearchCondition;
 import com.team01.deokhugam.dashboard.popularreview.entity.PopularReview;
+import com.team01.deokhugam.dashboard.popularreview.mapper.PopularReviewMapper;
 import com.team01.deokhugam.dashboard.popularreview.repository.PopularReviewRepository;
+import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,6 +32,7 @@ public class PopularReviewServiceImpl implements PopularReviewService {
 
   private final PopularReviewRepository popularReviewRepository;
   private final ReviewRepository reviewRepository;
+  private final PopularReviewMapper popularReviewMapper;
 
   @Override
   public void calculatePopularReviews(
@@ -106,5 +113,59 @@ public class PopularReviewServiceImpl implements PopularReviewService {
     }
 
     popularReviewRepository.saveAll(popularReviews);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public CursorPageResponsePopularReviewDto getPopularReviews(
+      DashboardPeriod period,
+      SortDirection direction,
+      String cursor,
+      OffsetDateTime after,
+      Integer limit
+  ) {
+    DashboardPeriod resolvedPeriod = period != null ? period : DashboardPeriod.DAILY;
+    SortDirection resolvedDirection = direction != null ? direction : SortDirection.ASC;
+    int resolvedLimit = limit != null ? Math.min(Math.max(limit, 1), 100) : 50;
+
+    LocalDate calculatedDate = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate();
+
+    PopularReviewSearchCondition condition = new PopularReviewSearchCondition(
+        resolvedPeriod,
+        resolvedDirection,
+        cursor,
+        after,
+        resolvedLimit,
+        calculatedDate
+    );
+
+    List<PopularReview> popularReviews = popularReviewRepository.findAllByCondition(condition);
+    long totalElements = popularReviewRepository.countByCondition(condition);
+
+    boolean hasNext = popularReviews.size() > resolvedLimit;
+
+    List<PopularReview> pageContent = hasNext
+        ? popularReviews.subList(0, resolvedLimit)
+        : popularReviews;
+
+    List<PopularReviewDto> content = popularReviewMapper.toDtoList(pageContent);
+
+    String nextCursor = null;
+    OffsetDateTime nextAfter = null;
+
+    if (hasNext && !pageContent.isEmpty()) {
+      PopularReview last = pageContent.get(pageContent.size() - 1);
+      nextCursor = String.valueOf(last.getRank());
+      nextAfter = last.getCreatedAt();
+    }
+
+    return new CursorPageResponsePopularReviewDto(
+        content,
+        nextCursor,
+        nextAfter,
+        content.size(),
+        totalElements,
+        hasNext
+    );
   }
 }
