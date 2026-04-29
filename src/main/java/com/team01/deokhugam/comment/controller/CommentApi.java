@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "댓글 관리", description = "댓글 관련 API")
@@ -31,7 +32,7 @@ public interface CommentApi {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   ResponseEntity<CursorPageResponse<CommentDto>> getComments(
-      @Parameter(description = "댓글 조회 조건") @Valid CommentSearchRequest request);
+      @ParameterObject @Valid CommentSearchRequest request);
 
   @Operation(summary = "댓글 등록", description = "새로운 댓글을 등록합니다.")
   @ApiResponses({

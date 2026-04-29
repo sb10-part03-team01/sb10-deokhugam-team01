@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +37,7 @@ public class CommentController implements CommentApi {
   @Override
   @GetMapping
   public ResponseEntity<CursorPageResponse<CommentDto>> getComments(
-      @Valid @ModelAttribute CommentSearchRequest request) {
+      @Valid @ParameterObject @ModelAttribute CommentSearchRequest request) {
 
     log.info(
         "[COMMENT] getComments reviewId={}, direction={}, cursor={}, after={}, limit={}",
