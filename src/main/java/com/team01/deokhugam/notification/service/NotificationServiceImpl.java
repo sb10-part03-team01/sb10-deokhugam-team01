@@ -93,7 +93,7 @@ public class NotificationServiceImpl implements NotificationService {
     OffsetDateTime oneWeekAgo = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(1);
     log.info("[DELETE_NOTIFICATION] 1주일 경과 알림 삭제 시작 기준시간={}", oneWeekAgo);
 
-    notificationRepository.deleteAllByIsReadTrueAndUpdatedAtBefore(oneWeekAgo);
+    notificationRepository.deleteAllByIsReadTrueAndConfirmedAtBefore(oneWeekAgo);
 
     log.info("[DELETE_NOTIFICATION] 1주일 경과 알림 삭제 완료");
   }
