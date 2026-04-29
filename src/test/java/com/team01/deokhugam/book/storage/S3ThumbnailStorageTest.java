@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import java.io.IOException;
 import java.net.URL;
 import java.util.function.Consumer;
@@ -78,7 +79,8 @@ class S3ThumbnailStorageTest {
 
     // when & then
     assertThatThrownBy(() -> s3Storage.upload(file))
-        .isInstanceOf(DeokhugamException.class);
+        .isInstanceOfSatisfying(DeokhugamException.class, ex ->
+             assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INVALID_FILE));
   }
 
   @Test
