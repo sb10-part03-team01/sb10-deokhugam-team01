@@ -3,10 +3,8 @@ package com.team01.deokhugam.review.entity;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.comment.entity.Comment;
 import com.team01.deokhugam.global.entity.BaseRemovableEntity;
-import com.team01.deokhugam.global.exception.review.ReviewContentBlankException;
-import com.team01.deokhugam.global.exception.review.ReviewContentNullException;
-import com.team01.deokhugam.global.exception.review.ReviewContentTooLongException;
-import com.team01.deokhugam.global.exception.review.ReviewRatingOutOfRangeException;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.user.entity.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -17,9 +15,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -69,12 +67,6 @@ public class Review extends BaseRemovableEntity {
   @OneToMany(mappedBy = "review", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private List<Comment> comments = new ArrayList<>();
 
-
-  // 낙관적 락
-  @Version
-  @Column(name = "version", nullable = false)
-  private Long version;
-
   public Review(Book book, User user, String content, double rating) {
     validateContent(content);
     validateRating(rating);
@@ -122,24 +114,26 @@ public class Review extends BaseRemovableEntity {
 
   private void validateContent(String content) {
     if (content == null) {
-      throw new ReviewContentNullException();
+      throw new DeokhugamException(ErrorCode.REVIEW_CONTENT_NULL);
     }
 
     String trimmedContent = content.trim();
 
     if (trimmedContent.isEmpty()) {
-      throw new ReviewContentBlankException();
+      throw new DeokhugamException(ErrorCode.REVIEW_CONTENT_BLANK);
     }
 
     if (trimmedContent.length() > 1000) {
-      throw new ReviewContentTooLongException(1000);
+      throw new DeokhugamException(ErrorCode.REVIEW_CONTENT_TOO_LONG);
+
     }
   }
 
 
   private void validateRating(double rating) {
     if (rating < 1.0 || rating > 5.0) {
-      throw new ReviewRatingOutOfRangeException(rating);
+      throw new DeokhugamException(ErrorCode.REVIEW_RATING_OUT_OF_RANGE, Map.of("rating", rating));
+
     }
   }
 }
