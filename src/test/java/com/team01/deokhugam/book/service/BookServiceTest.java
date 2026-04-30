@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.book.BookMapper;
@@ -44,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.client.RestClient;
@@ -237,7 +239,7 @@ class BookServiceTest {
     given(bookRepository.existsByIsbnAndIsDeletedFalse(anyString())).willReturn(false);
     // saveAndFlush 시점에 DB에서 강제로 중복 예외 발생
     given(bookRepository.saveAndFlush(any(Book.class)))
-        .willThrow(new org.springframework.dao.DataIntegrityViolationException("Unique constraint violation"));
+        .willThrow(new DataIntegrityViolationException("Unique constraint violation"));
 
     // when & then
     assertThatThrownBy(() -> bookService.createBook(request, null))
@@ -245,6 +247,19 @@ class BookServiceTest {
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DUPLICATED_ISBN);
   }
 
+  @Test
+  @DisplayName("도서 등록 실패 - 썸네일 업로드 중 IOException 발생 시 예외 변환")
+  void createBook_Fail_ThumbnailUploadIOException() throws IOException {
+    // given
+    MultipartFile mockFile = new MockMultipartFile("thumbnail", "test.jpg", "image/jpeg", "test data".getBytes());
+    given(bookRepository.existsByIsbnAndIsDeletedFalse(anyString())).willReturn(false);
+    given(s3ThumbnailStorage.upload(mockFile)).willThrow(new IOException("S3 통신 에러"));
+
+    // when & then
+    assertThatThrownBy(() -> bookService.createBook(request, mockFile))
+        .isInstanceOf(DeokhugamException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.THUMBNAIL_UPLOAD_FAIL);
+  }
   // =========================================================================
   // 단건 조회 (findBook) 테스트
   // =========================================================================
@@ -428,7 +443,7 @@ class BookServiceTest {
     UUID bookId = UUID.randomUUID();
     book.addThumbnail("old-s3-url.jpg"); // 기존 썸네일 존재
 
-    MultipartFile mockFile = new org.springframework.mock.web.MockMultipartFile("thumbnail", "new.jpg", "image/jpeg", "data".getBytes());
+    MultipartFile mockFile = new MockMultipartFile("thumbnail", "new.jpg", "image/jpeg", "data".getBytes());
     String newS3Url = "new-s3-url.jpg";
 
     given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.of(book));
@@ -436,7 +451,7 @@ class BookServiceTest {
     given(bookMapper.toDto(book)).willReturn(bookDto);
 
     // 가짜 트랜잭션 환경 열기
-    org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+    TransactionSynchronizationManager.initSynchronization();
 
     try {
       // when
@@ -446,9 +461,9 @@ class BookServiceTest {
       assertThat(book.getThumbnailUrl()).isEqualTo(newS3Url);
 
       // 트랜잭션 커밋 상태 강제 발생 (afterCommit 콜백 실행)
-      List<org.springframework.transaction.support.TransactionSynchronization> syncs =
-          org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations();
-      for (org.springframework.transaction.support.TransactionSynchronization sync : syncs) {
+      List<TransactionSynchronization> syncs =
+          TransactionSynchronizationManager.getSynchronizations();
+      for (TransactionSynchronization sync : syncs) {
         sync.afterCommit();
       }
 
@@ -456,7 +471,7 @@ class BookServiceTest {
       verify(s3ThumbnailStorage).delete("old-s3-url.jpg");
 
     } finally {
-      org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+      TransactionSynchronizationManager.clearSynchronization();
     }
   }
 
@@ -472,6 +487,53 @@ class BookServiceTest {
     // when & then
     assertThatThrownBy(() -> bookService.updateBook(request, bookId, null))
         .isInstanceOf(DeokhugamException.class);
+  }
+
+  @Test
+  @DisplayName("도서 수정 롤백 - 트랜잭션 롤백 시 새로 업로드된 썸네일이 삭제된다.")
+  void updateBook_Fail_Rollback_Deletes_NewThumbnail() throws Exception {
+    // given
+    UUID bookId = UUID.randomUUID();
+    MultipartFile mockFile = new MockMultipartFile("thumbnail", "new.jpg", "image/jpeg", "data".getBytes());
+    String newS3Url = "new-s3-url.jpg";
+
+    given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.of(book));
+    given(s3ThumbnailStorage.upload(mockFile)).willReturn(newS3Url);
+    given(bookMapper.toDto(book)).willReturn(bookDto);
+
+    TransactionSynchronizationManager.initSynchronization();
+    try {
+      // when
+      bookService.updateBook(new BookUpdateRequest(null, null, null, null, null), bookId, mockFile);
+
+      // then: 강제로 롤백 상태 발생 (afterCompletion)
+      List<TransactionSynchronization> syncs = TransactionSynchronizationManager.getSynchronizations();
+      for (TransactionSynchronization sync : syncs) {
+        sync.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+      }
+
+      // 새로 업로드했던 이미지가 롤백되면서 잘 지워지는지 검증
+      verify(s3ThumbnailStorage).delete(newS3Url);
+    } finally {
+      TransactionSynchronizationManager.clearSynchronization();
+    }
+  }
+
+  @Test
+  @DisplayName("도서 수정 실패 - 썸네일 업로드 중 IOException 발생 시 예외 변환")
+  void updateBook_Fail_ThumbnailUploadIOException() throws IOException {
+    // given
+    UUID bookId = UUID.randomUUID();
+    BookUpdateRequest updateRequest = new BookUpdateRequest("새제목", null, null, null, null);
+    MultipartFile mockFile = new MockMultipartFile("thumbnail", "test.jpg", "image/jpeg", "test data".getBytes());
+
+    given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.of(book));
+    given(s3ThumbnailStorage.upload(mockFile)).willThrow(new IOException("S3 통신 에러"));
+
+    // when & then
+    assertThatThrownBy(() -> bookService.updateBook(updateRequest, bookId, mockFile))
+        .isInstanceOf(DeokhugamException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.THUMBNAIL_UPLOAD_FAIL);
   }
 
   // =========================================================================
@@ -509,6 +571,22 @@ class BookServiceTest {
 
     // then
     verify(s3ThumbnailStorage).delete("https://s3.aws.com/old-image.jpg");
+    verify(bookRepository).delete(book);
+  }
+
+  @Test
+  @DisplayName("도서 영구 삭제 성공 - 썸네일이 없는 도서는 S3 삭제 로직이 실행되지 않는다.")
+  void permanentDeleteBook_without_thumbnail_Success() {
+    // given
+    UUID bookId = UUID.randomUUID();
+    // book 객체에 썸네일이 없는 상태 (null)
+    given(bookRepository.findByIdAndIsDeletedTrue(bookId)).willReturn(Optional.of(book));
+
+    // when
+    bookService.permanentDeleteBook(bookId);
+
+    // then
+    verify(s3ThumbnailStorage, never()).delete(anyString()); // delete가 단 한 번도 호출되지 않아야 함
     verify(bookRepository).delete(book);
   }
 
@@ -585,7 +663,7 @@ class BookServiceTest {
         .willReturn(new NaverBookResponse(responses.size(), responses));
 
     // when
-    com.team01.deokhugam.book.dto.naver.NaverBookDto result = bookService.getBookInfoByIsbn(isbn);
+    NaverBookDto result = bookService.getBookInfoByIsbn(isbn);
 
     // then: 이미지 다운로드 로직이 차단되어 null이 반환되어야 함
     assertThat(result.thumbnailImage()).isNull();
@@ -593,11 +671,59 @@ class BookServiceTest {
   }
 
   @Test
+  @DisplayName("네이버 도서 검색 실패 - ISBN이 공백일 경우 예외 발생")
+  void getBookInfoByIsbn_Fail_BlankIsbn() {
+    assertThatThrownBy(() -> bookService.getBookInfoByIsbn("   "))
+        .isInstanceOf(DeokhugamException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ISBN_UNIDENTIFIABLE);
+  }
+
+  @Test
+  @DisplayName("네이버 도서 검색 실패 - 검색 결과가 없을 경우 예외 발생")
+  void getBookInfoByIsbn_Fail_NotFound() {
+    // given
+    String isbn = "9788966263134";
+    // 네이버가 검색결과 0개를 내려줌
+    NaverBookResponse mockResponse = new NaverBookResponse(0, List.of());
+    given(naverRestClient.get().uri((Function)any()).retrieve().body(NaverBookResponse.class))
+        .willReturn(mockResponse);
+
+    // when & then
+    assertThatThrownBy(() -> bookService.getBookInfoByIsbn(isbn))
+        .isInstanceOf(DeokhugamException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.NAVER_BOOK_NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("네이버 도서 검색 - 이미지 다운로드 중 에러가 나면 전체 로직은 성공하고 이미지만 null 반환")
+  void getBookInfoByIsbn_ImageDownloadException() {
+    // given
+    String isbn = "9788966263134";
+    String validImageUrl = "https://shopping-phinf.pstatic.net/test.jpg";
+    NaverBookResponse.NaverBookItem mockItem = new NaverBookResponse.NaverBookItem(
+        "테스트 제목", "저자", "설명", "출판사", "20231015", "1234", validImageUrl
+    );
+    given(naverRestClient.get().uri((Function)any()).retrieve().body(NaverBookResponse.class))
+        .willReturn(new NaverBookResponse(1, List.of(mockItem)));
+
+    // 이미지 통신 중 강제 예외 발생
+    given(defaultRestClient.get().uri(validImageUrl).retrieve().body(byte[].class))
+        .willThrow(new RuntimeException("다운로드 터짐!"));
+
+    // when
+    NaverBookDto result = bookService.getBookInfoByIsbn(isbn);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.thumbnailImage()).isNull(); // 이미지는 null로 안전하게 반환!
+  }
+
+  @Test
   @DisplayName("OCR ISBN 추출 성공 - 이미지에서 정규식에 맞는 ISBN을 성공적으로 추출한다.")
   void getIsbnByOcr_Success() {
     // given
-    org.springframework.test.util.ReflectionTestUtils.setField(bookService, "ocrApiKey", "test-key");
-    MultipartFile mockImage = new org.springframework.mock.web.MockMultipartFile("image", "test.jpg", "image/jpeg", "image".getBytes());
+    ReflectionTestUtils.setField(bookService, "ocrApiKey", "test-key");
+    MultipartFile mockImage = new MockMultipartFile("image", "test.jpg", "image/jpeg", "image".getBytes());
 
     // OCR이 읽어온 텍스트: 잡동사니 문자열 사이에 ISBN이 숨어있는 상황
     String ocrText = "책 가격 15,000원 바코드 번호 ISBN 978-89-6626-313-4 읽어주세요";
@@ -618,10 +744,10 @@ class BookServiceTest {
   @DisplayName("OCR API 호출 중 서버 에러(RuntimeException) 발생 시 커스텀 예외로 감싸서 던진다.")
   void getIsbnByOcr_Fail_ApiServerError() {
     // given
-    org.springframework.test.util.ReflectionTestUtils.setField(bookService, "ocrApiKey", "test-key");
-    MultipartFile mockImage = new org.springframework.mock.web.MockMultipartFile("image", "test.jpg", "image/jpeg", "image".getBytes());
+    ReflectionTestUtils.setField(bookService, "ocrApiKey", "test-key");
+    MultipartFile mockImage = new MockMultipartFile("image", "test.jpg", "image/jpeg", "image".getBytes());
 
-    // RestClient가 500 에러 등을 뱉어서 통신 자체가 터졌을 때! (catch 블록 커버리지)
+    // RestClient가 500 에러 등을 뱉어서 통신 자체가 터졌을 때 (catch 블록 커버리지)
     given(ocrRestClient.post().uri(anyString()).contentType(any()).body(any(Object.class)).retrieve().body(OcrSpaceResponse.class))
         .willThrow(new RuntimeException("Connection Timeout!"));
 
@@ -629,5 +755,52 @@ class BookServiceTest {
     assertThatThrownBy(() -> bookService.getIsbnByOcr(mockImage))
         .isInstanceOf(DeokhugamException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.API_SERVER_ERROR);
+  }
+
+  @Test
+  @DisplayName("OCR 실패 - API 키가 설정되지 않은 경우")
+  void getIsbnByOcr_Fail_NoApiKey() {
+    ReflectionTestUtils.setField(bookService, "ocrApiKey", "");
+    MultipartFile mockImage = new MockMultipartFile("image", "test.jpg", "image/jpeg", "image".getBytes());
+
+    assertThatThrownBy(() -> bookService.getIsbnByOcr(mockImage))
+        .isInstanceOf(DeokhugamException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.API_CREDENTIAL_FAIL);
+  }
+
+  @Test
+  @DisplayName("OCR 실패 - 추출된 텍스트에 유효한 ISBN 패턴이 없는 경우")
+  void getIsbnByOcr_Fail_NoMatch() {
+    // given
+    ReflectionTestUtils.setField(bookService, "ocrApiKey", "test-key");
+    MultipartFile mockImage = new MockMultipartFile("image", "test.jpg", "image/jpeg", "image".getBytes());
+
+    OcrSpaceResponse.ParsedResult parsedResult = new OcrSpaceResponse.ParsedResult("그냥 일반적인 책 텍스트입니다. ISBN 없음.", "에러 없음");
+    OcrSpaceResponse mockResponse = new OcrSpaceResponse(List.of(parsedResult), false);
+
+    given(ocrRestClient.post().uri(anyString()).contentType(any()).body(any(Object.class)).retrieve().body(OcrSpaceResponse.class))
+        .willReturn(mockResponse);
+
+    // when & then (while 문을 다 돌았는데 못 찾았을 때의 예외 커버리지)
+    assertThatThrownBy(() -> bookService.getIsbnByOcr(mockImage))
+        .isInstanceOf(DeokhugamException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ISBN_UNIDENTIFIABLE);
+  }
+
+  @Test
+  @DisplayName("도서 평점 업데이트 연동 성공 - 평점 더하기, 빼기, 수정")
+  void reviewRating_Methods_Success() {
+    // given
+    UUID bookId = UUID.randomUUID();
+    given(bookRepository.findByIdAndIsDeletedFalse(bookId)).willReturn(Optional.of(book));
+
+    // when
+    bookService.plusBookReviewRating(bookId, 5.0);
+    bookService.minusBookReviewRating(bookId, 5.0);
+    bookService.modifyBookReviewRating(bookId, 5.0, 4.0);
+
+    // then
+    // 로직은 Book 엔티티 안에 있으므로, findById가 정상적으로 3번 호출되었는지만 검증하여 커버리지 확보
+    verify(bookRepository, times(3)).findByIdAndIsDeletedFalse(bookId);
   }
 }
