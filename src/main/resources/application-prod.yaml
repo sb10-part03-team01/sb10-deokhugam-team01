@@ -35,6 +35,9 @@ management:
       enabled: false
 
 deokhugam:
+  batch:
+    dashboard:
+      cron: "0 * * * * *" # 매 1분마다
   user:
     cleanup:
       # 논리 삭제 후 1일 경과 뒤 유저 정보가 완전히 삭제

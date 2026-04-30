@@ -37,9 +37,17 @@ public class PopularReviewController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime after,
       @RequestParam(defaultValue = "50") Integer limit
   ) {
-    return ResponseEntity.ok(
-        popularReviewService.getPopularReviews(period, direction, cursor, after, limit)
-    );
-  }
+    CursorPageResponsePopularReviewDto response =
+        popularReviewService.getPopularReviews(period, direction, cursor, after, limit);
 
+    log.info(
+        "인기 리뷰 목록 조회 성공: period={}, direction={}, size={}, hasNext={}",
+        period,
+        direction,
+        response.size(),
+        response.hasNext()
+    );
+
+    return ResponseEntity.ok(response);
+  }
 }

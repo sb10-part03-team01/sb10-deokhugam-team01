@@ -15,13 +15,8 @@ import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.book.service.BookService;
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
-import com.team01.deokhugam.global.exception.book.BookNotFoundException;
-import com.team01.deokhugam.global.exception.review.ReviewAlreadyExistsException;
-import com.team01.deokhugam.global.exception.review.ReviewNotFoundException;
-import com.team01.deokhugam.global.exception.review.ReviewNotSoftDeletedException;
-import com.team01.deokhugam.global.exception.review.ReviewUpdateForbiddenException;
-import com.team01.deokhugam.global.exception.user.UserNotFoundException;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -124,12 +119,10 @@ class ReviewServiceImplTest {
 
     given(bookRepository.findById(bookId)).willReturn(Optional.empty());
 
-    Exception exception = assertThrows(
-        BookNotFoundException.class,
-        () -> reviewServiceImpl.createReview(reviewCreateRequest)
-    );
-
-    assertThat(exception).isInstanceOf(BookNotFoundException.class);
+    assertThatThrownBy(() -> reviewServiceImpl.createReview(reviewCreateRequest))
+        .isInstanceOf(DeokhugamException.class)
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
   }
 
   @Test
@@ -143,11 +136,10 @@ class ReviewServiceImplTest {
     given(userRepository.findById(userId)).willReturn(Optional.empty());
 
     assertThatThrownBy(() -> reviewServiceImpl.createReview(reviewCreateRequest))
-        .isInstanceOf(UserNotFoundException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.USER_NOT_FOUND);
   }
-
 
   @Test
   @DisplayName("리뷰 생성 - 같은 유저가 같은 도서에 중복 리뷰 작성 시 예외 발생")
@@ -164,7 +156,7 @@ class ReviewServiceImplTest {
         .willReturn(true);
 
     assertThatThrownBy(() -> reviewServiceImpl.createReview(reviewCreateRequest))
-        .isInstanceOf(ReviewAlreadyExistsException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_ALREADY_EXISTS);
   }
@@ -194,7 +186,7 @@ class ReviewServiceImplTest {
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.empty());
 
     assertThatThrownBy(() -> reviewServiceImpl.getReview(reviewId, requestUserId))
-        .isInstanceOf(ReviewNotFoundException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);
   }
@@ -329,7 +321,7 @@ class ReviewServiceImplTest {
     given(author.getId()).willReturn(authorId);
 
     assertThatThrownBy(() -> reviewServiceImpl.updateReview(reviewId, requestUserId, request))
-        .isInstanceOf(ReviewUpdateForbiddenException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_UPDATE_FORBIDDEN);
 
@@ -360,7 +352,7 @@ class ReviewServiceImplTest {
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.empty());
 
     assertThatThrownBy(() -> reviewServiceImpl.deleteReview(reviewId, requestUserId))
-        .isInstanceOf(ReviewNotFoundException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);
   }
@@ -376,7 +368,7 @@ class ReviewServiceImplTest {
     given(author.getId()).willReturn(authorId);
 
     assertThatThrownBy(() -> reviewServiceImpl.deleteReview(reviewId, requestUserId))
-        .isInstanceOf(ReviewUpdateForbiddenException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_UPDATE_FORBIDDEN);
 
@@ -405,7 +397,7 @@ class ReviewServiceImplTest {
     given(reviewRepository.findById(reviewId)).willReturn(Optional.empty());
 
     assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
-        .isInstanceOf(ReviewNotFoundException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);
   }
@@ -421,7 +413,7 @@ class ReviewServiceImplTest {
     given(author.getId()).willReturn(authorId);
 
     assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
-        .isInstanceOf(ReviewUpdateForbiddenException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_UPDATE_FORBIDDEN);
 
@@ -440,7 +432,7 @@ class ReviewServiceImplTest {
     given(review.isDeleted()).willReturn(false);
 
     assertThatThrownBy(() -> reviewServiceImpl.hardDeleteReview(reviewId, requestUserId))
-        .isInstanceOf(ReviewNotSoftDeletedException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_NOT_SOFT_DELETED);
 
@@ -450,7 +442,6 @@ class ReviewServiceImplTest {
   @Test
   @DisplayName("리뷰 좋아요 - 좋아요 추가 정상 반영")
   void reviewLike_increase_success() {
-    // given
     Review review = mock(Review.class);
     User user = mock(User.class);
 
@@ -459,10 +450,8 @@ class ReviewServiceImplTest {
     given(reviewLikeRepository.findByReviewIdAndUserId(reviewId, requestUserId))
         .willReturn(Optional.empty());
 
-    //when
     ReviewLikeDto result = reviewServiceImpl.toggleLike(reviewId, requestUserId);
 
-    // then
     verify(reviewLikeRepository).save(any(ReviewLike.class));
     verify(review).increaseLikeCount();
     verify(review, never()).decreaseLikeCount();
@@ -474,7 +463,6 @@ class ReviewServiceImplTest {
   @Test
   @DisplayName("리뷰 좋아요 - 좋아요 감소 정상 반영")
   void reviewLike_decrease_success() {
-    // given
     Review review = mock(Review.class);
     User user = mock(User.class);
     ReviewLike reviewLike = mock(ReviewLike.class);
@@ -484,10 +472,8 @@ class ReviewServiceImplTest {
     given(reviewLikeRepository.findByReviewIdAndUserId(reviewId, requestUserId))
         .willReturn(Optional.of(reviewLike));
 
-    //when
     ReviewLikeDto result = reviewServiceImpl.toggleLike(reviewId, requestUserId);
 
-    // then
     verify(reviewLikeRepository).delete(reviewLike);
     verify(review).decreaseLikeCount();
     verify(review, never()).increaseLikeCount();
@@ -499,12 +485,10 @@ class ReviewServiceImplTest {
   @Test
   @DisplayName("리뷰 좋아요 - 논리삭제 되었거나 리뷰가 없을 시 예외 발생")
   void reviewLike_fail_whenReviewNotFound() {
-    // given
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.empty());
 
-    // when & then
     assertThatThrownBy(() -> reviewServiceImpl.toggleLike(reviewId, requestUserId))
-        .isInstanceOf(ReviewNotFoundException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);
   }
@@ -512,15 +496,13 @@ class ReviewServiceImplTest {
   @Test
   @DisplayName("리뷰 좋아요 - 사용자가 없을 시 예외 발생")
   void reviewLike_fail_whenUserIsNotFound() {
-    // given
     Review review = mock(Review.class);
 
     given(reviewRepository.findByIdAndIsDeletedFalse(reviewId)).willReturn(Optional.of(review));
     given(userRepository.findById(requestUserId)).willReturn(Optional.empty());
 
-    // when & then
     assertThatThrownBy(() -> reviewServiceImpl.toggleLike(reviewId, requestUserId))
-        .isInstanceOf(UserNotFoundException.class)
+        .isInstanceOf(DeokhugamException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.USER_NOT_FOUND);
   }

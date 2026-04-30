@@ -13,7 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team01.deokhugam.global.enums.SortDirection;
-import com.team01.deokhugam.global.exception.review.ReviewUpdateForbiddenException;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -21,6 +22,7 @@ import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import com.team01.deokhugam.review.service.ReviewService;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -256,16 +258,20 @@ class ReviewControllerTest {
   @Test
   @DisplayName("리뷰 수정 - 권한 없는 사용자면 403 반환")
   void updateReview_fail_whenForbidden() throws Exception {
-    // given
     UUID reviewId = UUID.randomUUID();
     UUID requestUserId = UUID.randomUUID();
 
     ReviewUpdateRequest request = new ReviewUpdateRequest("수정 시도", 4.5);
 
     given(reviewService.updateReview(reviewId, requestUserId, request))
-        .willThrow(new ReviewUpdateForbiddenException(reviewId, requestUserId));
+        .willThrow(new DeokhugamException(
+            ErrorCode.REVIEW_UPDATE_FORBIDDEN,
+            Map.of(
+                "reviewId", reviewId,
+                "requestUserId", requestUserId
+            )
+        ));
 
-    // when & then
     mockMvc.perform(patch("/api/reviews/{reviewId}", reviewId)
             .header("Deokhugam-Request-User-ID", requestUserId)
             .contentType(APPLICATION_JSON)

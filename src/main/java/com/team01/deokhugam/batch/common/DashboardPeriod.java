@@ -12,12 +12,13 @@ public enum DashboardPeriod {
 
   // 배치 집계 기준 시간대 UTC 통일
   private static final ZoneId SERVICE_ZONE = ZoneId.of("UTC");
+  private static final int MONTHLY_DAYS = 30;
 
   public LocalDateTime getStartDateTime(LocalDate baseDate) {
     return switch (this) {
       case DAILY -> baseDate.minusDays(1).atStartOfDay();
       case WEEKLY -> baseDate.minusWeeks(1).atStartOfDay();
-      case MONTHLY -> baseDate.minusMonths(1).atStartOfDay();
+      case MONTHLY -> baseDate.minusDays(MONTHLY_DAYS).atStartOfDay();
       case ALL_TIME -> LocalDateTime.of(2000, 1, 1, 0, 0);
     };
   }

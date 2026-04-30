@@ -16,6 +16,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+
 @Repository
 public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
@@ -123,6 +124,10 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
       jpql.append(" join r.user u ");
     }
 
+    if (queryParts.requiresBookJoin()) {
+      jpql.append(" join r.book b ");
+    }
+
     jpql.append(queryParts.whereClause());
 
     TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
@@ -135,6 +140,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     StringBuilder whereClause = new StringBuilder(" where r.isDeleted = false ");
     Map<String, Object> params = new HashMap<>();
     boolean requiresUserJoin = false;
+    boolean requiresBookJoin = false;
 
     if (condition.userId() != null) {
       whereClause.append(" and r.user.id = :userId ");
@@ -148,18 +154,20 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     if (condition.keyword() != null && !condition.keyword().isBlank()) {
       requiresUserJoin = true;
+      requiresBookJoin = true;
       whereClause.append(
           """
                and (
                  lower(u.nickname) like lower(:keyword) escape '\\'
                  or lower(r.content) like lower(:keyword) escape '\\'
+                 or lower(b.title) like lower(:keyword) escape '\\'
                )
               """
       );
       params.put("keyword", "%" + escapeLikeKeyword(condition.keyword()) + "%");
     }
 
-    return new QueryParts(whereClause.toString(), params, requiresUserJoin);
+    return new QueryParts(whereClause.toString(), params, requiresUserJoin, requiresBookJoin);
   }
 
   private UUID parseUuidCursor(String cursor) {
@@ -210,7 +218,8 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
   private record QueryParts(
       String whereClause,
       Map<String, Object> params,
-      boolean requiresUserJoin
+      boolean requiresUserJoin,
+      boolean requiresBookJoin
   ) {
 
   }
