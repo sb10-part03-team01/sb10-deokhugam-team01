@@ -8,6 +8,8 @@ import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
+import com.team01.deokhugam.notification.dto.NotificationCreateRequest;
+import com.team01.deokhugam.notification.service.NotificationService;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -45,6 +47,7 @@ public class ReviewServiceImpl implements ReviewService {
   private final UserRepository userRepository;
   private final ReviewMapper reviewMapper;
   private final BookService bookService;
+  private final NotificationService notificationService;
 
   @Override
   @Transactional
@@ -276,6 +279,22 @@ public class ReviewServiceImpl implements ReviewService {
             ReviewLike reviewLike = new ReviewLike(review, user);
             reviewLikeRepository.save(reviewLike);
             review.increaseLikeCount();
+
+            if (!review.getUser().getId().equals(requestUserId)) {
+              try {
+                notificationService.create(
+                    new NotificationCreateRequest(
+                        review,
+                        user,
+                        "내가 작성한 리뷰에 좋아요가 추가되었습니다."
+                    )
+                );
+              } catch (Exception e) {
+                log.error("리뷰 좋아요 알림 생성 실패: reviewId={}, actorUserId={}",
+                    reviewId, requestUserId, e);
+              }
+            }
+
             log.info("리뷰 좋아요 추가: reviewId={}, requestUserId={}", reviewId, requestUserId);
 
             return new ReviewLikeDto(reviewId, requestUserId, true);

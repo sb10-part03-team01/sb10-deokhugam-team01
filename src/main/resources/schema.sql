@@ -50,9 +50,10 @@ CREATE TABLE IF NOT EXISTS reviews
     updated_at    TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_reviews_books FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
-    CONSTRAINT fk_reviews_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT uk_reviews_book_user UNIQUE (book_id, user_id)
+    CONSTRAINT fk_reviews_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_reviews_active_book_user ON reviews (book_id, user_id) WHERE is_deleted = FALSE;
 
 CREATE INDEX IF NOT EXISTS idx_reviews_book_id ON reviews (book_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews (user_id);

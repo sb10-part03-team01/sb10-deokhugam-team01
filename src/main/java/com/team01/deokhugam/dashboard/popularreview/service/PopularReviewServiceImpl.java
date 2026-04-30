@@ -9,8 +9,11 @@ import com.team01.deokhugam.dashboard.popularreview.entity.PopularReview;
 import com.team01.deokhugam.dashboard.popularreview.mapper.PopularReviewMapper;
 import com.team01.deokhugam.dashboard.popularreview.repository.PopularReviewRepository;
 import com.team01.deokhugam.global.enums.SortDirection;
+import com.team01.deokhugam.notification.entity.Notification;
+import com.team01.deokhugam.notification.repository.NotificationRepository;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.repository.ReviewRepository;
+import com.team01.deokhugam.user.entity.User;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -35,6 +38,7 @@ public class PopularReviewServiceImpl implements PopularReviewService {
   private final PopularReviewRepository popularReviewRepository;
   private final ReviewRepository reviewRepository;
   private final PopularReviewMapper popularReviewMapper;
+  private final NotificationRepository notificationRepository;
 
   @Override
   public void calculatePopularReviews(
@@ -123,6 +127,38 @@ public class PopularReviewServiceImpl implements PopularReviewService {
     }
 
     popularReviewRepository.saveAll(popularReviews);
+
+    popularReviews.stream()
+        .filter(popularReview -> popularReview.getRank() <= 10)
+        .forEach(popularReview -> {
+          Review review = popularReview.getReview();
+          User reviewOwner = review.getUser();
+          String content = period + " 인기 리뷰 10위 안에 진입했습니다.";
+
+          try {
+            boolean alreadyExists = notificationRepository.existsByReviewIdAndUserIdAndContent(
+                review.getId(),
+                reviewOwner.getId(),
+                content
+            );
+
+            if (alreadyExists) {
+              return;
+            }
+
+            notificationRepository.save(new Notification(
+                review,
+                reviewOwner,
+                content
+            ));
+          } catch (Exception e) {
+            log.error("인기 리뷰 알림 생성 실패: reviewId={}, rank={}, period={}",
+                review.getId(),
+                popularReview.getRank(),
+                period,
+                e);
+          }
+        });
 
     log.info("인기 리뷰 집계 완료: period={}, calculatedDate={}, savedCount={}",
         period, calculatedDate, popularReviews.size());
