@@ -90,4 +90,51 @@ class DashboardBatchTransactionServiceTest {
     assertThat(second.getRating()).isEqualTo(4.2);
     assertThat(second.getReviewCount()).isEqualTo(3);
   }
+
+  @Test
+  @DisplayName("집계 대상 책이 일부 누락되면 스킵하고 rank는 연속으로 저장한다")
+  void delete_and_save_popular_books_skip_missing_book_and_keep_sequential_rank() {
+    // given
+    UUID bookId1 = UUID.randomUUID();
+    UUID missingBookId = UUID.randomUUID();
+    UUID bookId3 = UUID.randomUUID();
+
+    Book book1 =
+        new Book("책1", "저자1", "설명1", "출판사1", LocalDate.of(2026, 4, 1), "1111111111111", "t1");
+    Book book3 =
+        new Book("책3", "저자3", "설명3", "출판사3", LocalDate.of(2026, 4, 1), "3333333333333", "t3");
+
+    ReflectionTestUtils.setField(book1, "id", bookId1);
+    ReflectionTestUtils.setField(book3, "id", bookId3);
+
+    List<PopularBookScoreRow> rows =
+        List.of(
+            new PopularBookScoreRow(bookId1, 5L, 4.8, 4.88),
+            new PopularBookScoreRow(missingBookId, 4L, 4.5, 4.3),
+            new PopularBookScoreRow(bookId3, 3L, 4.2, 3.72));
+
+    LocalDate calculatedDate = LocalDate.of(2026, 4, 26);
+
+    given(bookRepository.findAllById(List.of(bookId1, missingBookId, bookId3)))
+        .willReturn(List.of(book1, book3));
+
+    // when
+    dashboardBatchTransactionService.deleteAndSavePopularBooks(
+        DashboardPeriod.DAILY, rows, calculatedDate);
+
+    // then
+    ArgumentCaptor<List<PopularBook>> captor = ArgumentCaptor.forClass(List.class);
+    verify(popularBookRepository).saveAll(captor.capture());
+
+    List<PopularBook> saved = captor.getValue();
+
+    // 누락된 책 1권은 저장X
+    assertThat(saved).hasSize(2);
+    // 첫번재는 원래 1위
+    assertThat(saved.get(0).getBook().getId()).isEqualTo(bookId1);
+    assertThat(saved.get(0).getRank()).isEqualTo(1);
+    // 두번째가 스킵되더라도 다음 저장대상 랭킹은 2위로
+    assertThat(saved.get(1).getBook().getId()).isEqualTo(bookId3);
+    assertThat(saved.get(1).getRank()).isEqualTo(2);
+  }
 }

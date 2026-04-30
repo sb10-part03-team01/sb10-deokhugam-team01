@@ -14,7 +14,7 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
 
   List<Notification> findAllByUserIdAndIsReadFalse(UUID userId);
 
-  void deleteAllByIsReadTrueAndUpdatedAtBefore(OffsetDateTime cutoff);
+  void deleteAllByIsReadTrueAndConfirmedAtBefore(OffsetDateTime cutoff);
 
   long countByUserId(UUID userId);
 }

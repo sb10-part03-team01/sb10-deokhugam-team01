@@ -13,7 +13,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface PopularReviewRepository extends JpaRepository<PopularReview, UUID> {
+public interface PopularReviewRepository extends JpaRepository<PopularReview, UUID>,
+    PopularReviewRepositoryCustom {
 
   @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query("""

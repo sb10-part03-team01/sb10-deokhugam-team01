@@ -2,9 +2,9 @@ package com.team01.deokhugam.comment.controller;
 
 import com.team01.deokhugam.comment.dto.CommentCreateRequest;
 import com.team01.deokhugam.comment.dto.CommentDto;
+import com.team01.deokhugam.comment.dto.CommentSearchRequest;
 import com.team01.deokhugam.comment.dto.CommentUpdateRequest;
 import com.team01.deokhugam.global.constant.AuthHeader;
-import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,8 +14,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.time.OffsetDateTime;
 import java.util.UUID;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "댓글 관리", description = "댓글 관련 API")
@@ -32,11 +32,7 @@ public interface CommentApi {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content)
   })
   ResponseEntity<CursorPageResponse<CommentDto>> getComments(
-      @Parameter(description = "리뷰 ID", required = true) UUID reviewId,
-      @Parameter(description = "정렬 방향", example = "DESC") SortDirection direction,
-      @Parameter(description = "커서 페이지네이션 커서") String cursor,
-      @Parameter(description = "보조 커서(createdAt)") OffsetDateTime after,
-      @Parameter(description = "페이지 크기", example = "50") Integer limit);
+      @ParameterObject @Valid CommentSearchRequest request);
 
   @Operation(summary = "댓글 등록", description = "새로운 댓글을 등록합니다.")
   @ApiResponses({
