@@ -28,7 +28,7 @@ RESTART IDENTITY CASCADE;
 -- 세션 변수에 한 번 고정한 뒤, 이후 INSERT는 모두 이 값을 참조한다.
 -- 시드 적재 시점이 바뀌어도 DAILY/WEEKLY/MONTHLY/ALL_TIME 분류는 항상 동일하게 재현된다.
 -- ===========================================================================
-SELECT set_config('seed.base_date', CURRENT_DATE::text, false);
+SELECT set_config('seed.base_date', (CURRENT_DATE - 1)::text, false);
 
 -- ===========================================================================
 -- 1) USERS (8명: 프로토타입 5 + 일반 2 + 논리삭제 1)
