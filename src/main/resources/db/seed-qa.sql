@@ -33,7 +33,7 @@ RESTART IDENTITY CASCADE; -- 시퀀스(자동 증가 번호)도 리셋 / 외래�
 -- [어제 00:00 UTC, 오늘 00:00 UTC) 이므로 '어제(UTC)'가 기준일이어야 DAILY 데이터로 잡힌다.
 -- 시드 적재 시점이 바뀌어도 DAILY/WEEKLY/MONTHLY/ALL_TIME 분류는 항상 동일하게 재현된다.
 -- ===========================================================================
-SELECT set_config('seed.base_date', (CURRENT_DATE - 1)::text, false);
+SELECT set_config('seed.base_date', (((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) - 1)::text, false);
 
 -- ===========================================================================
 -- 1) USERS (8명: 프로토타입 5 + 일반 2 + 논리삭제 1)
