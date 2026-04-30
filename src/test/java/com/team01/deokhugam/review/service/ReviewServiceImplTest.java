@@ -450,6 +450,9 @@ class ReviewServiceImplTest {
     given(reviewLikeRepository.findByReviewIdAndUserId(reviewId, requestUserId))
         .willReturn(Optional.empty());
 
+    given(review.getUser()).willReturn(user);
+    given(user.getId()).willReturn(requestUserId);
+
     ReviewLikeDto result = reviewServiceImpl.toggleLike(reviewId, requestUserId);
 
     verify(reviewLikeRepository).save(any(ReviewLike.class));
