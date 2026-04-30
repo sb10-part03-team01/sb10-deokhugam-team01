@@ -4,12 +4,8 @@ import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.book.service.BookService;
 import com.team01.deokhugam.global.enums.SortDirection;
-import com.team01.deokhugam.global.exception.book.BookNotFoundException;
-import com.team01.deokhugam.global.exception.review.ReviewAlreadyExistsException;
-import com.team01.deokhugam.global.exception.review.ReviewNotFoundException;
-import com.team01.deokhugam.global.exception.review.ReviewNotSoftDeletedException;
-import com.team01.deokhugam.global.exception.review.ReviewUpdateForbiddenException;
-import com.team01.deokhugam.global.exception.user.UserNotFoundException;
+import com.team01.deokhugam.global.exception.DeokhugamException;
+import com.team01.deokhugam.global.exception.ErrorCode;
 import com.team01.deokhugam.global.pagination.CursorPageResponse;
 import com.team01.deokhugam.global.pagination.CursorPaginationUtils;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
@@ -28,13 +24,16 @@ import com.team01.deokhugam.user.repository.UserRepository;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -52,16 +51,28 @@ public class ReviewServiceImpl implements ReviewService {
   public ReviewDto createReview(ReviewCreateRequest request) {
     //도서 확인
     Book book = bookRepository.findById(request.bookId())
-        .orElseThrow(() -> new BookNotFoundException(request.bookId()));
+        .orElseThrow(() -> new DeokhugamException(
+            ErrorCode.BOOK_NOT_FOUND,
+            Map.of("bookId", request.bookId())
+        ));
 
     //사용자 확인
     User user = userRepository.findById(request.userId())
-        .orElseThrow(() -> new UserNotFoundException(request.userId()));
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.USER_NOT_FOUND,
+            Map.of("userId", request.userId())
+        ));
 
     // 리뷰 중복확인
     if (reviewRepository.existsByBookIdAndUserIdAndIsDeletedFalse(request.bookId(),
         request.userId())) {
-      throw new ReviewAlreadyExistsException(request.bookId(), request.userId());
+      log.warn("리뷰 등록 실패 - 중복 리뷰 존재: bookId={}, userId={} ", request.bookId(), request.userId());
+      throw new DeokhugamException(
+          ErrorCode.REVIEW_ALREADY_EXISTS,
+          Map.of(
+              "bookId", request.bookId(),
+              "userId", request.userId()
+          ));
+
     }
 
     // 리뷰 엔티티 생성
@@ -73,7 +84,7 @@ public class ReviewServiceImpl implements ReviewService {
     );
     Review savedReview = reviewRepository.save(review);
 
-    bookService.plusBookReviewRating(book.getId(),review.getRating());
+    bookService.plusBookReviewRating(book.getId(), review.getRating());
 
     return reviewMapper.toDto(savedReview);
   }
@@ -81,7 +92,10 @@ public class ReviewServiceImpl implements ReviewService {
   @Override
   public ReviewDto getReview(UUID reviewId, UUID requestUserId) {
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
-        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+        .orElseThrow(() -> new DeokhugamException(
+            ErrorCode.REVIEW_NOT_FOUND,
+            Map.of("reviewId", reviewId
+            )));
 
     boolean likedByMe = reviewLikeRepository.existsByReviewIdAndUserId(reviewId, requestUserId);
     return reviewMapper.toDto(review).withLikedByMe(likedByMe);
@@ -155,13 +169,20 @@ public class ReviewServiceImpl implements ReviewService {
 
     // 리뷰  존재 검증
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
-        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+        .orElseThrow(
+            () -> new DeokhugamException(ErrorCode.REVIEW_NOT_FOUND, Map.of("reviewId", reviewId)));
 
     double oldRating = review.getRating();
     double newRating = request.rating();
     // 사용자가 쓴 리뷰인지 검증(NPE)
     if (!review.getUser().getId().equals(requestUserId)) {
-      throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
+      log.warn("리뷰 수정 실패 - 권한 없음: reviewId={}, requestUserId={}, authorUserId={}", reviewId,
+          requestUserId, review.getUser().getId());
+      throw new DeokhugamException(ErrorCode.REVIEW_UPDATE_FORBIDDEN,
+          Map.of(
+              "reviewId", reviewId,
+              "requestUserId", requestUserId
+          ));
     }
 
     // 리뷰 수정
@@ -178,11 +199,20 @@ public class ReviewServiceImpl implements ReviewService {
   public void deleteReview(UUID reviewId, UUID requestUserId) {
     // 리뷰  존재 검증
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
-        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.REVIEW_NOT_FOUND,
+            Map.of(
+                "reviewId", reviewId
+            )));
 
     // 사용자가 쓴 리뷰인지 검증
     if (!review.getUser().getId().equals(requestUserId)) {
-      throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
+      log.warn("리뷰 논리 삭제 실패 - 권한 없음: reviewId={}, requestUserId={}, authorUserId={}", reviewId,
+          requestUserId, review.getUser().getId());
+      throw new DeokhugamException(ErrorCode.REVIEW_UPDATE_FORBIDDEN,
+          Map.of(
+              "reviewId", reviewId,
+              "requestUserId", requestUserId
+          ));
     }
 
     // 평균 평점 수정
@@ -197,18 +227,28 @@ public class ReviewServiceImpl implements ReviewService {
   public void hardDeleteReview(UUID reviewId, UUID requestUserId) {
     // 리뷰 존재 검증
     Review review = reviewRepository.findById(reviewId)
-        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.REVIEW_NOT_FOUND,
+            Map.of(
+                "reviewId", reviewId
+            )));
 
     // 사용자가 쓴 리뷰인지 검증
     if (!review.getUser().getId().equals(requestUserId)) {
-      throw new ReviewUpdateForbiddenException(reviewId, requestUserId);
+      log.warn("리뷰 물리 삭제 실패 - 권한 없음: reviewId={}, requestUserId={}, authorUserId={}", reviewId,
+          requestUserId, review.getUser().getId());
+      throw new DeokhugamException(ErrorCode.REVIEW_UPDATE_FORBIDDEN,
+          Map.of(
+              "reviewId", reviewId,
+              "requestUserId", requestUserId
+          ));
     }
 
     // 논리 삭제된 리뷰인지 검증
     if (!review.isDeleted()) {
-      throw new ReviewNotSoftDeletedException();
+      log.warn("리뷰 물리 삭제 실패 - 논리 삭제되지 않은 리뷰: reviewId={}, requestUserId={}", reviewId,
+          requestUserId);
+      throw new DeokhugamException(ErrorCode.REVIEW_NOT_SOFT_DELETED);
     }
-
     // 물리 삭제
     reviewRepository.delete(review);
   }
@@ -217,15 +257,18 @@ public class ReviewServiceImpl implements ReviewService {
   @Transactional
   public ReviewLikeDto toggleLike(UUID reviewId, UUID requestUserId) {
     Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
-        .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+        .orElseThrow(
+            () -> new DeokhugamException(ErrorCode.REVIEW_NOT_FOUND, Map.of("reviewId", reviewId)));
 
     User user = userRepository.findById(requestUserId)
-        .orElseThrow(() -> new UserNotFoundException(requestUserId));
+        .orElseThrow(() -> new DeokhugamException(ErrorCode.USER_NOT_FOUND,
+            Map.of("requestUserId", requestUserId)));
 
     return reviewLikeRepository.findByReviewIdAndUserId(reviewId, requestUserId)
         .map(reviewLike -> {
           reviewLikeRepository.delete(reviewLike);
           review.decreaseLikeCount();
+          log.info("리뷰 좋아요 취소: reviewId={}, requestUserId={}", reviewId, requestUserId);
           return new ReviewLikeDto(reviewId, requestUserId, false);
         })
         .orElseGet(() -> {
@@ -233,8 +276,13 @@ public class ReviewServiceImpl implements ReviewService {
             ReviewLike reviewLike = new ReviewLike(review, user);
             reviewLikeRepository.save(reviewLike);
             review.increaseLikeCount();
+            log.info("리뷰 좋아요 추가: reviewId={}, requestUserId={}", reviewId, requestUserId);
+
             return new ReviewLikeDto(reviewId, requestUserId, true);
+
           } catch (DataIntegrityViolationException e) {
+            log.warn("리뷰 좋아요 추가 중복 감지: reviewId={}, requestUserId={}", reviewId, requestUserId);
+
             return new ReviewLikeDto(reviewId, requestUserId, true);
           }
         });

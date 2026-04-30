@@ -22,9 +22,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -41,6 +43,8 @@ public class PopularReviewServiceImpl implements PopularReviewService {
       OffsetDateTime start,
       OffsetDateTime end
   ) {
+    log.info("인기 리뷰 집계 시작: period={}, calculatedDate={}, start={}, end={}",
+        period, calculatedDate, start, end);
     // 기간 내 좋아요가 발생한 리뷰별 집계 결과를 조회
     List<PopularReviewScoreRow> likeRows =
         popularReviewRepository.findPopularReviewLikeScoreRows(start, end);
@@ -80,6 +84,10 @@ public class PopularReviewServiceImpl implements PopularReviewService {
         )
         .toList();
 
+    if (rankedRows.isEmpty()) {
+      log.info("인기 리뷰 집계 대상 없음: period={}, calculatedDate={}", period, calculatedDate);
+    }
+
     // PopularReview 생성에 필요한 Review 엔티티를 한 번에 조회
     List<UUID> reviewIds = rankedRows.stream()
         .map(PopularReviewScoreRow::reviewId)
@@ -97,6 +105,8 @@ public class PopularReviewServiceImpl implements PopularReviewService {
       Review review = reviewMap.get(row.reviewId());
 
       if (review == null) {
+        log.warn("인기 리뷰 집계 제외 - 리뷰 엔티티 없음: reviewId={}, period={}, calculatedDate={}",
+            row.reviewId(), period, calculatedDate);
         continue;
       }
 
@@ -113,6 +123,9 @@ public class PopularReviewServiceImpl implements PopularReviewService {
     }
 
     popularReviewRepository.saveAll(popularReviews);
+
+    log.info("인기 리뷰 집계 완료: period={}, calculatedDate={}, savedCount={}",
+        period, calculatedDate, popularReviews.size());
   }
 
   @Override

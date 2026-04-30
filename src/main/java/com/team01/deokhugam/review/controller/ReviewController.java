@@ -47,7 +47,12 @@ public class ReviewController {
   public ResponseEntity<ReviewDto> createReview(
       @Valid @RequestBody ReviewCreateRequest request
   ) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(reviewService.createReview(request));
+    ReviewDto response = reviewService.createReview(request);
+
+    log.info("리뷰 등록 성공, reviewId={}, bookId={}, userId={}", response.id(), response.bookId(),
+        response.userId());
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @ApiResponses({
@@ -61,14 +66,13 @@ public class ReviewController {
       @PathVariable UUID reviewId,
       @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
   ) {
-    return ResponseEntity.ok(reviewService.getReview(reviewId, requestUserId));
+    ReviewDto response = reviewService.getReview(reviewId, requestUserId);
+
+    log.info("리뷰 조회 성공,  reviewId={}, userId={}", reviewId, requestUserId);
+
+    return ResponseEntity.ok(response);
   }
 
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "리뷰 목록 조회 성공"),
-      @ApiResponse(responseCode = "400", description = "잘못된 요청(정렬 기준 오류, 페이지네이션 파라미터 오류, 요청자 ID누락)"),
-      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-  })
   @GetMapping
   public ResponseEntity<CursorPageResponseReviewDto> getReviews(
       @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
@@ -81,19 +85,22 @@ public class ReviewController {
       @RequestParam(required = false) OffsetDateTime after,
       @RequestParam(required = false) Integer limit
   ) {
-    // 리턴 타입 의논
-    return ResponseEntity.ok(reviewService.searchReviews(
-            requestUserId,
-            userId,
-            bookId,
-            keyword,
-            orderBy,
-            direction,
-            cursor,
-            after,
-            limit
-        )
+    CursorPageResponseReviewDto response = reviewService.searchReviews(
+        requestUserId,
+        userId,
+        bookId,
+        keyword,
+        orderBy,
+        direction,
+        cursor,
+        after,
+        limit
     );
+
+    log.info("리뷰 목록 조회 성공: requestUserId={}, userId={}, bookId={}, keyword={}", requestUserId,
+        userId, bookId, keyword);
+
+    return ResponseEntity.ok(response);
   }
 
   @ApiResponses({
@@ -110,6 +117,9 @@ public class ReviewController {
       @Valid @RequestBody ReviewUpdateRequest request
   ) {
     ReviewDto response = reviewService.updateReview(reviewId, requestUserId, request);
+
+    log.info("리뷰 수정 성공 requestUserId={}, reviewId={}, userId={}", requestUserId, reviewId,
+        response.userId());
     return ResponseEntity.ok(response);
   }
 
@@ -125,7 +135,11 @@ public class ReviewController {
       @PathVariable UUID reviewId,
       @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
   ) {
+
     reviewService.deleteReview(reviewId, requestUserId);
+
+    log.info("리뷰 논리삭제 성공 requestUserId={}, reviewId={}", requestUserId, reviewId);
+
     return ResponseEntity.noContent().build();
   }
 
@@ -142,6 +156,9 @@ public class ReviewController {
       @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
   ) {
     reviewService.hardDeleteReview(reviewId, requestUserId);
+
+    log.info("리뷰 물리삭제 성공 requestUserId={}, reviewId={}", requestUserId, reviewId);
+
     return ResponseEntity.noContent().build();
   }
 
@@ -156,6 +173,11 @@ public class ReviewController {
       @PathVariable UUID reviewId,
       @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
   ) {
-    return ResponseEntity.ok(reviewService.toggleLike(reviewId, requestUserId));
+    ReviewLikeDto response = reviewService.toggleLike(reviewId, requestUserId);
+
+    log.info("리뷰 좋아요 토글 성공: reviewId={}, requestUserId={}, liked={}", reviewId, requestUserId,
+        response.liked());
+
+    return ResponseEntity.ok(response);
   }
 }
