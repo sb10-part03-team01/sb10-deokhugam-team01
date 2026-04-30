@@ -2,16 +2,20 @@ package com.team01.deokhugam.notification.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.deokhugam.book.entity.Book;
 import com.team01.deokhugam.book.repository.BookRepository;
 import com.team01.deokhugam.global.config.JpaConfig;
 import com.team01.deokhugam.global.config.QueryDslConfig;
 import com.team01.deokhugam.notification.entity.Notification;
+import com.team01.deokhugam.notification.entity.QNotification;
 import com.team01.deokhugam.review.entity.Review;
 import com.team01.deokhugam.review.repository.ReviewRepository;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +44,22 @@ public class NotificationRepositoryTest {
   private ReviewRepository reviewRepository;
   @Autowired
   private NotificationRepository notificationRepository;
+  @Autowired
+  private EntityManager entityManager;
+
+  @Autowired
+  private JPAQueryFactory queryFactory;
+
+  private void setCreatedAt(Notification notification, OffsetDateTime createdAt) {
+    queryFactory
+        .update(QNotification.notification)
+        .set(QNotification.notification.createdAt, createdAt)
+        .where(QNotification.notification.id.eq(notification.getId()))
+        .execute();
+
+    entityManager.flush();
+    entityManager.clear();
+  }
 
 
   private User savedUser;
@@ -114,16 +134,22 @@ public class NotificationRepositoryTest {
     @DisplayName("DESC - 커서 이전 데이터만 반환")
     void cursorDesc() throws InterruptedException {
       //given
+      OffsetDateTime base = OffsetDateTime.now();
+
       Notification n1 = notificationRepository.save(
           new Notification(savedReview, savedUser, "test1"));
-      Thread.sleep(10);
+
       Notification n2 = notificationRepository.save(
           new Notification(savedReview, savedUser, "test2"));
-      Thread.sleep(10);
+
       Notification n3 = notificationRepository.save(
           new Notification(savedReview, savedUser, "test3"));
 
       notificationRepository.flush();
+
+      setCreatedAt(n1, base);
+      setCreatedAt(n2, base.plusSeconds(1));
+      setCreatedAt(n3, base.plusSeconds(2));
 
       Notification cursor = notificationRepository.findById(n2.getId()).get();
 
@@ -144,15 +170,20 @@ public class NotificationRepositoryTest {
     @DisplayName("ASC - 커서 이후 데이터만 반환")
     void cursorAsc() throws InterruptedException {
       //given
+      OffsetDateTime base = OffsetDateTime.now();
       Notification n1 = notificationRepository.save(
           new Notification(savedReview, savedUser, "test1"));
-      Thread.sleep(10);
+
       Notification n2 = notificationRepository.save(
           new Notification(savedReview, savedUser, "test2"));
-      Thread.sleep(10);
+
       Notification n3 = notificationRepository.save(
           new Notification(savedReview, savedUser, "test3"));
       notificationRepository.flush();
+
+      setCreatedAt(n1, base);
+      setCreatedAt(n2, base.plusSeconds(1));
+      setCreatedAt(n3, base.plusSeconds(2));
 
       Notification cursor = notificationRepository.findById(n2.getId()).get();
 
