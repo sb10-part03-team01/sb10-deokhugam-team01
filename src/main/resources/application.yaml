@@ -58,6 +58,10 @@ info:
       max-request-size: ${spring.servlet.multipart.maxRequestSize}
 
 deokhugam:
+  batch:
+    dashboard:
+      cron: "0 0 0 * * *"
+      zone: "UTC"
   storage:
     type: ${STORAGE_TYPE:s3}  # local | s3 (기본값: s3)
     local:
