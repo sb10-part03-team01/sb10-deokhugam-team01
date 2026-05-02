@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -421,5 +422,30 @@ public class CommentControllerTest {
 
     // when // then
     mockMvc.perform(get("/api/comments/{commentId}", commentId)).andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("댓글 목록 조회 시 응답 헤더에 X-Request-Id가 포함된다")
+  void get_comments_should_add_request_id_header() throws Exception {
+    // given
+    UUID reviewId = UUID.randomUUID();
+
+    CursorPageResponse<CommentDto> response =
+        new CursorPageResponse<>(List.of(), null, null, 0, 0, false);
+
+    given(
+            commentService.getComments(
+                eq(reviewId), any(CursorPageRequest.class), eq(SortDirection.DESC)))
+        .willReturn(response);
+
+    // when , then
+    mockMvc
+        .perform(
+            get("/api/comments")
+                .param("reviewId", reviewId.toString())
+                .param("direction", "DESC")
+                .param("limit", "50"))
+        .andExpect(status().isOk())
+        .andExpect(header().exists("X-Request-Id"));
   }
 }
