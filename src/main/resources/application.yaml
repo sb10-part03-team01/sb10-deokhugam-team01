@@ -24,9 +24,9 @@ spring:
     import: optional:file:.env[.properties]
   batch:
     jdbc:
-      initialize-schema: never
+      initialize-schema: always # 앱 시작할 때마다 메타데이터 테이블 생성
     job:
-      enabled: false
+      enabled: false # 앱이 시작될 때 등록된 배치 Job을 자동 실행하지 않도록 함 (@Scheduled로 Job 실행 설정)
 
 management:
   endpoints:
