@@ -12,13 +12,13 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
 logging:
   level:
     com.team01.deokhugam: debug
-    org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
+    org.hibernate.SQL: off # SQL 쿼리 출력 끄기
+    org.hibernate.orm.jdbc.bind: off # 파라미터 바인딩 출력 끄기
 
 management:
   endpoint:
