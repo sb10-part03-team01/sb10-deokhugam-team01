@@ -8,8 +8,6 @@ spring:
       mode: always
       data-locations: classpath:db/seed-qa.sql # 자동 인식 안되기 때문에 위치 명시
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
       hibernate:
         format_sql: false
@@ -21,20 +19,12 @@ logging:
     org.hibernate.orm.jdbc.bind: off # 파라미터 바인딩 출력 끄기
 
 management:
-  endpoint:
-    health:
-      show-details: always
   info:
     env:
       enabled: true
 
 deokhugam:
-  batch:
-    dashboard:
-      cron: "0 * * * * *" # 매 1분마다
   user:
     cleanup:
       # QA 환경에서는 테스트 용이성을 위해 3분으로 설정
       retention-minutes: 3
-      # 1분마다 cleanupSoftDeletedUsers 실행 (빠른 테스트용)
-      cron: "0 * * * * *"
