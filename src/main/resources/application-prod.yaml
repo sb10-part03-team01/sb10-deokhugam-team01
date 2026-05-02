@@ -42,5 +42,3 @@ deokhugam:
     cleanup:
       # 논리 삭제 후 1일 경과 뒤 유저 정보가 완전히 삭제
       retention-minutes: 1440
-      # 매일 3시 (1회) - 사용자 이용 적은 시간대
-      cron: "0 0 3 * * *"

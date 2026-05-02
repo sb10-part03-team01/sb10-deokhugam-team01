@@ -25,8 +25,8 @@ public class UserCleanupScheduler {
   @Scheduled의 cron은 zone 명시 필요 (서버 JVM 기본 타임존 의존 방지)
    */
   @Scheduled(
-      cron = "${deokhugam.user.cleanup.cron}",
-      zone = "UTC"
+      cron = "${deokhugam.batch.dashboard.cron}",
+      zone = "${deokhugam.batch.dashboard.zone}"
   )
   public void runUserCleanupJob() throws Exception {
     JobParameters jobParameters = new JobParametersBuilder()
