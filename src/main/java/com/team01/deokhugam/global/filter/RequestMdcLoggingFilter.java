@@ -51,17 +51,25 @@ public class RequestMdcLoggingFilter extends OncePerRequestFilter {
     if (hasText(xForwardedFor)) {
       // 프록시를 여러 번 거쳤다면 첫 번째 IP를 실제 클라이언트 IP로 본다.
       // X-Forwarded-For : 203.0.113.10, 10.0.0.3, 10.0.0.4
-      return xForwardedFor.split(",")[0].trim();
+      return sanitize(xForwardedFor.split(",")[0].trim());
     }
 
     String xRealIp = request.getHeader("X-Real-IP");
-
     if (hasText(xRealIp)) {
-      return xRealIp.trim();
+      return sanitize(xRealIp.trim());
     }
     // 프록시 헤더 없으면, 서블릿 요청의 remote address를 사용
     // ex) 127.0.0.1 or 0:0:0:0:0:0:0:1
-    return request.getRemoteAddr();
+    return sanitize(request.getRemoteAddr());
+  }
+
+  private String sanitize(String value) {
+    if (value == null) {
+      return null;
+    }
+
+    // 로그 인젝션 방지를 위해 개행/탭 같은 제어 문자를 제거
+    return value.replaceAll("[\\n\\r\\t]", "_");
   }
 
   private boolean hasText(String value) {
