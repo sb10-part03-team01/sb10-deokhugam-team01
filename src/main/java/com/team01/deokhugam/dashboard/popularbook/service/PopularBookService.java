@@ -1,6 +1,7 @@
 package com.team01.deokhugam.dashboard.popularbook.service;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
+import com.team01.deokhugam.book.storage.ThumbnailStorage;
 import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
 import com.team01.deokhugam.dashboard.popularbook.repository.PopularBookRepository;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PopularBookService {
 
   private final PopularBookRepository popularBookRepository;
+  private final ThumbnailStorage thumbnailStorage;
 
   // 인기 도서 조회
   @Transactional(readOnly = true)
@@ -40,8 +42,17 @@ public class PopularBookService {
     boolean hasNext = popularBooks.size() > normalizedLimit;
 
     // 목록 생성
+    // local/s3 환경에 맞는 실제 접근 가능한 URL로 변환
     List<PopularBookDto> content =
-        popularBooks.stream().limit(normalizedLimit).map(PopularBookDto::from).toList();
+        popularBooks.stream()
+            .limit(normalizedLimit)
+            .map(
+                popularBook ->
+                    PopularBookDto.from(
+                        popularBook,
+                        thumbnailStorage.generatePresignUrl(
+                            popularBook.getBook().getThumbnailUrl())))
+            .toList();
 
     String nextCursor = null;
     OffsetDateTime nextAfter = null;
