@@ -24,7 +24,7 @@ public interface PopularReviewMapper {
   @Mapping(target = "reviewContent", source = "review.content")
   @Mapping(target = "reviewRating", source = "review.rating")
   @Mapping(target = "period", source = "period")
-  @Mapping(target = "createdAt", source = "createdAt")
+  @Mapping(target = "createdAt", source = "review.createdAt")
   @Mapping(target = "rank", source = "rank")
   @Mapping(target = "score", source = "score")
   @Mapping(target = "likeCount", source = "likeCount")
