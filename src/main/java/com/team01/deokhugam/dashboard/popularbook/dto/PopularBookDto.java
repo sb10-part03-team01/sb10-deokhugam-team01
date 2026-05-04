@@ -24,13 +24,14 @@ public class PopularBookDto {
   private double rating;
   private OffsetDateTime createdAt;
 
-  public static PopularBookDto from(PopularBook popularBook) {
+  public static PopularBookDto from(PopularBook popularBook, String thumbnailUrl) {
     return PopularBookDto.builder()
         .id(popularBook.getId())
         .bookId(popularBook.getBook().getId())
         .title(popularBook.getBook().getTitle())
         .author(popularBook.getBook().getAuthor())
-        .thumbnailUrl(popularBook.getBook().getThumbnailUrl())
+        // 원본 key가 아닌, local/s3 환경에 맞게 변환된 URL사용
+        .thumbnailUrl(thumbnailUrl)
         .period(popularBook.getPeriodType())
         .rank(popularBook.getRank())
         .score(popularBook.getScore())
