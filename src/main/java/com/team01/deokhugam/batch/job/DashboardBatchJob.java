@@ -17,7 +17,10 @@ public class DashboardBatchJob {
   private final DashboardBatchService dashboardBatchService;
   private final NotificationService notificationService;
 
-  @Scheduled(cron = "0 0 0 * * *", zone = "UTC")
+  @Scheduled(
+      cron = "${deokhugam.batch.dashboard.cron}",
+      zone = "${deokhugam.batch.dashboard.zone:UTC}"
+  )
   public void run() {
     log.info("[DASHBOARD_BATCH] 시작");
 

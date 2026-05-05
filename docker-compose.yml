@@ -13,7 +13,7 @@ services:
       # dockerfile - 사용할 Dockerfile의 경로 (context 경로를 기준으로 한 상대 경로)
       dockerfile: Dockerfile
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: qa
       SERVER_PORT: ${SERVER_PORT}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
@@ -27,6 +27,11 @@ services:
       # S3
       STORAGE_TYPE: ${STORAGE_TYPE}
       STORAGE_LOCAL_ROOT_PATH: ${STORAGE_LOCAL_ROOT_PATH}
+      # NAVER API
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      # OCR API
+      OCR_API_KEY: ${OCR_API_KEY}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:

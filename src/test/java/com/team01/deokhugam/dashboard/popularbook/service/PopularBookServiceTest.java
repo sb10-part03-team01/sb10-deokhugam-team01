@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
 import com.team01.deokhugam.book.entity.Book;
+import com.team01.deokhugam.book.storage.ThumbnailStorage;
 import com.team01.deokhugam.dashboard.popularbook.dto.PopularBookDto;
 import com.team01.deokhugam.dashboard.popularbook.entity.PopularBook;
 import com.team01.deokhugam.dashboard.popularbook.repository.PopularBookRepository;
@@ -25,7 +26,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PopularBookServiceTest {
+
   @Mock private PopularBookRepository popularBookRepository;
+  @Mock private ThumbnailStorage thumbnailStorage;
 
   @InjectMocks private PopularBookService popularBookService;
 
@@ -40,6 +43,12 @@ class PopularBookServiceTest {
     PopularBook pb1 = createPopularBook(1, time1);
     PopularBook pb2 = createPopularBook(2, time2);
     PopularBook pb3 = createPopularBook(3, time3);
+
+    // 썸네일 원본 key를 실제 접근 가능한 URL로 변환
+    given(thumbnailStorage.generatePresignUrl("thumbnail-1.jpg"))
+        .willReturn("/qa-images/thumbnail-1.jpg");
+    given(thumbnailStorage.generatePresignUrl("thumbnail-2.jpg"))
+        .willReturn("/qa-images/thumbnail-2.jpg");
 
     // limit 2면 3개 반환
     given(
@@ -60,6 +69,8 @@ class PopularBookServiceTest {
     assertThat(result.nextCursor()).isEqualTo("2");
     assertThat(result.nextAfter()).isEqualTo(time2);
     assertThat(result.totalElements()).isEqualTo(3);
+    assertThat(result.content().get(0).getThumbnailUrl()).isEqualTo("/qa-images/thumbnail-1.jpg");
+    assertThat(result.content().get(1).getThumbnailUrl()).isEqualTo("/qa-images/thumbnail-2.jpg");
   }
 
   @Test
@@ -71,6 +82,11 @@ class PopularBookServiceTest {
 
     PopularBook pb1 = createPopularBook(1, time1);
     PopularBook pb2 = createPopularBook(2, time2);
+
+    given(thumbnailStorage.generatePresignUrl("thumbnail-1.jpg"))
+        .willReturn("/qa-images/thumbnail-1.jpg");
+    given(thumbnailStorage.generatePresignUrl("thumbnail-2.jpg"))
+        .willReturn("/qa-images/thumbnail-2.jpg");
 
     given(
             popularBookRepository.findAllByCursor(
@@ -90,6 +106,8 @@ class PopularBookServiceTest {
     assertThat(result.nextCursor()).isNull();
     assertThat(result.nextAfter()).isNull();
     assertThat(result.totalElements()).isEqualTo(2);
+    assertThat(result.content().get(0).getThumbnailUrl()).isEqualTo("/qa-images/thumbnail-1.jpg");
+    assertThat(result.content().get(1).getThumbnailUrl()).isEqualTo("/qa-images/thumbnail-2.jpg");
   }
 
   private PopularBook createPopularBook(int rank, OffsetDateTime createdAt) {
@@ -101,7 +119,11 @@ class PopularBookServiceTest {
             .publisher("출판사")
             .publishedDate(LocalDate.of(2026, 4, 1))
             .isbn("isbn-" + rank)
+            .thumbnailUrl("thumbnail-" + rank + ".jpg")
             .build();
+
+    // 현재 Book 생성자에서는 thumbnailUrl이 builder 값만으로는 세팅되지 않아서 테스트에서 직접 넣어준다.
+    book.addThumbnail("thumbnail-" + rank + ".jpg");
 
     ReflectionTestUtils.setField(book, "id", UUID.randomUUID());
 

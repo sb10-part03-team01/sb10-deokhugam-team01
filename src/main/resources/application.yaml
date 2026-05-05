@@ -58,6 +58,10 @@ info:
       max-request-size: ${spring.servlet.multipart.maxRequestSize}
 
 deokhugam:
+  batch:
+    dashboard:
+      cron: "0 0 0 * * *"
+      zone: "UTC"
   storage:
     type: ${STORAGE_TYPE:s3}  # local | s3 (기본값: s3)
     local:
@@ -77,5 +81,7 @@ deokhugam:
       key: ${OCR_API_KEY:}
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{requestId}] [%X{clientIp}] %logger{36} - %msg%n"
   level:
     root: info
