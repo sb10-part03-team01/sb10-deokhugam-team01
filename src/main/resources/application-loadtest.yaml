@@ -4,13 +4,13 @@
 #
 # 주의:
 #   이 프로파일은 기동 시 모든 도메인 테이블을 TRUNCATE 함.
-#   반드시 부하 테스트 전용 별도 DB 를 SPRING_DATASOURCE_URL 로 지정할 것.
+#   반드시 부하 테스트 전용 별도 DB 를 SPRING_DATASOURCE_URL_LOADTEST 로 지정할 것.
 #
 # 권장 기동 방법:
 #   SPRING_PROFILES_ACTIVE=loadtest \
-#   SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/deokhugam_loadtest \
-#   SPRING_DATASOURCE_USERNAME= \
-#   SPRING_DATASOURCE_PASSWORD= \
+#   SPRING_DATASOURCE_URL_LOADTEST=jdbc:postgresql://localhost:5432/deokhugam_loadtest \
+#   SPRING_DATASOURCE_USERNAME_LOADTEST= \
+#   SPRING_DATASOURCE_PASSWORD_LOADTEST= \
 #   ./gradlew bootRun
 # =====================================================================
 
