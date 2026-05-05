@@ -9,7 +9,6 @@ import com.team01.deokhugam.global.config.JpaConfig;
 import com.team01.deokhugam.user.entity.User;
 import com.team01.deokhugam.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +24,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.TestPropertySource;
 
 @DataJpaTest
-@Transactional
 @TestPropertySource(properties = "spring.profiles.active=test")
 @Import({JpaConfig.class, PowerUserRepositoryTest.TestConfig.class})
 public class PowerUserRepositoryTest {
@@ -51,15 +49,20 @@ public class PowerUserRepositoryTest {
   void setUp() {
     powerUserRepository.deleteAllInBatch();
     userRepository.deleteAllInBatch();
+  }
 
-    String uniqueEmail = "test" + java.util.UUID.randomUUID() + "@test.com";
-    User user = new User(uniqueEmail, "testUser", "password");
-    savedUser = userRepository.save(user);
+  private User createUser(String nickname) {
+    return userRepository.save(new User(
+        java.util.UUID.randomUUID() + "@test.com",
+        nickname,
+        "password"
+    ));
   }
 
   private PowerUser createPowerUser(long rank, DashboardPeriod period) {
+    User user = createUser("user" + rank);
     return PowerUser.builder()
-        .user(savedUser)
+        .user(user)
         .period(period)
         .calculatedDate(OffsetDateTime.now())
         .rank(rank)
@@ -151,6 +154,19 @@ public class PowerUserRepositoryTest {
       assertThat(result.get(0).getRank()).isEqualTo(1);
 
     }
+  }
+
+  @Test
+  @DisplayName("다른 기간(WEEKLY) 데이터는 DAILY 조회에 포함되지 않아야 한다")
+  void shouldNotIncludeOtherPeriodData() {
+    powerUserRepository.save(createPowerUser(1, DashboardPeriod.DAILY));
+    powerUserRepository.save(createPowerUser(2, DashboardPeriod.WEEKLY));
+
+    List<PowerUser> result = powerUserRepository
+        .findByPeriodOrderByRankAsc(DashboardPeriod.DAILY, PageRequest.of(0, 10));
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getPeriod()).isEqualTo(DashboardPeriod.DAILY);
   }
 
 }

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
@@ -20,7 +19,6 @@ import com.team01.deokhugam.user.entity.User;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,12 +26,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class PowerUserServiceTest {
 
   @InjectMocks
@@ -42,33 +37,34 @@ public class PowerUserServiceTest {
   @Mock
   private PowerUserRepository powerUserRepository;
 
+  @Mock
   private User mockUser;
+
+  @Mock
   private PowerUser mockPowerUser;
-
-  @BeforeEach
-  void setUp() {
-    mockUser = mock(User.class);
-    given(mockUser.getId()).willReturn(UUID.randomUUID());
-    given(mockUser.getNickname()).willReturn("testUser");
-
-    mockPowerUser = mock(PowerUser.class);
-    given(mockPowerUser.getUser()).willReturn(mockUser);
-    given(mockPowerUser.getPeriod()).willReturn(DashboardPeriod.DAILY);
-    given(mockPowerUser.getCreatedAt()).willReturn(OffsetDateTime.now());
-    given(mockPowerUser.getRank()).willReturn(1L);
-    given(mockPowerUser.getScore()).willReturn(100.0);
-    given(mockPowerUser.getReviewScoreSum()).willReturn(50.0);
-    given(mockPowerUser.getLikeCount()).willReturn(10L);
-    given(mockPowerUser.getCommentCount()).willReturn(5L);
-  }
 
   @Nested
   @DisplayName("getRanking")
   class getRanking {
 
+    private void setupMockPowerUser() {
+      given(mockUser.getId()).willReturn(UUID.randomUUID());
+      given(mockUser.getNickname()).willReturn("testUser");
+
+      given(mockPowerUser.getUser()).willReturn(mockUser);
+      given(mockPowerUser.getPeriod()).willReturn(DashboardPeriod.DAILY);
+      given(mockPowerUser.getCreatedAt()).willReturn(OffsetDateTime.now());
+      given(mockPowerUser.getRank()).willReturn(1L);
+      given(mockPowerUser.getScore()).willReturn(100.0);
+      given(mockPowerUser.getReviewScoreSum()).willReturn(50.0);
+      given(mockPowerUser.getLikeCount()).willReturn(10L);
+      given(mockPowerUser.getCommentCount()).willReturn(5L);
+    }
+
     @Test
     @DisplayName("after == null, cursor == null, asc 조회")
     void findByPeriodOrderByRankAscSuccess() {
+      setupMockPowerUser();
       given(powerUserRepository.findByPeriodOrderByRankAsc(any(), any()))
           .willReturn(List.of(mockPowerUser));
       given(powerUserRepository.countByPeriod(any()))
@@ -78,13 +74,19 @@ public class PowerUserServiceTest {
           powerUserService.getRanking(DashboardPeriod.DAILY, SortDirection.ASC, null, null, 10);
 
       assertThat(response.content()).hasSize(1);
-      verify(powerUserRepository).findByPeriodOrderByRankAsc(eq(DashboardPeriod.DAILY), any(PageRequest.class));
+      assertThat(response.hasNext()).isFalse();
+      assertThat(response.totalElements()).isEqualTo(1L);
+      assertThat(response.nextCursor()).isNull();
+      assertThat(response.nextAfter()).isNull();
+      verify(powerUserRepository).findByPeriodOrderByRankAsc(eq(DashboardPeriod.DAILY),
+          any(PageRequest.class));
     }
 
     @Test
     @DisplayName("after == null, cursor == null , desc 조회")
     void findByPeriodOrderByRankDescSuccess() {
       //given
+      setupMockPowerUser();
       given(powerUserRepository.findByPeriodOrderByRankDesc(any(), any()))
           .willReturn(List.of(mockPowerUser));
 
@@ -157,6 +159,7 @@ public class PowerUserServiceTest {
     @DisplayName("after != null, cursor가 정상인 경우")
     void afterNotNullValidCursor_success() {
       //given
+      setupMockPowerUser();
       OffsetDateTime after = OffsetDateTime.now();
 
       given(powerUserRepository.findNextPageDesc(any(), any(), any(), any()))
@@ -171,6 +174,34 @@ public class PowerUserServiceTest {
       //then
       assertThat(response.content()).hasSize(1);
       verify(powerUserRepository).findNextPageDesc(eq(DashboardPeriod.DAILY), eq(1L), eq(after),
+          any(PageRequest.class));
+    }
+
+    @Test
+    @DisplayName("after != null, cursor가 빈 문자열인 경우 예외")
+    void afterNotNullBlankCursor_throwsException() {
+      assertThatThrownBy(() ->
+          powerUserService.getRanking(DashboardPeriod.DAILY, SortDirection.DESC, "",
+              OffsetDateTime.now(), 10))
+          .isInstanceOf(DeokhugamException.class)
+          .satisfies(e -> assertThat(((DeokhugamException) e).getErrorCode())
+              .isEqualTo(ErrorCode.INVALID_CURSOR_PAGINATION));
+    }
+
+    @Test
+    @DisplayName("after != null, cursor 정상인 경우 (ASC)")
+    void afterNotNullValidCursorAsc_success() {
+      setupMockPowerUser();
+      OffsetDateTime after = OffsetDateTime.now();
+      given(powerUserRepository.findNextPageAsc(any(), any(), any(), any()))
+          .willReturn(List.of(mockPowerUser));
+      given(powerUserRepository.countByPeriod(any())).willReturn(1L);
+
+      CursorPageResponse<PowerUserDto> response =
+          powerUserService.getRanking(DashboardPeriod.DAILY, SortDirection.ASC, "1", after, 10);
+
+      assertThat(response.content()).hasSize(1);
+      verify(powerUserRepository).findNextPageAsc(eq(DashboardPeriod.DAILY), eq(1L), eq(after),
           any(PageRequest.class));
     }
 
