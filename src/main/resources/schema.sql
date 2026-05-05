@@ -96,6 +96,7 @@ CREATE TABLE IF NOT EXISTS notifications
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications (user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_review_id ON notifications (review_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_notifications_review_user_content ON notifications (review_id, user_id, content);
 
 CREATE TABLE IF NOT EXISTS review_likes
 (

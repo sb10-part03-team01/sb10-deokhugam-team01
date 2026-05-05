@@ -17,6 +17,7 @@ import com.team01.deokhugam.book.service.BookService;
 import com.team01.deokhugam.global.enums.SortDirection;
 import com.team01.deokhugam.global.exception.DeokhugamException;
 import com.team01.deokhugam.global.exception.ErrorCode;
+import com.team01.deokhugam.notification.service.NotificationService;
 import com.team01.deokhugam.review.dto.CursorPageResponseReviewDto;
 import com.team01.deokhugam.review.dto.ReviewCreateRequest;
 import com.team01.deokhugam.review.dto.ReviewDto;
@@ -41,18 +42,25 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
+
+  @Mock
+  private BookService bookService;
+
+  @Mock
+  private NotificationService notificationService;
+
+  @Mock
+  private PlatformTransactionManager transactionManager;
 
   @Mock
   private ReviewRepository reviewRepository;
 
   @Mock
   private BookRepository bookRepository;
-
-  @Mock
-  private BookService bookService;
 
   @Mock
   private UserRepository userRepository;

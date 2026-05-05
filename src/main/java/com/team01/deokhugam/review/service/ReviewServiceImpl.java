@@ -33,7 +33,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @Service
@@ -48,6 +51,7 @@ public class ReviewServiceImpl implements ReviewService {
   private final ReviewMapper reviewMapper;
   private final BookService bookService;
   private final NotificationService notificationService;
+  private final PlatformTransactionManager transactionManager;
 
   @Override
   @Transactional
@@ -282,11 +286,18 @@ public class ReviewServiceImpl implements ReviewService {
 
             if (!review.getUser().getId().equals(requestUserId)) {
               try {
-                notificationService.create(
-                    new NotificationCreateRequest(
-                        review,
-                        user,
-                        "내가 작성한 리뷰에 좋아요가 추가되었습니다."
+                TransactionTemplate transactionTemplate = new TransactionTemplate(
+                    transactionManager);
+                transactionTemplate.setPropagationBehavior(
+                    TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
+                transactionTemplate.executeWithoutResult(status ->
+                    notificationService.create(
+                        new NotificationCreateRequest(
+                            review,
+                            user,
+                            "내가 작성한 리뷰에 좋아요가 추가되었습니다."
+                        )
                     )
                 );
               } catch (Exception e) {
