@@ -21,7 +21,8 @@ function loadCsv(filename) {
   const lines = raw.split('\n');
   return lines
   .slice(1) // 첫 줄 헤더(id) 제거
-  .filter((l) => l.trim().length > 0); // 빈 줄 제거
+  .map((l) => l.trim()) // CRLF/공백 제거
+  .filter((l) => l.length > 0); // 빈 줄 제거
 }
 
 // 일반 배열 사용 시:
@@ -34,5 +35,11 @@ export const bookIds = new SharedArray('bookIds', () => loadCsv('books.csv'));
 // 배열에서 랜덤 요소 1개 반환
 // VU 가 매 iteration 마다 랜덤하게 하나 뽑아 쓸 때 사용
 export function pickRandom(arr) {
+  // 배열이 비어 있으면 undefined를 반환하므로 fail-fast
+  if (!arr || arr.length === 0) {
+    throw new Error(
+        'ID pool is empty. Please run extract-ids.sh and verify CSV files.'
+    );
+  }
   return arr[Math.floor(Math.random() * arr.length)];
 }
