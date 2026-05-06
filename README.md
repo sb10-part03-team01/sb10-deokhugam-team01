@@ -31,6 +31,12 @@ http://3.37.127.27
 
 ---
 
+## Swagger UI
+
+[http://3.37.127.27](http://3.37.127.27/swagger-ui/index.html)
+
+---
+
 ## 기술 스택
 
 ### Backend
@@ -38,6 +44,7 @@ http://3.37.127.27
 <img src="https://img.shields.io/badge/Spring Data JPA-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
 <img src="https://img.shields.io/badge/Spring Batch-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
 <img src="https://img.shields.io/badge/QueryDSL-0078D4?style=for-the-badge&logo=spring&logoColor=white">
+<img src="https://img.shields.io/badge/MapStruct-0052CC?style=for-the-badge&logoColor=white">
 <img src="https://img.shields.io/badge/Java 17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white">
 <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white">
 
@@ -47,6 +54,7 @@ http://3.37.127.27
 
 ### Infrastructure
 <img src="https://img.shields.io/badge/Amazon AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white">
+<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
 
 ### CI/CD & Code Quality
 <img src="https://img.shields.io/badge/GitHub Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white">
@@ -75,55 +83,197 @@ http://3.37.127.27
 
 <details>
 <summary><b>1. 유저(User) 도메인</b></summary>
+    
 <div markdown="1">
 <br>
 회원 관리에 필요한 핵심 테이블 구조입니다.
-<img width="549" height="227" alt="스크린샷 2026-05-06 오후 1 36 20" src="https://github.com/user-attachments/assets/9d863fbc-216a-4c3c-ae7f-401dcd3cf57e" />
+    
+```mermaid
+erDiagram
+    users {
+        UUID id PK
+        VARCHAR email UK
+        VARCHAR nickname
+        VARCHAR password
+        BOOLEAN is_deleted
+        TIMESTAMPTZ deleted_at
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+```
 </div>
 </details>
 
 <details>
 <summary><b>2. 도서(Book) 도메인</b></summary>
+    
 <div markdown="1">
 <br>
 도서 메타데이터, ISBN 매칭 정보 등 핵심 비즈니스 로직을 담당하는 테이블 구조입니다.
-<img width="562" height="371" alt="스크린샷 2026-05-06 오후 1 33 17" src="https://github.com/user-attachments/assets/bb4d3825-e431-4057-bf7d-ec42c5e2cd04" />
+    
+```mermaid
+erDiagram
+    books {
+        UUID id PK
+        VARCHAR title
+        VARCHAR author
+        TEXT description
+        VARCHAR publisher
+        DATE published_date
+        VARCHAR isbn UK
+        VARCHAR thumbnail_url
+        INTEGER review_count
+        FLOAT rating
+        BOOLEAN is_deleted
+        TIMESTAMPTZ deleted_at
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+```
 </div>
 </details>
 
 <details>
 <summary><b>3. 리뷰(Review) 도메인</b></summary>
+    
 <div markdown="1">
 <br>
 유저가 도서에 남긴 리뷰, 평점, 좋아요 등의 정보를 관리하는 테이블 구조입니다.
-<img width="765" height="494" alt="스크린샷 2026-05-06 오후 1 36 34" src="https://github.com/user-attachments/assets/22732345-6d46-49eb-9a41-f2719e9685eb" />
+    
+```mermaid
+erDiagram
+    books ||--o{ reviews : "has"
+    users ||--o{ reviews : "writes"
+    users ||--o{ review_likes : "likes"
+    reviews ||--o{ review_likes : "receives"
+
+    reviews {
+        UUID id PK
+        UUID book_id FK
+        UUID user_id FK
+        VARCHAR content
+        FLOAT rating
+        INTEGER like_count
+        INTEGER comment_count
+        BOOLEAN is_deleted
+        TIMESTAMPTZ deleted_at
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
+    review_likes {
+        UUID id PK
+        UUID review_id FK
+        UUID user_id FK
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+```
 </div>
 </details>
 
 <details>
 <summary><b>4. 댓글(Comment) 도메인</b></summary>
+    
 <div markdown="1">
 <br>
 리뷰에 대한 유저 간의 소통(댓글 및 대댓글)을 관리하는 테이블 구조입니다.
-<img width="536" height="219" alt="댓글 도메인 상세" src="https://github.com/user-attachments/assets/dd9374da-4144-4e94-b762-12eddf03da2f" />
+    
+```mermaid
+erDiagram
+    reviews ||--o{ comments : "has"
+    users ||--o{ comments : "writes"
+
+    comments {
+        UUID id PK
+        UUID review_id FK
+        UUID user_id FK
+        VARCHAR content
+        BOOLEAN is_deleted
+        TIMESTAMPTZ deleted_at
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+```
 </div>
 </details>
 
 <details>
 <summary><b>5. 알림(Notification) 도메인</b></summary>
+    
 <div markdown="1">
 <br>
 시스템 알림 및 유저 간 상호작용 알림을 처리하는 테이블 구조입니다.
-<img width="500" height="215" alt="알림 도메인 상세" src="https://github.com/user-attachments/assets/bb76a736-e61a-4da3-992b-f6465f326718" />
+    
+```mermaid
+erDiagram
+    users ||--o{ notifications : "receives"
+    reviews ||--o{ notifications : "triggers"
+
+    notifications {
+        UUID id PK
+        UUID review_id FK
+        UUID user_id FK
+        VARCHAR content
+        BOOLEAN is_read
+        TIMESTAMPTZ confirmed_at
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+```
 </div>
 </details>
 
 <details>
 <summary><b>6. 대쉬보드 및 통계(Dashboard & Statistics) 도메인</b></summary>
+    
 <div markdown="1">
 <br>
 인기 도서, 리뷰 통계, 유저 활동 지표 등 대쉬보드 화면 렌더링과 집계에 최적화된 테이블 구조입니다.
-<img width="862" height="810" alt="스크린샷 2026-05-06 오후 1 36 04" src="https://github.com/user-attachments/assets/fac1eef4-82bc-4591-a275-891014174a77" />
+    
+```mermaid
+erDiagram
+    books ||--o{ popular_books : "ranked as"
+    reviews ||--o{ popular_reviews : "ranked as"
+    users ||--o{ power_users : "ranked as"
+
+    popular_books {
+        UUID id PK
+        UUID book_id FK
+        VARCHAR period_type "DAILY, WEEKLY..."
+        DATE calculated_date
+        INTEGER rank
+        FLOAT score
+        FLOAT rating
+        INTEGER review_count
+        TIMESTAMPTZ created_at
+    }
+    
+    popular_reviews {
+        UUID id PK
+        UUID review_id FK
+        VARCHAR period_type "DAILY, WEEKLY..."
+        DATE calculated_date
+        INTEGER ranking
+        FLOAT score
+        INTEGER liked_count
+        INTEGER comment_count
+        TIMESTAMPTZ created_at
+    }
+    
+    power_users {
+        UUID id PK
+        UUID user_id FK
+        VARCHAR period_type "DAILY, WEEKLY..."
+        TIMESTAMPTZ calculated_date
+        BIGINT rank
+        FLOAT score
+        FLOAT review_score_sum
+        BIGINT like_count
+        BIGINT comment_count
+        TIMESTAMPTZ created_at
+    }
+```
 </div>
 </details>
 
