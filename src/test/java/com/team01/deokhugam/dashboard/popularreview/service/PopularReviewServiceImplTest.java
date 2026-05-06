@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.team01.deokhugam.batch.common.DashboardPeriod;
@@ -24,6 +25,7 @@ import com.team01.deokhugam.user.entity.User;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,7 +117,7 @@ class PopularReviewServiceImplTest {
   void getPopularReviews_success_withoutNextPage() {
     OffsetDateTime time1 = time(21, 10);
     OffsetDateTime time2 = time(21, 11);
-    
+
     PopularReview pr1 = mock(PopularReview.class);
     PopularReview pr2 = mock(PopularReview.class);
 
@@ -238,6 +240,54 @@ class PopularReviewServiceImplTest {
         10,
         0
     );
+  }
+
+  @Test
+  @DisplayName("인기 리뷰 집계 - 10위 밖 리뷰는 알림을 생성하지 않는다")
+  void calculatePopularReviews_doesNotCreateNotification_whenRankOutOfTop10() {
+    List<UUID> reviewIds = new ArrayList<>();
+    List<PopularReviewScoreRow> scoreRows = new ArrayList<>();
+    List<Review> reviews = new ArrayList<>();
+
+    for (int i = 1; i <= 11; i++) {
+      UUID id = UUID.randomUUID();
+      Review review = mock(Review.class);
+      User user = mock(User.class);
+
+      given(review.getId()).willReturn(id);
+
+      if (i <= 10) {
+        given(review.getUser()).willReturn(user);
+        given(user.getId()).willReturn(UUID.randomUUID());
+      }
+
+      reviewIds.add(id);
+      reviews.add(review);
+
+      scoreRows.add(new PopularReviewScoreRow(
+          id,
+          12L - i,
+          0L
+      ));
+    }
+
+    given(popularReviewRepository.findPopularReviewLikeScoreRows(start, end))
+        .willReturn(scoreRows);
+    given(popularReviewRepository.findPopularReviewCommentScoreRows(start, end))
+        .willReturn(List.of());
+    given(reviewRepository.findAllById(reviewIds))
+        .willReturn(reviews);
+    given(transactionManager.getTransaction(any()))
+        .willReturn(new SimpleTransactionStatus());
+
+    popularReviewService.calculatePopularReviews(
+        DashboardPeriod.DAILY,
+        calculatedDate,
+        start,
+        end
+    );
+
+    verify(notificationRepository, times(10)).save(any(Notification.class));
   }
 
   private OffsetDateTime time(int day, int hour) {

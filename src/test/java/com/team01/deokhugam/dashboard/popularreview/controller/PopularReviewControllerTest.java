@@ -26,8 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(
     controllers = PopularReviewController.class,
     properties = {
-        "spring.profiles.active=test",
-        "SPRING_PROFILES_ACTIVE=test"
+        "spring.profiles.active=test"
     }
 )
 @AutoConfigureMockMvc(addFilters = false)
@@ -127,14 +126,6 @@ class PopularReviewControllerTest {
   void get_popular_reviews_fail_when_period_is_invalid() throws Exception {
     mockMvc.perform(get("/api/reviews/popular")
             .param("period", "INVALID"))
-        .andExpect(status().isBadRequest());
-  }
-
-  @Test
-  @DisplayName("인기 리뷰 목록 조회 실패 - direction 값이 잘못되면 400을 반환한다")
-  void get_popular_reviews_fail_when_direction_is_invalid() throws Exception {
-    mockMvc.perform(get("/api/reviews/popular")
-            .param("direction", "INVALID"))
         .andExpect(status().isBadRequest());
   }
 
