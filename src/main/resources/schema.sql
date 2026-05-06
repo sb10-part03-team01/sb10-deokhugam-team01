@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS reviews
     rating        DOUBLE PRECISION NOT NULL CHECK (rating >= 1.0 AND rating <= 5.0),
     like_count    INTEGER          NOT NULL DEFAULT 0 CHECK (like_count >= 0),
     comment_count INTEGER          NOT NULL DEFAULT 0 CHECK (comment_count >= 0),
-    version       BIGINT           NOT NULL DEFAULT 0,
 
     is_deleted    BOOLEAN          NOT NULL DEFAULT FALSE,
     deleted_at    TIMESTAMPTZ,
@@ -50,9 +49,10 @@ CREATE TABLE IF NOT EXISTS reviews
     updated_at    TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_reviews_books FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
-    CONSTRAINT fk_reviews_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT uk_reviews_book_user UNIQUE (book_id, user_id)
+    CONSTRAINT fk_reviews_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_reviews_active_book_user ON reviews (book_id, user_id) WHERE is_deleted = FALSE;
 
 CREATE INDEX IF NOT EXISTS idx_reviews_book_id ON reviews (book_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews (user_id);
@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS notifications
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications (user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_review_id ON notifications (review_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_notifications_review_user_content ON notifications (review_id, user_id, content);
 
 CREATE TABLE IF NOT EXISTS review_likes
 (
@@ -168,4 +169,4 @@ CREATE TABLE IF NOT EXISTS power_users
     CONSTRAINT fk_power_users_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT uk_power_users_period_rank UNIQUE (period_type, calculated_date, rank),
     CONSTRAINT uk_power_users_period_user UNIQUE (period_type, calculated_date, user_id)
-    );
+);

@@ -85,6 +85,10 @@ public class DashboardBatchTransactionService {
 
     // 같은 기간 + 같은 calculatedDate로 재실행될 수 있으므로 해당 스냅샷만 지운다.
     popularBookRepository.deleteByPeriodTypeAndCalculatedDate(dashboardPeriod, calculatedDate);
+    // 파생 deleteBy...는 DELETE를 ActionQueue에 큐잉만 하므로,
+    // 뒤따라오는 saveAll의 INSERT가 커밋 시 먼저 flush되어 unique 제약(uk_popular_books_period_rank) 충돌 발생
+    // 여기서 명시 flush로 DELETE를 먼저 DB에 내보낸다.
+    popularBookRepository.flush();
 
     List<PopularBook> rankings = new ArrayList<>();
     int rank = 1;

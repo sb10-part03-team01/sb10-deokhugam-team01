@@ -1,0 +1,105 @@
+# =====================================================================
+# 덕후감 LOAD TEST 프로파일
+# 활성화: SPRING_PROFILES_ACTIVE=loadtest
+#
+# 주의:
+#   이 프로파일은 기동 시 모든 도메인 테이블을 TRUNCATE 함.
+#   반드시 부하 테스트 전용 별도 DB 를 SPRING_DATASOURCE_URL_LOADTEST 로 지정할 것.
+#
+# 권장 기동 방법:
+#   SPRING_PROFILES_ACTIVE=loadtest \
+#   SPRING_DATASOURCE_URL_LOADTEST=jdbc:postgresql://localhost:5432/deokhugam_loadtest \
+#   SPRING_DATASOURCE_USERNAME_LOADTEST= \
+#   SPRING_DATASOURCE_PASSWORD_LOADTEST= \
+#   ./gradlew bootRun
+# =====================================================================
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL_LOADTEST}
+    username: ${SPRING_DATASOURCE_USERNAME_LOADTEST}
+    password: ${SPRING_DATASOURCE_PASSWORD_LOADTEST}
+    hikari:
+      # 최대 커넥션 수 (50)
+      # - 운영 기본값(보통 10~20)보다 넉넉히 잡음
+      # - 이유: 부하 테스트에서 '커넥션 풀 부족'이 진짜 병목인지 판별하기 위함
+      #   * 풀이 작으면 모든 요청이 풀 대기에서 막혀 -> DB/쿼리 자체 성능을 측정 불가
+      #   * 풀을 충분히 키우고 측정 후, 점진적으로 줄이며 적정값 탐색
+      # - 주의: 풀 크기 > DB max_connections 면 DB 가 거부함
+      #   PostgreSQL 기본 max_connections=100 이므로 여러 인스턴스 띄울 땐 분배 필요
+      # - 일반 권장 공식: connections = ((core_count * 2) + effective_spindle_count)
+      #   (https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing)
+      maximum-pool-size: 50
+      # 최소 유휴 커넥션 (10)
+      # - 트래픽이 잠깐 줄어도 10개는 항상 살아있음
+      # - 이유: 부하 시작 직후 '콜드 스타트' 구간에서 커넥션 신규 생성 비용으로
+      #   초기 latency 가 튀는 현상을 줄임 -> 측정 그래프가 깔끔해짐
+      #   (콜드 스타트 : 시스템이나 서비스가 초기 데이터나 캐시가 없는 상태에서 시작되어, 정상 성능을 내기까지 지연이 발생하는 현상)
+      # - 운영에서는 minimum-idle == maximum-pool-size 로 두는 패턴도 흔함
+      #   (커넥션 생성/회수 오버헤드 제거)
+      minimum-idle: 10
+      # 커넥션 획득 타임아웃 (5000ms = 5초)
+      # - 풀에서 커넥션을 받지 못하고 5초 경과 시 SQLException 발생
+      # - 짧게 잡는 이유:
+      #   * 부하 테스트 중 풀이 고갈되면 'fail-fast' 하도록 유도
+      #   * 그래야 에러율 그래프에 즉시 드러남
+      #   * 길게 잡으면 요청들이 대기열에 쌓여 latency 가 부풀려짐 (왜곡)
+      # - HikariCP 기본값은 30초
+      connection-timeout: 5000
+  sql:
+    init:
+      mode: ${SQL_INIT_MODE:never}
+      data-locations: classpath:db/seed-loadtest.sql
+      # 시드 실패 시 동작
+      # - false: 에러 발생 시 애플리케이션 기동 중단
+      # - 이유: 시드가 깨진 채로 기동되면 일부 테이블만 채워진 상태로 부하가 들어가 측정값을 신뢰할 수 없음
+      continue-on-error: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        # 부하 테스트 중에는 SQL 포맷팅/출력 비활성화 (지연시간 왜곡 방지)
+        format_sql: false
+
+# 부하 테스트 중 로그 출력 최소화
+# - debug 로그를 켜면 I/O 가 지연시간을 크게 왜곡함
+# - 측정 시 application.yaml 의 console pattern 도 영향을 받으므로 root=warn
+logging:
+  level:
+    root: warn
+    com.team01.deokhugam: warn
+    org.hibernate.SQL: warn
+    org.hibernate.orm.jdbc.bind: warn
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # 부하 테스트 중 메트릭 수집 (Grafana/Prometheus 연동 시 활용)
+        include: health, info, metrics, loggers, prometheus
+  endpoint:
+    health:
+      # 헬스 상세정보(DB 상태, disk 등) 항상 표시
+      show-details: always
+  info:
+    env:
+      enabled: true
+  metrics:
+    tags:
+      # 모든 메트릭에 공통 태그 부여
+      # - Prometheus/Grafana 에서 application="deokhugam-loadtest" 로 필터 가능
+      application: deokhugam-loadtest
+
+deokhugam:
+  batch:
+    dashboard:
+      # 자동 배치 비활성화: 배치 부하와 API 부하를 섞으면 측정 결과 해석 불가
+      # 배치 성능을 측정하려면 별도 트리거(REST/CLI)로 수동 실행
+      # popular-reviews.js 실행 전에 "0 */1 * * * *" 로 바꾸고 배치 1회 실행 필요
+      cron: "-"
+  user:
+    cleanup:
+      # 부하 테스트 중 유저가 자동 삭제되면 외래키 정합성 깨짐 -> 사실상 무한 유지
+      retention-minutes: 525600  # 1년
+      cron: "-"

@@ -91,7 +91,7 @@ public class UserService {
     User user = userRepository.findByIdAndDeletedAtIsNull(userId)
         .orElseThrow(() -> new UserNotFoundException(userId));
     user.softDelete();
-    log.info("사용자 논리 삭제 완료: userId={}", userId);
+    log.debug("사용자 논리 삭제 완료: userId={}", userId);
     // JPA - Dirty Checking 으로 DB에 삭제사항 저장됨
   }
 

@@ -5,17 +5,11 @@ spring:
     password: ${RDS_SPRING_DATASOURCE_PASSWORD}
   sql:
     init:
-      # prod 안전 가드: schema.sql / data.sql / db/seed-qa.sql 어떤 것도 절대 실행하지 않음
-      mode: never
+      mode: never # prod 안전 가드: schema.sql / data.sql / db/seed-qa.sql 어떤 것도 절대 실행하지 않음
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
       hibernate:
         format_sql: false
-  batch:
-    jdbc:
-      initialize-schema: always
 
 logging:
   level:
@@ -33,14 +27,3 @@ management:
   info:
     env:
       enabled: false
-
-deokhugam:
-  batch:
-    dashboard:
-      cron: "0 * * * * *" # 매 1분마다
-  user:
-    cleanup:
-      # 논리 삭제 후 1일 경과 뒤 유저 정보가 완전히 삭제
-      retention-minutes: 1440
-      # 매일 3시 (1회) - 사용자 이용 적은 시간대 - cron 간격 24h - 최대 지연 48h
-      cron: "0 0 3 * * *"
