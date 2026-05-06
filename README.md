@@ -31,6 +31,12 @@ http://3.37.127.27
 
 ---
 
+## Swagger UI
+
+[http://3.37.127.27](http://3.37.127.27/swagger-ui/index.html)
+
+---
+
 ## 기술 스택
 
 ### Backend
@@ -38,6 +44,7 @@ http://3.37.127.27
 <img src="https://img.shields.io/badge/Spring Data JPA-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
 <img src="https://img.shields.io/badge/Spring Batch-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
 <img src="https://img.shields.io/badge/QueryDSL-0078D4?style=for-the-badge&logo=spring&logoColor=white">
+<img src="https://img.shields.io/badge/MapStruct-0052CC?style=for-the-badge&logoColor=white">
 <img src="https://img.shields.io/badge/Java 17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white">
 <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white">
 
@@ -47,6 +54,7 @@ http://3.37.127.27
 
 ### Infrastructure
 <img src="https://img.shields.io/badge/Amazon AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white">
+<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
 
 ### CI/CD & Code Quality
 <img src="https://img.shields.io/badge/GitHub Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white">
