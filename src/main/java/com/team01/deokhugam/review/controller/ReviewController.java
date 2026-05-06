@@ -8,8 +8,6 @@ import com.team01.deokhugam.review.dto.ReviewDto;
 import com.team01.deokhugam.review.dto.ReviewLikeDto;
 import com.team01.deokhugam.review.dto.ReviewUpdateRequest;
 import com.team01.deokhugam.review.service.ReviewService;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -32,47 +30,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/reviews")
-public class ReviewController {
+public class ReviewController implements ReviewApi {
 
   private final ReviewService reviewService;
 
-  @ApiResponses({
-      @ApiResponse(responseCode = "201", description = "리뷰 등록 성공"),
-      @ApiResponse(responseCode = "400", description = "잘못된 요청(입력값 검증 실패)"),
-      @ApiResponse(responseCode = "404", description = "도서 정보 없음"),
-      @ApiResponse(responseCode = "409", description = "이미 작성된 리뷰 존재"),
-      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-  })
-  @PostMapping
-  public ResponseEntity<ReviewDto> createReview(
-      @Valid @RequestBody ReviewCreateRequest request
-  ) {
-    ReviewDto response = reviewService.createReview(request);
-
-    log.info("리뷰 등록 성공, reviewId={}, bookId={}, userId={}", response.id(), response.bookId(),
-        response.userId());
-
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
-  }
-
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "리뷰 상세 정보 조회 성공"),
-      @ApiResponse(responseCode = "400", description = "잘못된 요청(요청자 ID 누락)"),
-      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
-      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-  })
-  @GetMapping("/{reviewId}")
-  public ResponseEntity<ReviewDto> getReview(
-      @PathVariable UUID reviewId,
-      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
-  ) {
-    ReviewDto response = reviewService.getReview(reviewId, requestUserId);
-
-    log.info("리뷰 조회 성공,  reviewId={}, userId={}", reviewId, requestUserId);
-
-    return ResponseEntity.ok(response);
-  }
-
+  @Override
   @GetMapping
   public ResponseEntity<CursorPageResponseReviewDto> getReviews(
       @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
@@ -97,19 +59,79 @@ public class ReviewController {
         limit
     );
 
-    log.info("리뷰 목록 조회 성공: requestUserId={}, userId={}, bookId={}, keyword={}", requestUserId,
-        userId, bookId, keyword);
+    log.info(
+        "리뷰 목록 조회 성공: requestUserId={}, userId={}, bookId={}, keyword={}",
+        requestUserId,
+        userId,
+        bookId,
+        keyword
+    );
 
     return ResponseEntity.ok(response);
   }
 
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "리뷰 수정 성공"),
-      @ApiResponse(responseCode = "400", description = "잘못된 요청 (입력값 검증 실패)"),
-      @ApiResponse(responseCode = "403", description = "리뷰 수정 권한 없음"),
-      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
-      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-  })
+  @Override
+  @PostMapping
+  public ResponseEntity<ReviewDto> createReview(
+      @Valid @RequestBody ReviewCreateRequest request
+  ) {
+    ReviewDto response = reviewService.createReview(request);
+
+    log.info(
+        "리뷰 등록 성공, reviewId={}, bookId={}, userId={}",
+        response.id(),
+        response.bookId(),
+        response.userId()
+    );
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
+
+  @Override
+  @PostMapping("/{reviewId}/like")
+  public ResponseEntity<ReviewLikeDto> likeReview(
+      @PathVariable UUID reviewId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
+  ) {
+    ReviewLikeDto response = reviewService.toggleLike(reviewId, requestUserId);
+
+    log.info(
+        "리뷰 좋아요 토글 성공: reviewId={}, requestUserId={}, liked={}",
+        reviewId,
+        requestUserId,
+        response.liked()
+    );
+
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  @GetMapping("/{reviewId}")
+  public ResponseEntity<ReviewDto> getReview(
+      @PathVariable UUID reviewId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
+  ) {
+    ReviewDto response = reviewService.getReview(reviewId, requestUserId);
+
+    log.info("리뷰 조회 성공, reviewId={}, userId={}", reviewId, requestUserId);
+
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  @DeleteMapping("/{reviewId}")
+  public ResponseEntity<Void> deleteReview(
+      @PathVariable UUID reviewId,
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
+  ) {
+    reviewService.deleteReview(reviewId, requestUserId);
+
+    log.info("리뷰 논리삭제 성공 requestUserId={}, reviewId={}", requestUserId, reviewId);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
   @PatchMapping("/{reviewId}")
   public ResponseEntity<ReviewDto> updateReview(
       @PathVariable UUID reviewId,
@@ -118,38 +140,17 @@ public class ReviewController {
   ) {
     ReviewDto response = reviewService.updateReview(reviewId, requestUserId, request);
 
-    log.info("리뷰 수정 성공 requestUserId={}, reviewId={}, userId={}", requestUserId, reviewId,
-        response.userId());
+    log.info(
+        "리뷰 수정 성공 requestUserId={}, reviewId={}, userId={}",
+        requestUserId,
+        reviewId,
+        response.userId()
+    );
+
     return ResponseEntity.ok(response);
   }
 
-  @ApiResponses({
-      @ApiResponse(responseCode = "204", description = "리뷰 논리 삭제 성공"),
-      @ApiResponse(responseCode = "400", description = "잘못된 요청(요청자 ID누락)"),
-      @ApiResponse(responseCode = "403", description = "리뷰 삭제 권한 없음"),
-      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
-      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-  })
-  @DeleteMapping("/{reviewId}")
-  public ResponseEntity<Void> deleteReview(
-      @PathVariable UUID reviewId,
-      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
-  ) {
-
-    reviewService.deleteReview(reviewId, requestUserId);
-
-    log.info("리뷰 논리삭제 성공 requestUserId={}, reviewId={}", requestUserId, reviewId);
-
-    return ResponseEntity.noContent().build();
-  }
-
-  @ApiResponses({
-      @ApiResponse(responseCode = "204", description = "리뷰 물리 삭제 성공"),
-      @ApiResponse(responseCode = "400", description = "잘못된 요청(요청자 ID누락, 논리 삭제되지 않은 리뷰)"),
-      @ApiResponse(responseCode = "403", description = "리뷰 삭제 권한 없음"),
-      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
-      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-  })
+  @Override
   @DeleteMapping("/{reviewId}/hard")
   public ResponseEntity<Void> hardDeleteReview(
       @PathVariable UUID reviewId,
@@ -160,24 +161,5 @@ public class ReviewController {
     log.info("리뷰 물리삭제 성공 requestUserId={}, reviewId={}", requestUserId, reviewId);
 
     return ResponseEntity.noContent().build();
-  }
-
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "리뷰 좋아요 성공"),
-      @ApiResponse(responseCode = "400", description = "잘못된 요청(요청자 ID 누락)"),
-      @ApiResponse(responseCode = "404", description = "리뷰 정보 없음"),
-      @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-  })
-  @PostMapping("/{reviewId}/like")
-  public ResponseEntity<ReviewLikeDto> likeReview(
-      @PathVariable UUID reviewId,
-      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId
-  ) {
-    ReviewLikeDto response = reviewService.toggleLike(reviewId, requestUserId);
-
-    log.info("리뷰 좋아요 토글 성공: reviewId={}, requestUserId={}, liked={}", reviewId, requestUserId,
-        response.liked());
-
-    return ResponseEntity.ok(response);
   }
 }
