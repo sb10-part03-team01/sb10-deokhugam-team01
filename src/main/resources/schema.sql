@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS reviews
     rating        DOUBLE PRECISION NOT NULL CHECK (rating >= 1.0 AND rating <= 5.0),
     like_count    INTEGER          NOT NULL DEFAULT 0 CHECK (like_count >= 0),
     comment_count INTEGER          NOT NULL DEFAULT 0 CHECK (comment_count >= 0),
-    version       BIGINT           NOT NULL DEFAULT 0,
 
     is_deleted    BOOLEAN          NOT NULL DEFAULT FALSE,
     deleted_at    TIMESTAMPTZ,
@@ -170,4 +169,4 @@ CREATE TABLE IF NOT EXISTS power_users
     CONSTRAINT fk_power_users_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT uk_power_users_period_rank UNIQUE (period_type, calculated_date, rank),
     CONSTRAINT uk_power_users_period_user UNIQUE (period_type, calculated_date, user_id)
-    );
+);
