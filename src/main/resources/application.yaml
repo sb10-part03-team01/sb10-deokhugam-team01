@@ -2,31 +2,27 @@ server:
   port: ${SERVER_PORT:8080}
 
 spring:
-  # profile을 .env 값 참조하여 결정
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE}
   application:
     name: deokhugam
-  servlet:
-    multipart:
-      maxFileSize: 20MB # 파일 하나의 최대 크기
-      maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE} # profile을 .env 값 참조하여 결정
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
-      # validate : 엔티티와 실제 DB 테이블이 일치하는지만 검사함. 다를 경우 예외를 발생시키고 실행을 중단
-      # update : 변경된 엔티티에 맞춰 테이블 스키마를 업데이트함. 단, 컬럼 추가는 되지만 삭제나 타입 변경은 반영되지 않음
-      # create : 기존 테이블을 삭제(DROP)하고 엔티티를 기반으로 새 테이블을 생성
+      ddl-auto: validate # validate : 엔티티와 실제 DB 테이블이 일치하는지만 검사함. 다를 경우 예외를 발생시키고 실행을 중단
     open-in-view: false
-  config:
-    import: optional:file:.env[.properties]
+  servlet:
+    multipart:
+      maxFileSize: 20MB # 파일 하나의 최대 크기
+      maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
   batch:
     jdbc:
-      initialize-schema: never
+      initialize-schema: always # 앱 시작할 때마다 메타데이터 테이블 생성
     job:
-      enabled: false
+      enabled: false # 앱이 시작될 때 등록된 배치 Job을 자동 실행하지 않도록 함 (@Scheduled로 Job 실행 설정)
 
 management:
   endpoints:
@@ -60,8 +56,11 @@ info:
 deokhugam:
   batch:
     dashboard:
-      cron: "0 0 0 * * *"
+      cron: "0 * * * * *" # 매 1분마다 실행
       zone: "UTC"
+  user:
+    cleanup:
+      retention-minutes: 1440 # 논리 삭제 후 1일(1440분) 경과 시 물리 삭제 (운영 기본값)
   storage:
     type: ${STORAGE_TYPE:s3}  # local | s3 (기본값: s3)
     local:
