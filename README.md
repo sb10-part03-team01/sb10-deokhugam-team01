@@ -8,13 +8,15 @@
 
 ## 팀원 구성
 
-| 프로필 |                    이름                     |    역할    | 담당 기능                                                         |
+## 팀원 구성
+
+| 프로필 |                     이름                     |  역할  | 담당 기능                                                                                     |
 |:---:|:-----------------------------------------:|:--------:|:--------------------------------------------------------------|
-|     | **[김현재](https://github.com/hyunjae3458)** | **null** | **[주요 기능]**<br>- **기능**<br>**[추가/인프라 기능]**<br>- 추가1 <br>- 추가2 |
-|     |   **[문정환](https://github.com/mjohn26)**   | **null** | **[주요 기능]**<br>- **기능**<br>**[추가/인프라 기능]**<br>- 추가1 <br>- 추가2 |
-|     |   **[박승민](https://github.com/raonPsm)**   | **null** | **[주요 기능]**<br>- **기능**<br>**[추가/인프라 기능]**<br>- 추가1 <br>- 추가2 |
-|     |  **[안승리](https://github.com/Atory0206)**  | **null** | **[주요 기능]**<br>- **기능**<br>**[추가/인프라 기능]**<br>- 추가1 <br>- 추가2 |
-|     | **[최종인](https://github.com/jongin-git)**  | **null** | **[주요 기능]**<br>- **기능**<br>**[추가/인프라 기능]**<br>- 추가1 <br>- 추가2 |
+| <img src="https://github.com/hyunjae3458.png" width="100" style="border-radius:50%;"> | **[김현재](https://github.com/hyunjae3458)** | **도서 관리 도메인,<br>README 작성** | **[주요 기능]**<br>- 도서 관리 API 구현 (CRUD 및 커서 페이지네이션)<br>- Naver Book & OCR Space API 연동<br>**[추가/인프라 기능]**<br>- S3 썸네일 업로드 트랜잭션 동기화 |
+| <img src="https://github.com/mjohn26.png" width="100" style="border-radius:50%;"> |   **[문정환](https://github.com/mjohn26)**   | **리뷰 관리, 인기 리뷰 도메인,<br>노션 정리** | **[주요 기능]**<br>- 리뷰 관리 API 구현<br>- 인기 리뷰 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
+| <img src="https://github.com/raonPsm.png" width="100" style="border-radius:50%;"> |   **[박승민](https://github.com/raonPsm)**   | **유저 관리 도메인, 인프라 설정,<br>PPT 제작** | **[주요 기능]**<br>- 유저 관리 API 구현<br>**[추가/인프라 기능]**<br>- AWS 인프라 환경 구축 및 GitHub Actions CI/CD 설정<br>- CodeRabbit(AI 리뷰), Codecov(테스트 커버리지) 연동 |
+| <img src="https://github.com/Atory0206.png" width="100" style="border-radius:50%;"> |  **[안승리](https://github.com/Atory0206)**  | **알림 관리, 파워 유저 도메인,<br>발표** | **[주요 기능]**<br>- 알림 관리 API 구현<br>- 파워 유저 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
+| <img src="https://github.com/jongin-git.png" width="100" style="border-radius:50%;"> | **[최종인](https://github.com/jongin-git)**  | **댓글 관리, 인기 도서 도메인,<br>시연 영상 제작** | **[주요 기능]**<br>- 댓글 관리 API 구현<br>- 인기 도서 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- MDC 기반 Request ID & IP 로깅 및 헤더 응답 처리 |
 
 ---
 
@@ -25,21 +27,35 @@
 
 ---
 
+## 배포 사이트
+
+http://3.37.127.27
+
+---
+
 ## 기술 스택
 
-- Backend: Spring Boot, Spring Data JPA, Java17, Gradle
-
+### Backend
 <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
-<img src="https://img.shields.io/badge/spring data jpa-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
-<img src="https://img.shields.io/badge/java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white">
-<img src="https://img.shields.io/badge/gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white">
+<img src="https://img.shields.io/badge/Spring Data JPA-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
+<img src="https://img.shields.io/badge/Spring Batch-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
+<img src="https://img.shields.io/badge/QueryDSL-0078D4?style=for-the-badge&logo=spring&logoColor=white">
+<img src="https://img.shields.io/badge/Java 17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white">
+<img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white">
 
-- Database: PostgreSQL
-
+### Database
 <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
+<img src="https://img.shields.io/badge/H2 Database-4169E1?style=for-the-badge">
 
-- 공통 Tool: Git, Github, Discord, IntelliJ IDEA
+### Infrastructure
+<img src="https://img.shields.io/badge/Amazon AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white">
 
+### CI/CD & Code Quality
+<img src="https://img.shields.io/badge/GitHub Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white">
+<img src="https://img.shields.io/badge/Codecov-F01F7A?style=for-the-badge&logo=codecov&logoColor=white">
+<img src="https://img.shields.io/badge/CodeRabbit-FF6600?style=for-the-badge">
+
+### Collaboration Tools
 <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white">
 <img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white">
 <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white">
@@ -47,17 +63,92 @@
 
 ---
 
+## ERD (Entity-Relationship Diagram)
+
+전체 데이터베이스의 구조를 한눈에 파악할 수 있는 전체 ERD입니다.
+
+<img width="1005" height="506" alt="전체 ERD" src="https://github.com/user-attachments/assets/297c2e1e-5976-4aa1-9928-25b59bc0d665" />
+
+---
+
+## 도메인별 ERD 상세
+
+테이블 수가 많아 복잡도를 낮추기 위해 **각 도메인(Domain)별로 구조를 분리**하여 상세히 나타냈습니다.  
+
+<details>
+<summary><b>1. 유저(User) 도메인</b></summary>
+<div markdown="1">
+<br>
+회원 관리에 필요한 핵심 테이블 구조입니다.
+<img width="549" height="227" alt="스크린샷 2026-05-06 오후 1 36 20" src="https://github.com/user-attachments/assets/9d863fbc-216a-4c3c-ae7f-401dcd3cf57e" />
+</div>
+</details>
+
+<details>
+<summary><b>2. 도서(Book) 도메인</b></summary>
+<div markdown="1">
+<br>
+도서 메타데이터, ISBN 매칭 정보 등 핵심 비즈니스 로직을 담당하는 테이블 구조입니다.
+<img width="562" height="371" alt="스크린샷 2026-05-06 오후 1 33 17" src="https://github.com/user-attachments/assets/bb4d3825-e431-4057-bf7d-ec42c5e2cd04" />
+</div>
+</details>
+
+<details>
+<summary><b>3. 리뷰(Review) 도메인</b></summary>
+<div markdown="1">
+<br>
+유저가 도서에 남긴 리뷰, 평점, 좋아요 등의 정보를 관리하는 테이블 구조입니다.
+<img width="765" height="494" alt="스크린샷 2026-05-06 오후 1 36 34" src="https://github.com/user-attachments/assets/22732345-6d46-49eb-9a41-f2719e9685eb" />
+</div>
+</details>
+
+<details>
+<summary><b>4. 댓글(Comment) 도메인</b></summary>
+<div markdown="1">
+<br>
+리뷰에 대한 유저 간의 소통(댓글 및 대댓글)을 관리하는 테이블 구조입니다.
+<img width="536" height="219" alt="댓글 도메인 상세" src="https://github.com/user-attachments/assets/dd9374da-4144-4e94-b762-12eddf03da2f" />
+</div>
+</details>
+
+<details>
+<summary><b>5. 알림(Notification) 도메인</b></summary>
+<div markdown="1">
+<br>
+시스템 알림 및 유저 간 상호작용 알림을 처리하는 테이블 구조입니다.
+<img width="500" height="215" alt="알림 도메인 상세" src="https://github.com/user-attachments/assets/bb76a736-e61a-4da3-992b-f6465f326718" />
+</div>
+</details>
+
+<details>
+<summary><b>6. 대쉬보드 및 통계(Dashboard & Statistics) 도메인</b></summary>
+<div markdown="1">
+<br>
+인기 도서, 리뷰 통계, 유저 활동 지표 등 대쉬보드 화면 렌더링과 집계에 최적화된 테이블 구조입니다.
+<img width="862" height="810" alt="스크린샷 2026-05-06 오후 1 36 04" src="https://github.com/user-attachments/assets/fac1eef4-82bc-4591-a275-891014174a77" />
+</div>
+</details>
+
+---
+
+## 인프라 아키텍처 다이어그램
+
+<img width="970" height="555" alt="스크린샷 2026-05-06 오전 10 42 48" src="https://github.com/user-attachments/assets/23e79095-7c98-41c0-a490-b5719099f181" />
+
+---
+
 ## 팀원별 구현 기능 상세
 
 ### 김현재
 
-(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+<img width="2878" height="1550" alt="image" src="https://github.com/user-attachments/assets/5a9ae2dc-e40e-4995-b8b5-5547b363d681" />
 
-- **소셜 로그인 API**
-    - Google OAuth 2.0을 활용한 소셜 로그인 기능 구현
-    - 로그인 후 추가 정보 입력을 위한 RESTful API 엔드포인트 개발
-- **회원 추가 정보 입력 API**
-    - 회원 유형(관리자, 학생)에 따른 조건부 입력 처리 API 구현
+- **도서 관리 API**
+    - 도서 등록, 수정, 삭제, 상세 조회 API 구현 및 유효성 검증(Validation) 로직 작성
+- **외부 인프라 및 API 연동**
+    - AWS S3를 활용한 썸네일 이미지 업로드 및 Presigned URL 발급 로직 구현
+    -  네이버 도서 검색 API 연동
+    -  OCR Space API 연동
 
 ### 문정환
 
@@ -108,74 +199,50 @@
 ## 파일 구조
 
 ```Markdown
-src
-┣ main
-┃ ┣ java
-┃ ┃ ┣ com
-┃ ┃ ┃ ┣ example
-┃ ┃ ┃ ┃ ┣ controller
-┃ ┃ ┃ ┃ ┃ ┣ AuthController.java
-┃ ┃ ┃ ┃ ┃ ┣ UserController.java
-┃ ┃ ┃ ┃ ┃ ┗ AdminController.java
-┃ ┃ ┃ ┃ ┣ model
-┃ ┃ ┃ ┃ ┃ ┣ User.java
-┃ ┃ ┃ ┃ ┃ ┗ Course.java
-┃ ┃ ┃ ┃ ┣ repository
-┃ ┃ ┃ ┃ ┃ ┣ UserRepository.java
-┃ ┃ ┃ ┃ ┃ ┗ CourseRepository.java
-┃ ┃ ┃ ┃ ┣ service
-┃ ┃ ┃ ┃ ┃ ┣ AuthService.java
-┃ ┃ ┃ ┃ ┃ ┣ UserService.java
-┃ ┃ ┃ ┃ ┃ ┗ AdminService.java
-┃ ┃ ┃ ┃ ┣ security
-┃ ┃ ┃ ┃ ┃ ┣ SecurityConfig.java
-┃ ┃ ┃ ┃ ┃ ┗ JwtAuthenticationEntryPoint.java
-┃ ┃ ┃ ┃ ┣ dto
-┃ ┃ ┃ ┃ ┃ ┣ LoginRequest.java
-┃ ┃ ┃ ┃ ┃ ┗ UserResponse.java
-┃ ┃ ┃ ┃ ┣ exception
-┃ ┃ ┃ ┃ ┃ ┣ GlobalExceptionHandler.java
-┃ ┃ ┃ ┃ ┃ ┗ ResourceNotFoundException.java
-┃ ┃ ┃ ┃ ┣ utils
-┃ ┃ ┃ ┃ ┃ ┣ JwtUtils.java
-┃ ┃ ┃ ┃ ┃ ┗ UserMapper.java
-┃ ┃ ┃ ┣ resources
-┃ ┃ ┃ ┃ ┣ application.properties
-┃ ┃ ┃ ┃ ┗ static
-┃ ┃ ┃ ┃ ┃ ┣ css
-┃ ┃ ┃ ┃ ┃ ┃ ┗ style.css
-┃ ┃ ┃ ┃ ┃ ┣ js
-┃ ┃ ┃ ┃ ┃ ┃ ┗ script.js
-┃ ┃ ┃ ┣ webapp
-┃ ┃ ┃ ┃ ┣ WEB-INF
-┃ ┃ ┃ ┃ ┃ ┗ web.xml
-┃ ┃ ┃ ┣ test
-┃ ┃ ┃ ┃ ┣ java
-┃ ┃ ┃ ┃ ┃ ┣ com
-┃ ┃ ┃ ┃ ┃ ┃ ┣ example
-┃ ┃ ┃ ┃ ┃ ┃ ┃ ┣ AuthServiceTest.java
-┃ ┃ ┃ ┃ ┃ ┃ ┃ ┗ UserControllerTest.java
-┃ ┃ ┃ ┃ ┃ ┃ ┗ ApplicationTests.java
-┃ ┃ ┃ ┣ resources
-┃ ┃ ┃ ┃ ┣ application.properties
-┃ ┃ ┃ ┃ ┗ static
-┃ ┃ ┃ ┃ ┃ ┣ css
-┃ ┃ ┃ ┃ ┃ ┃ ┗ style.css
-┃ ┃ ┃ ┃ ┃ ┣ js
-┃ ┃ ┃ ┃ ┃ ┃ ┗ script.js
-┣ pom.xml
-┣ Application.java
-┣ application.properties
-┣ .gitignore
+.
+┣ .github
+┃ ┣ ISSUE_TEMPLATE
+┃ ┣ workflows
+┃ ┗ PULL_REQUEST_TEMPLATE.md
+┣ src
+┃ ┣ main
+┃ ┃ ┣ java
+┃ ┃ ┃ ┗ com.team01.deokhugam
+┃ ┃ ┃   ┣ batch
+┃ ┃ ┃   ┣ book
+┃ ┃ ┃   ┣ comment
+┃ ┃ ┃   ┣ dashboard
+┃ ┃ ┃   ┣ global
+┃ ┃ ┃   ┃ ┣ config
+┃ ┃ ┃   ┃ ┣ constant
+┃ ┃ ┃   ┃ ┣ entity
+┃ ┃ ┃   ┃ ┣ enums
+┃ ┃ ┃   ┃ ┣ exception
+┃ ┃ ┃   ┃ ┣ filter
+┃ ┃ ┃   ┃ ┣ pagination
+┃ ┃ ┃   ┃ ┗ util
+┃ ┃ ┃   ┣ notification
+┃ ┃ ┃   ┣ review
+┃ ┃ ┃   ┗ user
+┃ ┃ ┗ resources
+┃ ┃     ┣ db
+┃ ┃     ┗ static
+┃ ┗ test
+┃     ┗ java
+┃         ┗ com.team01.deokhugam
+┃           ┣ batch
+┃           ┣ book
+┃           ┣ comment
+┃           ┣ config
+┃           ┣ dashboard
+┃           ┣ global
+┃           ┣ notification
+┃           ┣ review
+┃           ┗ user
+┣ codecov.yml
+┣ coderabbit.yml
 ┗ README.md
 ```
-
----
-
-## 구현 홈페이지
-
-(개발한 홈페이지에 대한 링크 게시)
-https://www.codeit.kr/
 
 ---
 
