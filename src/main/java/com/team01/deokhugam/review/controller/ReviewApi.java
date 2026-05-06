@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +20,6 @@ import jakarta.validation.Valid;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "리뷰 관리", description = "리뷰 관련 API")
 public interface ReviewApi {
@@ -60,9 +60,16 @@ public interface ReviewApi {
       @ApiResponse(responseCode = "500", description = "서버 내부 오류")
   })
   ResponseEntity<ReviewDto> createReview(
+      @Parameter(
+          name = AuthHeader.REQUEST_USER_ID,
+          description = "요청자 ID",
+          required = true,
+          in = ParameterIn.HEADER
+      )
+      UUID requestUserId,
+
       @Valid
-      @RequestBody
-      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      @RequestBody(
           description = "리뷰 등록 요청 정보",
           required = true,
           content = @Content(schema = @Schema(implementation = ReviewCreateRequest.class))
@@ -155,8 +162,7 @@ public interface ReviewApi {
       UUID requestUserId,
 
       @Valid
-      @RequestBody
-      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      @RequestBody(
           description = "리뷰 수정 요청 정보",
           required = true,
           content = @Content(schema = @Schema(implementation = ReviewUpdateRequest.class))

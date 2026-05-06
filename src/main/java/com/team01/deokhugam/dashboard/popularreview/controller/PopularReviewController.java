@@ -28,7 +28,8 @@ public class PopularReviewController implements PopularReviewApi {
       @RequestParam(defaultValue = "DAILY") DashboardPeriod period,
       @RequestParam(defaultValue = "ASC") SortDirection direction,
       @RequestParam(required = false) String cursor,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime after,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      OffsetDateTime after,
       @RequestParam(defaultValue = "50") Integer limit
   ) {
     CursorPageResponsePopularReviewDto response =

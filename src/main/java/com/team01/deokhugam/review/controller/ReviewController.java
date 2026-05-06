@@ -60,11 +60,11 @@ public class ReviewController implements ReviewApi {
     );
 
     log.info(
-        "리뷰 목록 조회 성공: requestUserId={}, userId={}, bookId={}, keyword={}",
-        requestUserId,
-        userId,
+        "리뷰 목록 조회 성공: bookId={}, keyword={}, size={}, hasNext={}",
         bookId,
-        keyword
+        keyword,
+        response.size(),
+        response.hasNext()
     );
 
     return ResponseEntity.ok(response);
@@ -73,16 +73,12 @@ public class ReviewController implements ReviewApi {
   @Override
   @PostMapping
   public ResponseEntity<ReviewDto> createReview(
+      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
       @Valid @RequestBody ReviewCreateRequest request
   ) {
     ReviewDto response = reviewService.createReview(request);
 
-    log.info(
-        "리뷰 등록 성공, reviewId={}, bookId={}, userId={}",
-        response.id(),
-        response.bookId(),
-        response.userId()
-    );
+    log.info("리뷰 등록 성공: reviewId={}, bookId={}", response.id(), response.bookId());
 
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
@@ -95,12 +91,7 @@ public class ReviewController implements ReviewApi {
   ) {
     ReviewLikeDto response = reviewService.toggleLike(reviewId, requestUserId);
 
-    log.info(
-        "리뷰 좋아요 토글 성공: reviewId={}, requestUserId={}, liked={}",
-        reviewId,
-        requestUserId,
-        response.liked()
-    );
+    log.info("리뷰 좋아요 토글 성공: reviewId={}, liked={}", reviewId, response.liked());
 
     return ResponseEntity.ok(response);
   }
@@ -113,7 +104,7 @@ public class ReviewController implements ReviewApi {
   ) {
     ReviewDto response = reviewService.getReview(reviewId, requestUserId);
 
-    log.info("리뷰 조회 성공, reviewId={}, userId={}", reviewId, requestUserId);
+    log.info("리뷰 조회 성공: reviewId={}", reviewId);
 
     return ResponseEntity.ok(response);
   }
@@ -126,7 +117,7 @@ public class ReviewController implements ReviewApi {
   ) {
     reviewService.deleteReview(reviewId, requestUserId);
 
-    log.info("리뷰 논리삭제 성공 requestUserId={}, reviewId={}", requestUserId, reviewId);
+    log.info("리뷰 논리삭제 성공: reviewId={}", reviewId);
 
     return ResponseEntity.noContent().build();
   }
@@ -140,12 +131,7 @@ public class ReviewController implements ReviewApi {
   ) {
     ReviewDto response = reviewService.updateReview(reviewId, requestUserId, request);
 
-    log.info(
-        "리뷰 수정 성공 requestUserId={}, reviewId={}, userId={}",
-        requestUserId,
-        reviewId,
-        response.userId()
-    );
+    log.info("리뷰 수정 성공: reviewId={}", reviewId);
 
     return ResponseEntity.ok(response);
   }
@@ -158,7 +144,7 @@ public class ReviewController implements ReviewApi {
   ) {
     reviewService.hardDeleteReview(reviewId, requestUserId);
 
-    log.info("리뷰 물리삭제 성공 requestUserId={}, reviewId={}", requestUserId, reviewId);
+    log.info("리뷰 물리삭제 성공: reviewId={}", reviewId);
 
     return ResponseEntity.noContent().build();
   }

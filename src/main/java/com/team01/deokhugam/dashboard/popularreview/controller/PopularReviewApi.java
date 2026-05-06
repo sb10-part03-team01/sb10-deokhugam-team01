@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.OffsetDateTime;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "리뷰 관리", description = "리뷰 관련 API")
+@Tag(name = "인기 리뷰 관리", description = "인기 리뷰 관련 API")
 public interface PopularReviewApi {
 
   @Operation(summary = "인기 리뷰 목록 조회", description = "기간별 인기 리뷰 목록을 커서 페이지네이션 방식으로 조회합니다.")
