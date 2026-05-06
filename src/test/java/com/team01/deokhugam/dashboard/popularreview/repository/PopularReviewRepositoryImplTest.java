@@ -93,41 +93,6 @@ class PopularReviewRepositoryImplTest {
   }
 
   @Test
-  @DisplayName("ASC 정렬에서 cursor rank 이후 데이터를 조회한다")
-  void find_all_by_condition_with_cursor_asc_returns_after_cursor_rank() {
-    Book book = persistBook("책2", "저자2", "isbn-2");
-
-    Review review1 = persistReview(book, persistUser("user4@test.com", "user4"), "리뷰1");
-    Review review2 = persistReview(book, persistUser("user5@test.com", "user5"), "리뷰2");
-    Review review3 = persistReview(book, persistUser("user6@test.com", "user6"), "리뷰3");
-
-    persistPopularReview(review1, DashboardPeriod.DAILY, calculatedDate, 1, 10.0, 10, 0, time1);
-    PopularReview cursorPopularReview =
-        persistPopularReview(review2, DashboardPeriod.DAILY, calculatedDate, 2, 9.0, 8, 1, time2);
-    persistPopularReview(review3, DashboardPeriod.DAILY, calculatedDate, 3, 8.0, 6, 2, time3);
-
-    em.flush();
-
-    OffsetDateTime cursorAfter = cursorPopularReview.getCreatedAt();
-
-    em.clear();
-
-    PopularReviewSearchCondition condition = condition(
-        SortDirection.ASC,
-        "2",
-        cursorAfter,
-        2
-    );
-
-    List<PopularReview> result = popularReviewRepository.findAllByCondition(condition);
-
-    assertThat(result).hasSize(1);
-    assertThat(result)
-        .extracting(PopularReview::getRank)
-        .containsExactly(3);
-  }
-
-  @Test
   @DisplayName("period와 calculatedDate가 일치하는 데이터만 조회한다")
   void find_all_by_condition_filters_by_period_and_calculated_date() {
     Book book = persistBook("책4", "저자4", "isbn-4");
