@@ -199,6 +199,9 @@ erDiagram
     
 ```mermaid
 erDiagram
+    users ||--o{ notifications : "receives"
+    reviews ||--o{ notifications : "triggers"
+
     notifications {
         UUID id PK
         UUID review_id FK
