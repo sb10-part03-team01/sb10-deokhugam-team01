@@ -60,14 +60,6 @@ public interface ReviewApi {
       @ApiResponse(responseCode = "500", description = "서버 내부 오류")
   })
   ResponseEntity<ReviewDto> createReview(
-      @Parameter(
-          name = AuthHeader.REQUEST_USER_ID,
-          description = "요청자 ID",
-          required = true,
-          in = ParameterIn.HEADER
-      )
-      UUID requestUserId,
-
       @Valid
       @RequestBody(
           description = "리뷰 등록 요청 정보",

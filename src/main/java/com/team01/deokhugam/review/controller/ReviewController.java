@@ -73,7 +73,6 @@ public class ReviewController implements ReviewApi {
   @Override
   @PostMapping
   public ResponseEntity<ReviewDto> createReview(
-      @RequestHeader(AuthHeader.REQUEST_USER_ID) UUID requestUserId,
       @Valid @RequestBody ReviewCreateRequest request
   ) {
     ReviewDto response = reviewService.createReview(request);
