@@ -64,7 +64,7 @@ public class PopularReviewRepositoryImpl implements PopularReviewRepositoryCusto
       throw new DeokhugamException(
           ErrorCode.INVALID_CURSOR_FORMAT,
           Map.of(
-              "cursor", condition.cursor(),
+              "cursor", String.valueOf(condition.cursor()),
               "after", String.valueOf(condition.after())
           )
       );
