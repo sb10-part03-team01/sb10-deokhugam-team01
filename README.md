@@ -289,6 +289,9 @@ erDiagram
 
 ### 김현재
 
+<img width="400" height="350" alt="덕후감_시연영상_2배속 (1)" src="https://github.com/user-attachments/assets/09923e38-defd-4922-962d-abbe9a27f7c5" />
+
+
 - **도서 관리 API**
     - 도서 등록, 수정, 삭제, 상세 조회 API 구현 및 유효성 검증(Validation) 로직 작성
 - **외부 인프라 및 API 연동**
@@ -297,6 +300,9 @@ erDiagram
     -  OCR Space API 연동
 
 ### 문정환
+
+<img width="400" height="350" alt="덕후감_시연영상_2배속 (2)" src="https://github.com/user-attachments/assets/73653057-a8db-4310-b7a8-88466d565311" />
+
 
 - **리뷰 관리 API**
     - 리뷰 작성, 수정, 삭제 로직 구현
@@ -309,6 +315,9 @@ erDiagram
 
 ### 박승민
 
+<img width="400" height="350" alt="덕후감_시연영상_2배속" src="https://github.com/user-attachments/assets/71f6dffc-0f28-4e79-b1d8-630871bad944" />
+
+
 - **유저 관리 API**
     - 회원 가입, 로그인 등 유저 관리 도메인 핵심 로직 및 API 구현
 - **CI/CD 및 인프라 구축**
@@ -317,6 +326,8 @@ erDiagram
     - Codecov(테스트 커버리지 측정) 및 CodeRabbit(AI 코드 리뷰) 연동을 통한 코드 품질 관리 인프라 셋업
 
 ### 안승리
+
+<img width="400" height="350" alt="덕후감_시연영상_2배속 (5)" src="https://github.com/user-attachments/assets/7c8f9843-bca3-4820-a544-6c0093e63149" />
 
 - **알림 관리 API**
     - 알림 생성 및 단건/목록 조회 API 구현
@@ -327,6 +338,9 @@ erDiagram
     - 통계 데이터 처리를 위한 Spring Batch 공통 설정 및 파일 구조화 작업
 
 ### 최종인
+
+<img width="400" height="350" alt="덕후감_시연영상_2배속 (3)" src="https://github.com/user-attachments/assets/431ecbc0-1aba-4203-9e90-654cb1e360ab" />
+
 
 - **댓글 관리 API**
     - 댓글 CRUD 및 QueryDSL을 활용한 커서 기반 페이지네이션 목록 조회 API 구현
