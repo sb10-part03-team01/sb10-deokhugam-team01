@@ -11,9 +11,9 @@
 | 프로필 |                     이름                     |  역할  | 담당 기능                                                                                     |
 |:---:|:-----------------------------------------:|:--------:|:--------------------------------------------------------------|
 | <img src="https://github.com/hyunjae3458.png" width="100" style="border-radius:50%;"> | **[김현재](https://github.com/hyunjae3458)** | **도서 관리 도메인,<br>README 작성** | **[주요 기능]**<br>- 도서 관리 API 구현 (CRUD 및 커서 페이지네이션)<br>- Naver Book & OCR Space API 연동<br>**[추가/인프라 기능]**<br>- S3 썸네일 업로드 트랜잭션 동기화 |
-| <img src="https://github.com/mjohn26.png" width="100" style="border-radius:50%;"> |   **[문정환](https://github.com/mjohn26)**   | **리뷰 관리, 인기 리뷰 도메인,<br>노션 정리** | **[주요 기능]**<br>- 리뷰 관리 API 구현<br>- 인기 리뷰 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
+| <img src="https://github.com/mjohn26.png" width="100" style="border-radius:50%;"> |   **[문정환](https://github.com/mjohn26)**   | **리뷰 관리, 인기 리뷰 도메인,<br>발표** | **[주요 기능]**<br>- 리뷰 관리 API 구현<br>- 인기 리뷰 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
 | <img src="https://github.com/raonPsm.png" width="100" style="border-radius:50%;"> |   **[박승민](https://github.com/raonPsm)**   | **유저 관리 도메인, 인프라 설정,<br>PPT 제작** | **[주요 기능]**<br>- 유저 관리 API 구현<br>**[추가/인프라 기능]**<br>- AWS 인프라 환경 구축 및 GitHub Actions CI/CD 설정<br>- CodeRabbit(AI 리뷰), Codecov(테스트 커버리지) 연동 |
-| <img src="https://github.com/Atory0206.png" width="100" style="border-radius:50%;"> |  **[안승리](https://github.com/Atory0206)**  | **알림 관리, 파워 유저 도메인,<br>발표** | **[주요 기능]**<br>- 알림 관리 API 구현<br>- 파워 유저 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
+| <img src="https://github.com/Atory0206.png" width="100" style="border-radius:50%;"> |  **[안승리](https://github.com/Atory0206)**  | **알림 관리, 파워 유저 도메인,<br>노션 정리** | **[주요 기능]**<br>- 알림 관리 API 구현<br>- 파워 유저 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
 | <img src="https://github.com/jongin-git.png" width="100" style="border-radius:50%;"> | **[최종인](https://github.com/jongin-git)**  | **댓글 관리, 인기 도서 도메인,<br>시연 영상 제작** | **[주요 기능]**<br>- 댓글 관리 API 구현<br>- 인기 도서 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- MDC 기반 Request ID & IP 로깅 및 헤더 응답 처리 |
 
 ---
