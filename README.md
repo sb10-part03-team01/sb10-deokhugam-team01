@@ -11,9 +11,9 @@
 | 프로필 |                     이름                     |  역할  | 담당 기능                                                                                     |
 |:---:|:-----------------------------------------:|:--------:|:--------------------------------------------------------------|
 | <img src="https://github.com/hyunjae3458.png" width="100" style="border-radius:50%;"> | **[김현재](https://github.com/hyunjae3458)** | **도서 관리 도메인,<br>README 작성** | **[주요 기능]**<br>- 도서 관리 API 구현 (CRUD 및 커서 페이지네이션)<br>- Naver Book & OCR Space API 연동<br>**[추가/인프라 기능]**<br>- S3 썸네일 업로드 트랜잭션 동기화 |
-| <img src="https://github.com/mjohn26.png" width="100" style="border-radius:50%;"> |   **[문정환](https://github.com/mjohn26)**   | **리뷰 관리, 인기 리뷰 도메인,<br>노션 정리** | **[주요 기능]**<br>- 리뷰 관리 API 구현<br>- 인기 리뷰 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
+| <img src="https://github.com/mjohn26.png" width="100" style="border-radius:50%;"> |   **[문정환](https://github.com/mjohn26)**   | **리뷰 관리, 인기 리뷰 도메인,<br>발표** | **[주요 기능]**<br>- 리뷰 관리 API 구현<br>- 인기 리뷰 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
 | <img src="https://github.com/raonPsm.png" width="100" style="border-radius:50%;"> |   **[박승민](https://github.com/raonPsm)**   | **유저 관리 도메인, 인프라 설정,<br>PPT 제작** | **[주요 기능]**<br>- 유저 관리 API 구현<br>**[추가/인프라 기능]**<br>- AWS 인프라 환경 구축 및 GitHub Actions CI/CD 설정<br>- CodeRabbit(AI 리뷰), Codecov(테스트 커버리지) 연동 |
-| <img src="https://github.com/Atory0206.png" width="100" style="border-radius:50%;"> |  **[안승리](https://github.com/Atory0206)**  | **알림 관리, 파워 유저 도메인,<br>발표** | **[주요 기능]**<br>- 알림 관리 API 구현<br>- 파워 유저 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
+| <img src="https://github.com/Atory0206.png" width="100" style="border-radius:50%;"> |  **[안승리](https://github.com/Atory0206)**  | **알림 관리, 파워 유저 도메인,<br>노션 정리** | **[주요 기능]**<br>- 알림 관리 API 구현<br>- 파워 유저 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- (도메인 비즈니스 로직 고도화 집중) |
 | <img src="https://github.com/jongin-git.png" width="100" style="border-radius:50%;"> | **[최종인](https://github.com/jongin-git)**  | **댓글 관리, 인기 도서 도메인,<br>시연 영상 제작** | **[주요 기능]**<br>- 댓글 관리 API 구현<br>- 인기 도서 대쉬보드 API 구현<br>**[추가/인프라 기능]**<br>- MDC 기반 Request ID & IP 로깅 및 헤더 응답 처리 |
 
 ---
@@ -289,7 +289,8 @@ erDiagram
 
 ### 김현재
 
-<img width="2878" height="1550" alt="image" src="https://github.com/user-attachments/assets/5a9ae2dc-e40e-4995-b8b5-5547b363d681" />
+<img width="400" height="350" alt="덕후감_시연영상_2배속 (1)" src="https://github.com/user-attachments/assets/09923e38-defd-4922-962d-abbe9a27f7c5" />
+
 
 - **도서 관리 API**
     - 도서 등록, 수정, 삭제, 상세 조회 API 구현 및 유효성 검증(Validation) 로직 작성
@@ -300,47 +301,55 @@ erDiagram
 
 ### 문정환
 
-(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+<img width="400" height="350" alt="덕후감_시연영상_2배속 (2)" src="https://github.com/user-attachments/assets/73653057-a8db-4310-b7a8-88466d565311" />
 
-- **회원별 권한 관리**
-    - Spring Security를 활용하여 사용자 역할에 따른 권한 설정
-    - 관리자 페이지와 일반 사용자 페이지를 위한 조건부 라우팅 처리
-- **반응형 레이아웃 API**
-    - 클라이언트에서 요청된 반응형 레이아웃을 위한 RESTful API 엔드포인트 구현
+
+- **리뷰 관리 API**
+    - 리뷰 작성, 수정, 삭제 로직 구현
+    - 다중 필터링(작성자, 도서, 키워드) 및 커서 기반 페이지네이션을 적용한 리뷰 목록 조회
+    - 현재 요청자 기준 리뷰 좋아요 여부(likedByMe) 동적 응답 처리
+    - 리뷰 좋아요 토글 기능 및 이벤트 발생 시 타 유저 알림 생성 연동
+- **인기 리뷰 대쉬보드 API**
+    - 기간별 좋아요 수와 댓글 수를 기반으로 한 인기 리뷰 점수 산정 및 랭킹 부여 로직 구현
+    - 기간별 인기 리뷰 목록 조회 및 10위권 진입 시 작성자 알림 발송 로직 연동
 
 ### 박승민
 
-(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+<img width="400" height="350" alt="덕후감_시연영상_2배속" src="https://github.com/user-attachments/assets/71f6dffc-0f28-4e79-b1d8-630871bad944" />
 
-- **수강생 정보 관리 API**
-    - `GET`요청을 사용하여 학생의 수강 정보를 조회하는 API 엔드포인트 개발
-    - 학생 정보의 CRUD 처리 (Spring Data JPA 사용)
-- **공용 Button API**
-    - 공통으로 사용할 버튼 기능을 처리하는 API 엔드포인트 구현
+
+- **유저 관리 API**
+    - 회원 가입, 로그인 등 유저 관리 도메인 핵심 로직 및 API 구현
+- **CI/CD 및 인프라 구축**
+    - AWS 기반(ECS, ECR 등) 서버 인프라 환경 구축
+    - GitHub Actions를 활용한 CI/CD 자동화 파이프라인 구성
+    - Codecov(테스트 커버리지 측정) 및 CodeRabbit(AI 코드 리뷰) 연동을 통한 코드 품질 관리 인프라 셋업
 
 ### 안승리
 
-(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+<img width="400" height="350" alt="덕후감_시연영상_2배속 (5)" src="https://github.com/user-attachments/assets/7c8f9843-bca3-4820-a544-6c0093e63149" />
 
-- **관리자 API**
-    - `@PathVariable`을 사용한 동적 라우팅 기능 구현
-    - `PATCH`,`DELETE`요청을 사용하여 학생 정보를 수정하고 탈퇴하는 API 엔드포인트 개발
-- **CRUD 기능**
-    - 학생 정보의 CRUD 기능을 제공하는 API 구현 (Spring Data JPA)
-- **회원관리 슬라이더**
-    - 학생별 정보 목록을`Carousel`형식으로 조회하는 API 구현
+- **알림 관리 API**
+    - 알림 생성 및 단건/목록 조회 API 구현
+    - 개별 알림 읽음 상태 변경 및 전체 읽음 처리 로직 구현
+    - 스케줄링을 활용하여 확인된 지 1주일이 경과한 오래된 알림 자동 삭제 로직 구현
+- **파워 유저 및 배치(Batch) 기반 설정**
+    - 파워 유저(활동량 우수 유저) 집계 및 대쉬보드 API 구현
+    - 통계 데이터 처리를 위한 Spring Batch 공통 설정 및 파일 구조화 작업
 
 ### 최종인
 
-(자신이 개발한 기능에 대한 사진이나 gif 파일 첨부)
+<img width="400" height="350" alt="덕후감_시연영상_2배속 (3)" src="https://github.com/user-attachments/assets/431ecbc0-1aba-4203-9e90-654cb1e360ab" />
 
-- **학생 시간 정보 관리 API**
-    - 학생별 시간 정보를`GET`요청을 사용하여 조회하는 API 구현
-    - 실시간 접속 현황을 관리하는 API 엔드포인트
-- **수정 및 탈퇴 API**
-    - `PATCH`,`DELETE`요청을 사용하여 수강생의 개인정보 수정 및 탈퇴 처리
-- **공용 Modal API**
-    - 공통 Modal 컴포넌트를 처리하는 API 구현
+
+- **댓글 관리 API**
+    - 댓글 CRUD 및 QueryDSL을 활용한 커서 기반 페이지네이션 목록 조회 API 구현
+    - 댓글 생성 시 알림 생성 연동
+- **인기 도서 대쉬보드 API**
+    - 집계 쿼리를 활용한 인기 도서 배치 집계 및 랭킹 저장 로직 구현
+    - 기간별 인기 도서 커서 기반 페이지네이션 조회 API 구현
+- **시스템 로깅**
+    - MDC를 활용한 requestId 및 clientIp 로깅 처리로 요청 추적성 강화
 
 ---
 
