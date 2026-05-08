@@ -405,4 +405,5 @@ erDiagram
 
 ## 프로젝트 회고록
 
-(제작한 발표자료 링크 혹은 첨부파일 첨부)
+[1팀_덕후감_발표자료.pdf](https://github.com/user-attachments/files/27500726/1._._.pdf)
+
